@@ -267,9 +267,9 @@ tr.pend{border-left:3px solid var(--gold)}
     <span class="live-badge" id="op-live-badge" style="display:none">● EN VIVO</span>
     <span style="font-size:.68rem;color:var(--muted)" id="op-date"></span>
     <span style="font-size:.72rem;color:var(--muted)" id="op-prog"></span>
-    <span id="offline-badge" style="display:none;background:#c0392b;color:#fff;padding:.18rem .55rem;border-radius:4px;font-size:.6rem;letter-spacing:1px;font-weight:700;animation:pulse 1.5s infinite">    <button class="tbtn" onclick="showPublic()">🖥 Público</button>#9888; SIN CONEXION     <button class="tbtn" onclick="showPublic()">🖥 Público</button>mdash; <span id="offline-count">0</span> pendientes</span>
-    <span id="syncing-badge" style="display:none;background:var(--gold);color:#000;padding:.18rem .55rem;border-radius:4px;font-size:.6rem;letter-spacing:1px;font-weight:700;">    <button class="tbtn" onclick="showPublic()">🖥 Público</button>#8593; Sincronizando...</span>
-    <button class="tbtn" onclick="showPublic()">    <button class="tbtn" onclick="showPublic()">🖥 Público</button>#128251; Publico</button>
+    <span id="offline-badge" style="display:none;background:#c0392b;color:#fff;padding:.18rem .55rem;border-radius:4px;font-size:.6rem;letter-spacing:1px;font-weight:700;animation:pulse 1.5s infinite">⚠ SIN CONEXION — <span id="offline-count">0</span> pendientes</span>
+    <span id="syncing-badge" style="display:none;background:var(--gold);color:#000;padding:.18rem .55rem;border-radius:4px;font-size:.6rem;letter-spacing:1px;font-weight:700;">↑ Sincronizando...</span>
+    <button class="tbtn" onclick="showPublic()">🖥 Público</button>
     <button class="tbtn" id="btn-balanza" onclick="balanzaToggle()" style="border-color:#1a9ad6;color:#1a9ad6;">⚖ Balanza</button>
     <button class="tbtn gold" onclick="openAddLotModal()">➕ Lote</button>
     <button class="back-btn" onclick="opConfirmExit()">← Menú</button>
@@ -308,7 +308,7 @@ tr.pend{border-left:3px solid var(--gold)}
         <span id="remate-id-preview" style="font-size:.72rem;color:var(--muted);font-style:italic;flex:1;">REMATE N°— — ----/--/--</span>
       </div>
       <button class="btn btn-green" id="btn-start" onclick="startRemate()" disabled>INICIAR REMATE →</button>
-      <div class="demo-link">Sin archivo — <a onclick="loadDemo()">usar datos de demostración</a></div>
+      <div class="demo-link">Sin archivo — <a onclick="loadDemo()">usar datos de demostración</a> · <a onclick="downloadTemplate()" style="color:var(--gold)">⬇ descargar plantilla Excel</a></div>
     </div>
   </div>
 
@@ -989,6 +989,7 @@ async function supaUpsertLote(remateId, lot) {
     orden:        lot.orden,
     lote:         lot.lote,
     propietario:  lot.propietario||'',
+    ci_propietario: lot.ciPropietario||'',
     estancia:     lot.estancia||'',
     cantidad:     lot.cantidad||0,
     categoria:    lot.categoria||'',
@@ -1018,7 +1019,7 @@ async function supaGetLotes(remateId) {
   return res.data.map(function(r) {
     return {
       _key: r.lote_key, orden: r.orden, lote: r.lote,
-      propietario: r.propietario, estancia: r.estancia,
+      propietario: r.propietario, ciPropietario: r.ci_propietario||'', estancia: r.estancia,
       cantidad: r.cantidad, categoria: r.categoria, raza: r.raza,
       edad: r.edad, obs: r.obs, precio: r.precio, peso: r.peso,
       saved: r.saved, montoTotal: r.monto_total, comision: r.comision,
@@ -1183,22 +1184,24 @@ function goTo(screen) {
 var lots = [], cur = 0, remateId = null;
 
 var DEMO = [
-  {orden:1,lote:3,propietario:'JEAN PAUL MORENO',estancia:'LA PRIMAVERA',cantidad:10,categoria:'VAQUILLAS',raza:'NELORE',edad:'12 MESES',obs:'CI: 9821301'},
-  {orden:2,lote:7,propietario:'CARLOS ANTELO SUAREZ',estancia:'SAN RAFAEL',cantidad:5,categoria:'VAQUILLAS',raza:'BRAHMAN',edad:'14 MESES',obs:''},
-  {orden:3,lote:11,propietario:'PATRICIA VACA DIEZ',estancia:'LA ESPERANZA',cantidad:8,categoria:'VACA',raza:'MESTIZA',edad:'36 MESES',obs:'CON CRIA'},
-  {orden:4,lote:15,propietario:'RODRIGO SALVATIERRA',estancia:'EL PORVENIR',cantidad:22,categoria:'TORILLOS',raza:'NELORE',edad:'18 MESES',obs:''},
-  {orden:5,lote:19,propietario:'MONICA PARADA RIOS',estancia:'SANTA ROSA',cantidad:14,categoria:'TORILLOS',raza:'ANELORADO',edad:'20 MESES',obs:''},
-  {orden:6,lote:24,propietario:'FERNANDO CRONEMBOLD',estancia:'LOS TAJIBOS',cantidad:3,categoria:'TORO',raza:'SENEPOL',edad:'36 MESES',obs:'REPRODUCTOR'},
-  {orden:7,lote:28,propietario:'LUCIA AYMALLA TORREZ',estancia:'CAMPO VERDE',cantidad:18,categoria:'TORILLOS',raza:'NELORE',edad:'15 MESES',obs:''},
-  {orden:8,lote:33,propietario:'GABRIEL PINTO VACA',estancia:'EL RETIRO',cantidad:6,categoria:'VACAS',raza:'NELORE',edad:'36 MESES',obs:'CON CRIA'},
-  {orden:9,lote:40,propietario:'JOSE LEDEZMA PAZ',estancia:'DONA LEONOR',cantidad:25,categoria:'TORILLOS',raza:'BRAHMAN',edad:'22 MESES',obs:''},
-  {orden:10,lote:47,propietario:'BEATRIZ ANTELO MELGAR',estancia:'LAS LOMAS',cantidad:9,categoria:'VAQUILLAS',raza:'NELORE',edad:'11 MESES',obs:''},
+  {orden:1,lote:3,propietario:'JEAN PAUL MORENO',CI_PROPIETARIO:'9821301 SC',estancia:'LA PRIMAVERA',cantidad:10,categoria:'VAQUILLAS',raza:'NELORE',edad:'12 MESES',obs:''},
+  {orden:2,lote:7,propietario:'CARLOS ANTELO SUAREZ',CI_PROPIETARIO:'3845621 SC',estancia:'SAN RAFAEL',cantidad:5,categoria:'VAQUILLAS',raza:'BRAHMAN',edad:'14 MESES',obs:''},
+  {orden:3,lote:11,propietario:'PATRICIA VACA DIEZ',CI_PROPIETARIO:'5123874 SC',estancia:'LA ESPERANZA',cantidad:8,categoria:'VACA',raza:'MESTIZA',edad:'36 MESES',obs:'CON CRIA'},
+  {orden:4,lote:15,propietario:'RODRIGO SALVATIERRA',CI_PROPIETARIO:'2987463 SC',estancia:'EL PORVENIR',cantidad:22,categoria:'TORILLOS',raza:'NELORE',edad:'18 MESES',obs:''},
+  {orden:5,lote:19,propietario:'MONICA PARADA RIOS',CI_PROPIETARIO:'4562198 SC',estancia:'SANTA ROSA',cantidad:14,categoria:'TORILLOS',raza:'ANELORADO',edad:'20 MESES',obs:''},
+  {orden:6,lote:24,propietario:'FERNANDO CRONEMBOLD',CI_PROPIETARIO:'1874536 SC',estancia:'LOS TAJIBOS',cantidad:3,categoria:'TORO',raza:'SENEPOL',edad:'36 MESES',obs:'REPRODUCTOR'},
+  {orden:7,lote:28,propietario:'LUCIA AYMALLA TORREZ',CI_PROPIETARIO:'6321485 SC',estancia:'CAMPO VERDE',cantidad:18,categoria:'TORILLOS',raza:'NELORE',edad:'15 MESES',obs:''},
+  {orden:8,lote:33,propietario:'GABRIEL PINTO VACA',CI_PROPIETARIO:'7845632 SC',estancia:'EL RETIRO',cantidad:6,categoria:'VACAS',raza:'NELORE',edad:'36 MESES',obs:'CON CRIA'},
+  {orden:9,lote:40,propietario:'JOSE LEDEZMA PAZ',CI_PROPIETARIO:'3214567 SC',estancia:'DONA LEONOR',cantidad:25,categoria:'TORILLOS',raza:'BRAHMAN',edad:'22 MESES',obs:''},
+  {orden:10,lote:47,propietario:'BEATRIZ ANTELO MELGAR',CI_PROPIETARIO:'8963214 SC',estancia:'LAS LOMAS',cantidad:9,categoria:'VAQUILLAS',raza:'NELORE',edad:'11 MESES',obs:''},
 ];
 
 function mkLot(d) {
   return {
     orden: +(d.orden||d.ORDEN||0), lote: +(d.lote||d.LOTE||0),
-    propietario: d.propietario||d.PROPIETARIO||'', estancia: d.estancia||d.ESTANCIA||'',
+    propietario:    d.propietario||d.PROPIETARIO||'',
+    ciPropietario:  String(d.ciPropietario||d.CI_PROPIETARIO||'').trim(),
+    estancia:       d.estancia||d.ESTANCIA||'',
     cantidad: +(d.cantidad||d.CANTIDAD||0), categoria: d.categoria||d.CATEGORIA||'',
     raza: d.raza||d.RAZA||'', edad: d.edad||d.EDAD||'', obs: d.obs||d.OBS||'',
     precio:0, peso:0, comprador:'', compradorCI:'', compradorTel:'', saved:false,
@@ -1251,13 +1254,13 @@ function parseXLS(buffer, name) {
     for (var i=0;i<raw.length;i++) { if(raw[i]&&String(raw[i][0]).toUpperCase().trim()==='LOTE'){hi=i;break;} }
     if (hi<0) { toast('No se encontro encabezado LOTE', true); return; }
     var H = raw[hi].map(function(h){ return h?String(h).toUpperCase().trim():''; });
-    var c = {lote:H.indexOf('LOTE'),orden:H.indexOf('ORDEN'),propietario:H.findIndex(function(h){return h==='PROPIETARIO';}),estancia:H.indexOf('ESTANCIA'),cantidad:H.indexOf('CANTIDAD'),categoria:H.indexOf('CATEGORIA'),raza:H.indexOf('RAZA'),edad:H.indexOf('EDAD'),obs:H.findIndex(function(h){return h==='OBS.'||h==='OBS';})};
+    var c = {lote:H.indexOf('LOTE'),orden:H.indexOf('ORDEN'),propietario:H.findIndex(function(h){return h==='PROPIETARIO';}),ciProp:H.findIndex(function(h){return h.includes('CI PROP')||h==='CI_PROPIETARIO'||h==='CI PROPIETARIO';}),estancia:H.indexOf('ESTANCIA'),cantidad:H.indexOf('CANTIDAD'),categoria:H.indexOf('CATEGORIA'),raza:H.indexOf('RAZA'),edad:H.indexOf('EDAD'),obs:H.findIndex(function(h){return h==='OBS.'||h==='OBS';})};
     var data = [];
     for (var i=hi+1;i<raw.length;i++) {
       var r=raw[i]; if(!r) continue;
       var lv=r[c.lote]; if(typeof lv!=='number'||lv===0) continue;
       var ov=c.orden>=0?r[c.orden]:null; if(!ov&&ov!==0) continue;
-      data.push({LOTE:lv,ORDEN:ov,PROPIETARIO:c.propietario>=0?r[c.propietario]||'':'',ESTANCIA:c.estancia>=0?r[c.estancia]||'':'',CANTIDAD:c.cantidad>=0?r[c.cantidad]||0:0,CATEGORIA:c.categoria>=0?r[c.categoria]||'':'',RAZA:c.raza>=0?r[c.raza]||'':'',EDAD:c.edad>=0?r[c.edad]||'':'',OBS:c.obs>=0?r[c.obs]||'':''});
+      data.push({LOTE:lv,ORDEN:ov,PROPIETARIO:c.propietario>=0?r[c.propietario]||'':'',CI_PROPIETARIO:c.ciProp>=0?String(r[c.ciProp]||'').trim():'',ESTANCIA:c.estancia>=0?r[c.estancia]||'':'',CANTIDAD:c.cantidad>=0?r[c.cantidad]||0:0,CATEGORIA:c.categoria>=0?r[c.categoria]||'':'',RAZA:c.raza>=0?r[c.raza]||'':'',EDAD:c.edad>=0?r[c.edad]||'':'',OBS:c.obs>=0?r[c.obs]||'':''});
     }
     if(!data.length){toast('No se encontraron lotes validos',true);return;}
     lots = data.map(mkLot).sort(function(a,b){return a.orden-b.orden;});
@@ -1290,6 +1293,32 @@ function showPreview(msg) {
 function loadDemo() {
   lots = DEMO.map(mkLot);
   showPreview(lots.length + ' lotes de demostracion');
+}
+
+function downloadTemplate() {
+  var wb = XLSX.utils.book_new();
+  var headers = ['LOTE','ORDEN','PROPIETARIO','CI PROPIETARIO','COMPRADOR','ESTANCIA','CANTIDAD','CATEGORIA','RAZA','EDAD','OBS.'];
+  var rows = [
+    headers,
+    [3,  1, 'JEAN PAUL MORENO',      '9821301 SC', '', 'LA PRIMAVERA',   10, 'VAQUILLAS', 'NELORE',   '12 MESES', ''],
+    [7,  2, 'CARLOS ANTELO SUAREZ',  '3845621 SC', '', 'SAN RAFAEL',      5, 'VAQUILLAS', 'BRAHMAN',  '14 MESES', ''],
+    [11, 3, 'PATRICIA VACA DIEZ',    '5123874 SC', '', 'LA ESPERANZA',    8, 'VACA',      'MESTIZA',  '36 MESES', 'CON CRIA'],
+    [15, 4, 'RODRIGO SALVATIERRA',   '2987463 SC', '', 'EL PORVENIR',    22, 'TORILLOS',  'NELORE',   '18 MESES', ''],
+    [19, 5, 'MONICA PARADA RIOS',    '4562198 SC', '', 'SANTA ROSA',     14, 'TORILLOS',  'ANELORADO','20 MESES',  ''],
+    [24, 6, 'FERNANDO CRONEMBOLD',   '1874536 SC', '', 'LOS TAJIBOS',     3, 'TORO',      'SENEPOL',  '36 MESES', 'REPRODUCTOR'],
+    [28, 7, 'LUCIA AYMALLA TORREZ',  '6321485 SC', '', 'CAMPO VERDE',    18, 'TORILLOS',  'NELORE',   '15 MESES', ''],
+    [33, 8, 'GABRIEL PINTO VACA',    '7845632 SC', '', 'EL RETIRO',       6, 'VACAS',     'NELORE',   '36 MESES', 'CON CRIA'],
+    [40, 9, 'JOSE LEDEZMA PAZ',      '3214567 SC', '', 'DONA LEONOR',    25, 'TORILLOS',  'BRAHMAN',  '22 MESES', ''],
+    [47,10, 'BEATRIZ ANTELO MELGAR', '8963214 SC', '', 'LAS LOMAS',       9, 'VAQUILLAS', 'NELORE',   '11 MESES', ''],
+  ];
+  var ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [
+    {wch:6},{wch:6},{wch:28},{wch:16},{wch:28},{wch:18},
+    {wch:9},{wch:12},{wch:12},{wch:10},{wch:12}
+  ];
+  XLSX.utils.book_append_sheet(wb, ws, 'base');
+  XLSX.writeFile(wb, 'AGACON_Plantilla_Lotes.xlsx');
+  toast('Plantilla descargada ✓');
 }
 
 function startRemate() {
@@ -3301,10 +3330,15 @@ function admGetFilteredLotes() {
   // Extraer palabras clave del nombre buscado (mas de 2 letras)
   var palabrasBuscadas = normForFilter(admFilterText).split(' ').filter(function(w){ return w.length > 2; });
 
-  function propietarioMatcheaPersona(propietario) {
-    // El propietario matchea si comparte AL MENOS 1 palabra clave con el nombre buscado
-    if (!propietario) return false;
-    var normProp = normForFilter(propietario).split(' ').filter(function(w){ return w.length > 2; });
+  function propietarioMatcheaPersona(lote) {
+    // Primero: CI propietario exacto si el lote lo tiene
+    if (admFilterCI && lote.ciPropietario) {
+      var ciPropNum = lote.ciPropietario.replace(/[^0-9]/g,'');
+      if (ciPropNum && ciPropNum === admFilterCI) return true;
+    }
+    // Fallback: similitud de nombre
+    if (!lote.propietario) return false;
+    var normProp = normForFilter(lote.propietario).split(' ').filter(function(w){ return w.length > 2; });
     return palabrasBuscadas.some(function(w){ return normProp.indexOf(w) >= 0; });
   }
 
@@ -3315,8 +3349,8 @@ function admGetFilteredLotes() {
       // Vino del dropdown con nombre+CI
       // Comprador: CI exacto
       var matchComp = ciLote === admFilterCI;
-      // Propietario/defensa: al menos 1 palabra en comun con el nombre buscado
-      var matchProp = propietarioMatcheaPersona(l.propietario);
+      // Propietario/defensa: CI exacto o similitud de nombre
+      var matchProp = propietarioMatcheaPersona(l);
       return matchComp || matchProp;
     } else if (admFilterCI) {
       return ciLote === admFilterCI;
