@@ -227,6 +227,27 @@ tr.pend{border-left:3px solid var(--gold)}
 .fgroup input,.fgroup select{background:#111;border:1px solid var(--border);border-radius:6px;padding:.48rem .7rem;color:#fff;font-size:.88rem;font-family:inherit;width:100%}
 .fgroup input:focus{outline:none;border-color:var(--green)}
 .mgrid{display:grid;grid-template-columns:1fr 1fr;gap:.65rem}
+
+/* ════════════════════════════════════════
+   MODAL ASIGNAR COMPRADOR — tema claro + letras grandes
+   ════════════════════════════════════════ */
+#m-comp-buyer .modal{background:#FFFFFF;border:1px solid #E3E8F0;max-width:560px;box-shadow:0 20px 60px rgba(20,30,60,.3)}
+#m-comp-buyer .modal h3{color:#1F2937;font-size:1.35rem;letter-spacing:2px;display:flex;align-items:center;gap:.5rem}
+#m-comp-buyer .lot-tag{background:#FDECEC;border:1px solid #F7C9C5;color:#1a2333;font-size:1.05rem;line-height:1.7;font-weight:600}
+#m-comp-buyer .fgroup label{color:#5B667A;font-size:.8rem;font-weight:700}
+#m-comp-buyer .fgroup input{background:#FFFFFF;border:1px solid #D7DEE8;color:#1a2333;font-size:1.15rem;padding:.7rem .9rem}
+#m-comp-buyer .fgroup input:focus{border-color:#2E75B6;box-shadow:0 0 0 3px rgba(46,117,182,.15)}
+#m-comp-buyer .fgroup input::placeholder{color:#AAB4C2}
+#m-comp-buyer #mc-suggestions{background:#FFFFFF !important;border:1px solid #D7DEE8 !important;max-height:200px !important;box-shadow:0 8px 24px rgba(20,30,60,.12)}
+#m-comp-buyer #mc-suggestions > div{border-bottom:1px solid #EEF1F6 !important}
+#m-comp-buyer #mc-suggestions > div:hover{background:#F7FAFD !important}
+#m-comp-buyer #mc-suggestions div[style*="color:#fff"]{color:#1a2333 !important;font-size:1.02rem !important}
+#m-comp-buyer #mc-suggestions div[style*="var(--muted)"]{color:#7A879B !important;font-size:.82rem !important}
+#m-comp-buyer .btn{font-size:1.1rem;padding:.85rem 1rem}
+#m-comp-buyer .btn-green{background:#1B8A4A;color:#fff}
+#m-comp-buyer .btn-green:hover{background:#15733d}
+#m-comp-buyer .btn-ghost{background:#F1F4F9;color:#5B667A;border:1px solid #D7DEE8}
+
 .btn{padding:.52rem 1rem;border:none;border-radius:6px;cursor:pointer;font-weight:700;font-size:.8rem;letter-spacing:1px;text-transform:uppercase;transition:.15s}
 .btn-green{background:var(--green);color:#fff} .btn-green:hover{background:var(--green2)}
 .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)} .btn-ghost:hover{border-color:#fff;color:#fff}
@@ -422,6 +443,24 @@ tr.pend{border-left:3px solid var(--gold)}
 #screen-operador .li-price { color:#B0750A; }
 #screen-operador .li-buyer { color:#1B8A4A; }
 #screen-operador .li-nobuy { color:#B0750A; }
+
+/* ════════════════════════════════════════
+   ADMIN — letras más grandes en general
+   ════════════════════════════════════════ */
+#screen-admin .topbar-title { font-size:1.4rem; }
+#screen-admin label { font-size:.85rem !important; }
+#screen-admin select, #screen-admin input[type=number], #screen-admin input[type=text] { font-size:1.05rem !important; }
+#screen-admin .stat-card .sv { font-size:2.3rem !important; }
+#screen-admin .stat-card .sl { font-size:.95rem !important; }
+#screen-admin .summary-grid .icon-badge { width:48px; height:48px; font-size:1.45rem; }
+#screen-admin thead th { font-size:.95rem !important; padding:.7rem .6rem !important; }
+#screen-admin td { font-size:1rem !important; padding:.6rem !important; }
+#screen-admin tbody tr { line-height:1.5; }
+#screen-admin .fbtn, #screen-admin .tab-btn { font-size:1rem !important; padding:.55rem 1rem !important; }
+#screen-admin div[style*="letter-spacing"][style*="uppercase"] { font-size:.9rem !important; }
+#screen-admin .btn, #screen-admin button.tbtn { font-size:1rem !important; }
+#screen-admin input[style*="background:#111"] { font-size:1.05rem !important; padding:.6rem .8rem !important; }
+#screen-admin #adm-search-nombre, #screen-admin #adm-search-ci { font-size:1.05rem !important; }
 </style>
 
 </head>
