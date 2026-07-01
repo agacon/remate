@@ -2301,6 +2301,12 @@ function compSaveComprador() {
   var esDefensa = testLot ? isDefensa(testLot) : false;
   var comPct = esDefensa ? getDefensaComPct(lot) : null;
 
+  // Si es defensa pero no se pudo determinar socio/no socio, preguntar al usuario
+  if (esDefensa && comPct === null) {
+    var esSocioResp = confirm('🛡 DEFENSA de "'+(lot.propietario||'')+'"\n\n¿El propietario es SOCIO?\n\n• Aceptar = SÍ es socio (comisión 0.5%)\n• Cancelar = NO es socio (comisión 1%)');
+    comPct = esSocioResp ? 0.5 : 1;
+  }
+
   var update = {comprador:nombre, compradorCI:ci, compradorTel:tel,
     esDefensa: esDefensa, defensaCom: esDefensa ? comPct : null};
 
@@ -2316,10 +2322,7 @@ function compSaveComprador() {
   closeModal('m-comp-buyer');
 
   if (esDefensa) {
-    var socioTxt = sociosList.length
-      ? (isSocio(lot.propietario, lot.propietarioCi) ? ' — SOCIO (0.5%)' : ' — NO SOCIO (1%)')
-      : ' (0.5% default)';
-    toast('🛡 DEFENSA detectada' + socioTxt);
+    toast('🛡 DEFENSA registrada — ' + (comPct===0.5 ? 'SOCIO (0.5%)' : 'NO SOCIO (1%)'));
   } else {
     toast('Comprador asignado ✓');
   }
@@ -2432,9 +2435,11 @@ function admRenderDefensas() {
   var tbody=document.getElementById('adm-tbody-def');tbody.innerHTML='';
   if(!sinComp.length){var tr=document.createElement('tr');var td=document.createElement('td');td.colSpan=8;td.style.cssText='text-align:center;color:#888;padding:1.5rem';td.textContent='No hay defensas';tr.appendChild(td);tbody.appendChild(tr);return;}
   sinComp.forEach(function(l,i){
-    var m=(l.precio||0)*(l.cantidad||0),c=m*0.005;
+    var m=(l.precio||0)*(l.cantidad||0);
+    var pct=(l.defensaCom!=null?l.defensaCom:0.5);
+    var c=m*(pct/100);
     var tr=document.createElement('tr');
-    tr.innerHTML='<td>'+(i+1)+'</td><td>'+(l.propietario||'—')+'</td><td>'+l.categoria+'</td><td>'+l.lote+'</td><td>'+l.cantidad+'</td><td>$'+(l.precio||0)+'</td><td>$'+m.toLocaleString()+'</td><td style="color:var(--gold)">$'+c.toFixed(2)+'</td>';
+    tr.innerHTML='<td>'+(i+1)+'</td><td>'+(l.propietario||'—')+'</td><td>'+l.categoria+'</td><td>'+l.lote+'</td><td>'+l.cantidad+'</td><td>$'+(l.precio||0)+'</td><td>$'+m.toLocaleString()+'</td><td style="color:var(--gold)">'+pct+'% — $'+c.toFixed(2)+'</td>';
     tbody.appendChild(tr);
   });
 }
@@ -2715,7 +2720,7 @@ function buildDefensas(lotes, tc, fecha, remateNum) {
       setCell(ws,row,4,l.cantidad||0,{align:'center',numFmt:NUM_INT});
       setCell(ws,row,5,l.precio||0,{align:'right',numFmt:NUM_INT});
       setCell(ws,row,6,'=E'+r1+'*F'+r1,{align:'right',numFmt:NUM_FMT});
-      setCell(ws,row,7,'=G'+r1+'*0.5%',{align:'right',numFmt:NUM_FMT});
+      setCell(ws,row,7,'=G'+r1+'*'+((l.defensaCom!=null?l.defensaCom:0.5))+'%',{align:'right',numFmt:NUM_FMT});
       setCell(ws,row,8,'=H'+r1,{bold:true,fill:YELLOW,align:'right',numFmt:NUM_FMT});
       setCell(ws,row,9,tc,{align:'center',numFmt:'0.00'});
       setCell(ws,row,10,'=I'+r1+'*J'+r1,{bold:true,align:'right',numFmt:NUM_FMT});
@@ -2763,7 +2768,10 @@ function buildResumen(lotes, tc, comPct, fecha, remateNum) {
   var sinComp  = lotes.filter(function(l){return !l.comprador;});
   var dtM      = sinComp.reduce(function(a,l){return a+(l.precio||0)*(l.cantidad||0);},0);
   var cab      = lotes.reduce(function(a,l){return a+(l.cantidad||0);},0);
-  var comTotal = monto*comPct/100*2 + dtM*0.005;
+  var dtMSocio   = sinComp.filter(function(l){return (l.defensaCom!=null?l.defensaCom:0.5)<=0.5;}).reduce(function(a,l){return a+(l.precio||0)*(l.cantidad||0);},0);
+  var dtMNoSocio = sinComp.filter(function(l){return (l.defensaCom!=null?l.defensaCom:0.5)>0.5;}).reduce(function(a,l){return a+(l.precio||0)*(l.cantidad||0);},0);
+  var comDef   = dtMSocio*0.005 + dtMNoSocio*0.01;
+  var comTotal = monto*comPct/100*2 + comDef;
 
   setCell(ws,0,0,'DETALLE DE EGRESOS E INGRESOS',{bold:true,sz:13});
   setCell(ws,1,0,'REMATE DE GANADO EN PIE',{bold:true,sz:12});
@@ -2788,7 +2796,8 @@ function buildResumen(lotes, tc, comPct, fecha, remateNum) {
   secHdr('DETALLE DE INGRESOS');
   item('COMISION VENDEDORES '+comPct+'%', monto*comPct/100);
   item('COMISION COMPRADORES '+comPct+'%', monto*comPct/100);
-  item('COMISION DEFENSAS 0.5%', dtM*0.005);
+  item('COMISION DEFENSAS SOCIO 0.5%', dtMSocio*0.005);
+  item('COMISION DEFENSAS NO SOCIO 1%', dtMNoSocio*0.01);
   item('TOTAL INGRESOS', comTotal, true);
   row++;
   secHdr('ESTADISTICAS');
@@ -3080,7 +3089,6 @@ async function admExportExcel() {
     var monto=admLotes.reduce(function(a,l){return a+(l.precio||0)*(l.cantidad||0);},0);
     var dtM=sinComp.reduce(function(a,l){return a+(l.precio||0)*(l.cantidad||0);},0);
     var cab=admLotes.reduce(function(a,l){return a+(l.cantidad||0);},0);
-    var comIngresos=monto*comPct/100*2+dtM*0.005;
     function resHdr(rowN,title) {
       [1,2,3].forEach(function(c){
         var cell=wsRes.getRow(rowN).getCell(c);
@@ -3357,9 +3365,10 @@ function isDefensa(lot) {
 }
 
 function getDefensaComPct(lot) {
-  // Returns 0.5 if socio, 1 if not
-  if (!sociosList.length) return 0.5; // default if list not loaded
+  // Returns 0.5 if socio, 1 if not socio, null if cannot determine
+  if (!sociosList.length) return null; // lista no cargada → no se puede saber
   var esSocio = isSocio(lot.propietario, lot.propietarioCi);
+  if (esSocio === null) return null;   // no encontrado con certeza
   return esSocio ? 0.5 : 1;
 }
 
