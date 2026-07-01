@@ -461,6 +461,24 @@ tr.pend{border-left:3px solid var(--gold)}
 #screen-admin .btn, #screen-admin button.tbtn { font-size:1rem !important; }
 #screen-admin input[style*="background:#111"] { font-size:1.05rem !important; padding:.6rem .8rem !important; }
 #screen-admin #adm-search-nombre, #screen-admin #adm-search-ci { font-size:1.05rem !important; }
+
+/* ════ MODAL CONFIGURACIÓN — tema claro ════ */
+#m-config .modal{background:#FFFFFF;border:1px solid #E3E8F0;box-shadow:0 20px 60px rgba(20,30,60,.3)}
+#m-config .modal h3{color:#1F2937;font-size:1.35rem;letter-spacing:2px}
+#m-config .btn-ghost{background:#F1F4F9;color:#5B667A;border:1px solid #D7DEE8}
+#m-config #config-sections > div{background:#FFFFFF !important;border-color:#E3E8F0 !important;margin-bottom:.9rem}
+#m-config div[style*="color:#fff"]{color:#1a2333 !important}
+#m-config span[style*="color:#fff"]{color:#1a2333 !important}
+#m-config div[style*="color:var(--muted)"]{color:#5B667A !important}
+#m-config span[style*="color:var(--muted)"]{color:#5B667A !important}
+#m-config div[style*="color:var(--gold)"]{color:#B0750A !important}
+#m-config span[style*="color:var(--gold)"]{color:#B0750A !important}
+#m-config input[style*="background:#111"]{background:#FFFFFF !important;color:#1a2333 !important;border-color:#D7DEE8 !important;font-size:1.02rem !important;padding:.55rem .8rem !important}
+#m-config input[style*="background:#111"]:focus{outline:none;border-color:#2E75B6 !important;box-shadow:0 0 0 3px rgba(46,117,182,.15)}
+#m-config .fgroup label{color:#5B667A !important;font-size:.8rem !important}
+#m-config div[style*="letter-spacing"][style*="uppercase"]{font-size:.95rem !important}
+#m-config .tbtn{background:#2E75B6;color:#fff;border:none}
+#m-config .tbtn.green{background:#1B8A4A}
 </style>
 
 </head>
@@ -889,6 +907,13 @@ tr.pend{border-left:3px solid var(--gold)}
       <div class="stat-card"><div class="icon-badge ic-gold">%</div><div class="sv" id="as-comision" style="color:#B0750A;font-size:1.1rem">$0</div><div class="sl">Comisión total</div></div>
       <div class="stat-card"><div class="icon-badge ic-red">👤</div><div class="sv" id="as-sincomp" style="color:#C0392B">0</div><div class="sl">Sin comprador</div></div>
     </div>
+    <!-- Botón que abre el modal de Configuración -->
+    <div style="display:flex;justify-content:flex-end;flex-shrink:0;">
+      <button class="tbtn" onclick="openConfigModal()" style="font-size:1rem;padding:.5rem 1.1rem;">⚙ Configuración (datos bancarios y contraseñas)</button>
+    </div>
+
+    <!-- ══ PANEL DE CONFIGURACIÓN (se muestra dentro del modal) ══ -->
+    <div id="config-sections">
     <!-- Bank account fields - saved in Firebase -->
     <div style="background:var(--panel);border:1px solid var(--gold);border-radius:8px;padding:.8rem 1rem;display:flex;flex-direction:column;gap:.6rem;flex-shrink:0;">
       <div style="display:flex;align-items:center;justify-content:space-between;">
@@ -990,6 +1015,8 @@ tr.pend{border-left:3px solid var(--gold)}
       </div>
       <div style="font-size:.65rem;color:var(--muted);">Dejar vacío = acceso libre. Los cambios aplican inmediatamente.</div>
     </div>
+    </div>
+    <!-- ══ FIN PANEL DE CONFIGURACIÓN ══ -->
 
     <div class="export-bar">
       <h3>Exportar</h3>
@@ -1173,6 +1200,17 @@ tr.pend{border-left:3px solid var(--gold)}
   </div>
 </div>
 
+<!-- Modal de Configuración (contiene datos bancarios + socios + contraseñas) -->
+<div class="overlay" id="m-config">
+  <div class="modal" id="m-config-modal" style="max-width:900px;max-height:88vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <h3>⚙ Configuración</h3>
+      <button class="btn btn-ghost" onclick="closeConfigModal()" style="padding:.5rem .9rem;">✕ Cerrar</button>
+    </div>
+    <div id="config-modal-body"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1208,6 +1246,13 @@ async function checkConnection() {
   }
 }
 checkConnection();
+
+// Al cargar, mover las secciones de configuración al modal (descongestiona el admin)
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function(){ try{ ensureConfigInModal(); }catch(e){} });
+} else {
+  try{ ensureConfigInModal(); }catch(e){}
+}
 
 // ════════════════════════════════════════
 //  SUPABASE HELPERS — reemplazan db.ref(...)
@@ -2054,7 +2099,7 @@ function compLoadRematesList() {
       var opt = document.createElement('option');
       opt.value = r.id;
       var hora = r.creado_en ? new Date(r.creado_en).toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit'}) : '';
-      opt.textContent = (r.nombre || ('Remate '+(r.fecha||'')+' '+hora)) + ' (' + String(r.id).slice(-6) + ')';
+      opt.textContent = (r.nombre || ('Remate '+(r.fecha||'')+' '+hora));
       sel.appendChild(opt);
     });
     var saved = localStorage.getItem('agacon_remateId');
@@ -2294,7 +2339,7 @@ function admLoadRematesList() {
     data.forEach(function(r) {
       var opt = document.createElement('option');
       opt.value = r.id;
-      opt.textContent = (r.nombre || ('Remate '+(r.fecha||''))) + ' (' + String(r.id).slice(-6) + ')';
+      opt.textContent = (r.nombre || ('Remate '+(r.fecha||'')));
       sel.appendChild(opt);
     });
     var saved = localStorage.getItem('agacon_remateId');
@@ -3990,6 +4035,21 @@ function admExportCSV(tipo) {
 // ════════════════════════════════════════
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+// ── Modal de Configuración ──
+// Las secciones (#config-sections) se mueven al modal una sola vez y quedan ahí.
+function ensureConfigInModal(){
+  var sections = document.getElementById('config-sections');
+  var body = document.getElementById('config-modal-body');
+  if (sections && body && sections.parentNode !== body) body.appendChild(sections);
+}
+function openConfigModal(){
+  ensureConfigInModal();
+  document.getElementById('m-config').classList.add('open');
+}
+function closeConfigModal(){
+  document.getElementById('m-config').classList.remove('open');
+}
 function setText(id,val){var el=document.getElementById(id);if(el)el.textContent=val;}
 function setFlip(id,val){var el=document.getElementById(id);if(!el||el.textContent===val)return;el.textContent=val;el.classList.remove('num-flip');void el.offsetWidth;el.classList.add('num-flip');}
 
@@ -4013,7 +4073,7 @@ function openDeleteRemateModal() {
     data.forEach(function(r) {
       var opt = document.createElement('option');
       opt.value = r.id;
-      opt.textContent = (r.nombre || ('Remate '+(r.fecha||''))) + ' (' + String(r.id).slice(-6) + ')';
+      opt.textContent = (r.nombre || ('Remate '+(r.fecha||'')));
       sel.appendChild(opt);
     });
   });
