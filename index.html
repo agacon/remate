@@ -479,6 +479,17 @@ tr.pend{border-left:3px solid var(--gold)}
 #m-config div[style*="letter-spacing"][style*="uppercase"]{font-size:.95rem !important}
 #m-config .tbtn{background:#2E75B6;color:#fff;border:none}
 #m-config .tbtn.green{background:#1B8A4A}
+
+/* ════ MODAL NUEVO LOTE — tema claro ════ */
+#m-addlot .modal{background:#FFFFFF;border:1px solid #E3E8F0;box-shadow:0 20px 60px rgba(20,30,60,.3)}
+#m-addlot .modal h3{color:#1F2937}
+#m-addlot .fgroup label{color:#5B667A !important}
+#m-addlot input{background:#FFFFFF !important;color:#1a2333 !important;border:1px solid #D7DEE8 !important}
+#m-addlot input::placeholder{color:#9AA6B8 !important}
+#m-addlot input:focus{outline:none;border-color:#2E75B6 !important;box-shadow:0 0 0 3px rgba(46,117,182,.15)}
+#m-addlot div[style*="color:var(--muted)"]{color:#5B667A !important}
+#m-addlot .lot-tag{background:#FDF4E3;color:#B0750A !important;border:1px solid #EBD9AE}
+#m-addlot .btn-ghost{background:#F1F4F9;color:#5B667A;border:1px solid #D7DEE8}
 </style>
 
 </head>
@@ -1085,7 +1096,7 @@ tr.pend{border-left:3px solid var(--gold)}
     <h3>➕ Nuevo Lote</h3>
     <div style="font-size:.75rem;color:var(--muted)">Se inserta entre lotes sin alterar el orden existente.</div>
     <div class="fgroup"><label>Insertar después del lote</label>
-      <select id="al-after" onchange="updateAddLotPreview()" style="background:#111;border:1px solid var(--border);color:#fff;border-radius:6px;padding:.5rem .75rem;font-size:.88rem;width:100%">
+      <select id="al-after" onchange="updateAddLotPreview()" style="background:#fff;border:1px solid #D7DEE8;color:#1a2333;border-radius:6px;padding:.5rem .75rem;font-size:.88rem;width:100%">
         <option value="-1">— Al inicio —</option>
       </select>
     </div>
@@ -1096,7 +1107,7 @@ tr.pend{border-left:3px solid var(--gold)}
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem">
       <div class="fgroup"><label>Categoría</label>
-        <select id="al-cat" style="background:#111;border:1px solid var(--border);color:#fff;border-radius:6px;padding:.5rem .75rem;font-size:.88rem;width:100%">
+        <select id="al-cat" style="background:#fff;border:1px solid #D7DEE8;color:#1a2333;border-radius:6px;padding:.5rem .75rem;font-size:.88rem;width:100%">
           <option>VAQUILLAS</option><option>VACA</option><option>VACAS</option>
           <option>TORILLO</option><option>TORILLOS</option><option>TORO</option>
           <option>TOROS</option><option>NOVILLO</option><option>TERNERO</option><option>EQUINO</option>
@@ -1106,12 +1117,13 @@ tr.pend{border-left:3px solid var(--gold)}
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem">
       <div class="fgroup"><label>Propietario</label><input type="text" id="al-prop" placeholder="Nombre"></div>
-      <div class="fgroup"><label>Estancia</label><input type="text" id="al-estancia" placeholder="Nombre"></div>
+      <div class="fgroup"><label>CI Propietario</label><input type="text" id="al-prop-ci" placeholder="Ej: 9821301 SC"></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem">
+      <div class="fgroup"><label>Estancia</label><input type="text" id="al-estancia" placeholder="Nombre"></div>
       <div class="fgroup"><label>Edad</label><input type="text" id="al-edad" placeholder="12 MESES"></div>
-      <div class="fgroup"><label>Obs.</label><input type="text" id="al-obs" placeholder="Opcional"></div>
     </div>
+    <div class="fgroup"><label>Obs.</label><input type="text" id="al-obs" placeholder="Opcional"></div>
     <div style="display:flex;gap:.6rem">
       <button class="btn btn-gold" style="flex:1" onclick="saveNewLot()">✓ AGREGAR AL REMATE</button>
       <button class="btn btn-ghost" onclick="closeModal('m-addlot')">CANCELAR</button>
@@ -2040,7 +2052,7 @@ function openAddLotModal() {
     opt.textContent='Orden '+l.orden+' — Lote '+l.lote+' — '+l.categoria;
     sel.appendChild(opt);
   });
-  ['al-lote','al-raza','al-prop','al-estancia','al-edad','al-obs'].forEach(function(id){document.getElementById(id).value='';});
+  ['al-lote','al-raza','al-prop','al-prop-ci','al-estancia','al-edad','al-obs'].forEach(function(id){document.getElementById(id).value='';});
   document.getElementById('al-preview').style.display='none';
   openModal('m-addlot');
 }
@@ -2064,7 +2076,7 @@ function saveNewLot() {
   if(isNaN(idx)||idx===-1){ newOrden=lots.length?lots[0].orden/2:1; }
   else { var after=lots[idx],next=lots[idx+1]; newOrden=next?(after.orden+next.orden)/2:after.orden+1; }
   var currentLot=lots[cur];
-  lots.push(mkLot({LOTE:lote,ORDEN:newOrden,CANTIDAD:cant,CATEGORIA:document.getElementById('al-cat').value,RAZA:document.getElementById('al-raza').value.toUpperCase(),PROPIETARIO:document.getElementById('al-prop').value.toUpperCase(),ESTANCIA:document.getElementById('al-estancia').value.toUpperCase(),EDAD:document.getElementById('al-edad').value.toUpperCase(),OBS:document.getElementById('al-obs').value.toUpperCase()}));
+  lots.push(mkLot({LOTE:lote,ORDEN:newOrden,CANTIDAD:cant,CATEGORIA:document.getElementById('al-cat').value,RAZA:document.getElementById('al-raza').value.toUpperCase(),PROPIETARIO:document.getElementById('al-prop').value.toUpperCase(),CI_PROPIETARIO:document.getElementById('al-prop-ci').value.toUpperCase(),ESTANCIA:document.getElementById('al-estancia').value.toUpperCase(),EDAD:document.getElementById('al-edad').value.toUpperCase(),OBS:document.getElementById('al-obs').value.toUpperCase()}));
   lots.sort(function(a,b){return a.orden-b.orden;});
   cur=lots.indexOf(currentLot);
   closeModal('m-addlot'); renderOp();
@@ -2162,7 +2174,7 @@ function compRenderTable() {
     // Raza
     tr.appendChild(cell(l.raza||'—', fontSize+';color:#aaa'));
     // Precio unitario
-    tr.appendChild(cell('$us '+(l.precio||0), fontBig+';color:#fff'));
+    tr.appendChild(cell('$us '+(l.precio||0), fontBig+';color:#1a2333'));
     // Total
     tr.appendChild(cell('$us '+dispMonto.toLocaleString(), fontBig+';color:#f39c12'));
     // Comision 3%
