@@ -1250,6 +1250,19 @@ tr.pend{border-left:3px solid var(--gold)}
       <div class="fgroup"><label>CI / RUC</label><input type="text" id="mc-ci" placeholder="Documento"></div>
       <div class="fgroup"><label>Teléfono</label><input type="text" id="mc-tel" placeholder="Teléfono"></div>
     </div>
+    <div class="fgroup" style="margin:.2rem 0 .6rem;padding:.55rem .6rem;background:#1a2744;border:1px solid var(--border);border-radius:6px">
+      <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;margin:0;font-size:.85rem">
+        <input type="checkbox" id="mc-defensa" onchange="compToggleDefensa()" style="width:auto;margin:0;cursor:pointer">
+        <span>🛡 Marcar como DEFENSA (manual)</span>
+      </label>
+      <div id="mc-defensa-pct" style="display:none;margin-top:.5rem">
+        <label style="font-size:.6rem;letter-spacing:1px;color:var(--muted)">COMISIÓN DE DEFENSA</label>
+        <select id="mc-defensa-com" style="width:100%">
+          <option value="0.5">Socio — 0.5%</option>
+          <option value="1">No socio — 1%</option>
+        </select>
+      </div>
+    </div>
     <div style="display:flex;gap:.6rem">
       <button class="btn btn-green" style="flex:1" onclick="compSaveComprador()">✓ GUARDAR</button>
       <button class="btn btn-ghost" onclick="closeModal('m-comp-buyer')">CANCELAR</button>
@@ -2345,11 +2358,34 @@ function compOpenModal(lotKey) {
   document.getElementById('mc-nombre').value=lot.comprador||'';
   document.getElementById('mc-ci').value=lot.compradorCI||'';
   document.getElementById('mc-tel').value=lot.compradorTel||'';
+  // Estado de defensa manual: reflejar lo ya guardado en el lote
+  var cbDef=document.getElementById('mc-defensa');
+  cbDef.checked = !!lot.esDefensa;
+  document.getElementById('mc-defensa-com').value = (lot.defensaCom!=null ? String(lot.defensaCom) : '0.5');
+  compToggleDefensa();
   document.getElementById('mc-search-nombre').value='';
   document.getElementById('mc-search-ci').value='';
   document.getElementById('mc-suggestions').style.display='none';
   openModal('m-comp-buyer');
   setTimeout(function(){document.getElementById('mc-search-nombre').focus();},100);
+}
+
+// Muestra/oculta el selector de comisión al marcar "defensa manual".
+// Si el lote aún no tiene comisión guardada, sugiere el % según si el propietario es socio.
+function compToggleDefensa() {
+  var cb=document.getElementById('mc-defensa');
+  var box=document.getElementById('mc-defensa-pct');
+  if(!cb||!box) return;
+  box.style.display = cb.checked ? 'block' : 'none';
+  if (cb.checked) {
+    var lot = compLotes.find(function(l){ return l._key===compCurrentLotKey; });
+    if (lot && lot.defensaCom==null && typeof isSocio==='function') {
+      var socio = isSocio(lot.propietario, lot.ciPropietario);
+      var sel = document.getElementById('mc-defensa-com');
+      if (socio===true) sel.value='0.5';
+      else if (socio===false) sel.value='1';
+    }
+  }
 }
 
 function compSaveComprador() {
@@ -2361,13 +2397,23 @@ function compSaveComprador() {
   // Check defensa: buyer matches seller
   var lot = compLotes.find(function(l){ return l._key===compCurrentLotKey; });
   var testLot = lot ? Object.assign({},lot,{comprador:nombre,compradorCI:ci}) : null;
-  var esDefensa = testLot ? isDefensa(testLot) : false;
-  var comPct = esDefensa ? getDefensaComPct(lot) : null;
 
-  // Si es defensa pero no se pudo determinar socio/no socio, preguntar al usuario
-  if (esDefensa && comPct === null) {
-    var esSocioResp = confirm('🛡 DEFENSA de "'+(lot.propietario||'')+'"\n\n¿El propietario es SOCIO?\n\n• Aceptar = SÍ es socio (comisión 0.5%)\n• Cancelar = NO es socio (comisión 1%)');
-    comPct = esSocioResp ? 0.5 : 1;
+  var defensaManual = document.getElementById('mc-defensa').checked;
+  var esDefensa, comPct;
+
+  if (defensaManual) {
+    // Defensa forzada por el usuario: se toma el % elegido, sin preguntar y sin importar el CI
+    esDefensa = true;
+    comPct = parseFloat(document.getElementById('mc-defensa-com').value) || 0.5;
+  } else {
+    // Detección automática por CI / nombre
+    esDefensa = testLot ? isDefensa(testLot) : false;
+    comPct = esDefensa ? getDefensaComPct(lot) : null;
+    // Si es defensa pero no se pudo determinar socio/no socio, preguntar al usuario
+    if (esDefensa && comPct === null) {
+      var esSocioResp = confirm('🛡 DEFENSA de "'+(lot.propietario||'')+'"\n\n¿El propietario es SOCIO?\n\n• Aceptar = SÍ es socio (comisión 0.5%)\n• Cancelar = NO es socio (comisión 1%)');
+      comPct = esSocioResp ? 0.5 : 1;
+    }
   }
 
   var update = {comprador:nombre, compradorCI:ci, compradorTel:tel,
