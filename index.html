@@ -2186,6 +2186,8 @@ function compRenderTable() {
   var rows=compLotes.filter(function(l){return l.saved;});
   if(compFilterMode==='pendientes') rows=rows.filter(function(l){return !l.comprador;});
   if(compFilterMode==='asignados')  rows=rows.filter(function(l){return !!l.comprador;});
+  // Mostrar el más nuevo primero: orden decreciente (los lotes nuevos aparecen arriba)
+  rows.sort(function(a,b){ return (Number(b.orden)||0) - (Number(a.orden)||0); });
   tbody.innerHTML='';
   if(!rows.length){
     var tr=document.createElement('tr');
@@ -3828,13 +3830,29 @@ async function admExportSingle() {
 
   // Ventas y Defensas: buscar por nombre como propietario
   // Si hay CI de comprador, usarlo para ser más preciso en ventas también
+  // Ventas y Defensas: la persona es el PROPIETARIO del lote.
+  // Se empareja por CI del propietario (si está) y, si no, por coincidencia de palabras del
+  // nombre — NUNCA por "includes", para que un nombre más largo o más corto con el MISMO CI
+  // no deje afuera sus lotes (ej: "JEAN PAUL TORO" vs "JEAN PAUL TORO LEDEZMA").
+  var personaCINum = (personaCI || admFilterCI || '').replace(/[^0-9]/g,'');
+  var palabrasPersona = normForFilter(personaNombre||'').split(' ').filter(function(w){ return w.length>2; });
+  function esPropietarioPersona(l){
+    if (personaCINum && personaCINum.length>=6 && l.ciPropietario){
+      var pc = String(l.ciPropietario).replace(/[^0-9]/g,'');
+      if (pc && pc===personaCINum) return true;
+    }
+    var palabrasProp = normForFilter(l.propietario||'').split(' ').filter(function(w){ return w.length>2; });
+    if(!palabrasProp.length || !palabrasPersona.length) return false;
+    var comunes = palabrasProp.filter(function(w){ return palabrasPersona.indexOf(w)>=0; });
+    return comunes.length>=2;
+  }
   var lotesVentas = admLotes.filter(function(l){
     if (lotEsDefensa(l)) return false;
-    return (l.propietario||'').toUpperCase().includes(nombreUpper);
+    return esPropietarioPersona(l);
   });
   var lotesDefensas = admLotes.filter(function(l){
     if (!lotEsDefensa(l)) return false;
-    return (l.propietario||'').toUpperCase().includes(nombreUpper);
+    return esPropietarioPersona(l);
   });
   // Resolver comisión de cada defensa: socio → 0.5%; si no está en la lista → preguntar (una vez por persona).
   // Si se resuelve por primera vez, se guarda en la base para no volver a preguntar.
