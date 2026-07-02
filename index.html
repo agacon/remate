@@ -2212,20 +2212,24 @@ function compRenderTable() {
     tr.appendChild(cell(l.orden, fontSize+';color:#aaa'));
     // Lote
     tr.appendChild(cell(l.lote, fontBig+';font-size:1.1rem'));
-    // Propietario
-    tr.appendChild(cell(l.propietario||'—', fontSize));
+    // Propietario (con CI abajo, igual que el comprador)
+    var tdProp=document.createElement('td');
+    tdProp.style.cssText=fontSize;
+    tdProp.textContent=l.propietario||'—';
+    if(l.ciPropietario){var brP=document.createElement('br');var smP=document.createElement('small');smP.style.cssText='color:#888;font-size:.8rem';smP.textContent='CI: '+l.ciPropietario;tdProp.appendChild(brP);tdProp.appendChild(smP);}
+    tr.appendChild(tdProp);
     // Cantidad
     tr.appendChild(cell(l.cantidad, fontBig+';text-align:center'));
     // Categoria
     tr.appendChild(cell(l.categoria, fontSize+';font-weight:600'));
     // Raza
-    tr.appendChild(cell(l.raza||'—', fontSize+';color:#aaa'));
+    tr.appendChild(cell(l.raza||'—', fontSize+';color:#555'));
     // Precio unitario
     tr.appendChild(cell('$us '+(l.precio||0), fontBig+';color:#1a2333'));
     // Total
     tr.appendChild(cell('$us '+dispMonto.toLocaleString(), fontBig+';color:#f39c12'));
     // Comision 3%
-    tr.appendChild(cell('$us '+dispCom.toFixed(2), fontSize+';color:#aaa'));
+    tr.appendChild(cell('$us '+dispCom.toFixed(2), fontSize+';color:#555'));
     // Liq. Pagable
     tr.appendChild(cell('$us '+dispTotalCom.toFixed(2), fontBig+';color:#2ecc71'));
     // Comprador
@@ -4003,6 +4007,19 @@ async function admExportSingle() {
         });
         row++; n++;
       });
+      // Fila de TOTALES de la hoja DEFENSAS (suma de comisiones $us y Bs.)
+      var endDef = row - 1;
+      var rtD = wsD.getRow(row); rtD.height=20;
+      for (var cD=1; cD<=9; cD++){
+        var ccD=rtD.getCell(cD); ccD.border=border();
+        ccD.font={name:'Calibri',bold:true,size:11}; ccD.fill=hdrFill(GRANDBG);
+        ccD.alignment={horizontal:'right',vertical:'middle'};
+      }
+      wsD.mergeCells(row,1,row,7);
+      rtD.getCell(1).value='TOTALES'; rtD.getCell(1).alignment={horizontal:'left',vertical:'middle'};
+      rtD.getCell(8).value={formula:'SUM(H6:H'+endDef+')'}; rtD.getCell(8).numFmt='#,##0.00';
+      rtD.getCell(9).value={formula:'SUM(I6:I'+endDef+')'}; rtD.getCell(9).numFmt='#,##0.00'; rtD.getCell(9).fill=hdrFill(YELLOW);
+      row++;
       writeBankToSheet(wsD, row);
     }
 
