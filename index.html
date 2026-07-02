@@ -24,7 +24,7 @@ html,body{height:100%;background:#0d0d0d;color:#f0f0f0;font-family:"Segoe UI",Ar
 .menu-logo .logo-sep{width:60px;height:3px;background:var(--green);border-radius:3px;margin:.2rem 0}
 .menu-conn-pill{display:inline-flex;align-items:center;gap:.4rem;background:#FDECEC;color:#C0392B;border:1px solid #F7C9C5;border-radius:20px;padding:.3rem .9rem;font-size:.78rem;font-weight:600;margin-top:.4rem}
 .menu-conn-pill.ok{background:#E7F7EE;color:#1B8A4A;border-color:#BEEBD2}
-.menu-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;width:100%;max-width:920px}
+.menu-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:1.4rem;width:100%;max-width:640px}
 .menu-card{background:#FFFFFF;border:1px solid #E3E8F0;border-radius:16px;padding:2rem 1.6rem 1.6rem;cursor:pointer;transition:.2s;display:flex;flex-direction:column;align-items:center;gap:.9rem;text-align:center;box-shadow:0 1px 3px rgba(20,30,60,.05)}
 .menu-card:hover{transform:translateY(-5px);box-shadow:0 14px 36px rgba(20,30,60,.12)}
 .menu-icon{width:76px;height:76px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2.1rem}
@@ -466,19 +466,19 @@ tr.pend{border-left:3px solid var(--gold)}
 #m-config .modal{background:#FFFFFF;border:1px solid #E3E8F0;box-shadow:0 20px 60px rgba(20,30,60,.3)}
 #m-config .modal h3{color:#1F2937;font-size:1.35rem;letter-spacing:2px}
 #m-config .btn-ghost{background:#F1F4F9;color:#5B667A;border:1px solid #D7DEE8}
-#m-config #config-sections > div{background:#FFFFFF !important;border-color:#E3E8F0 !important;margin-bottom:.9rem}
-#m-config div[style*="color:#fff"]{color:#1a2333 !important}
-#m-config span[style*="color:#fff"]{color:#1a2333 !important}
-#m-config div[style*="color:var(--muted)"]{color:#5B667A !important}
-#m-config span[style*="color:var(--muted)"]{color:#5B667A !important}
-#m-config div[style*="color:var(--gold)"]{color:#B0750A !important}
-#m-config span[style*="color:var(--gold)"]{color:#B0750A !important}
-#m-config input[style*="background:#111"]{background:#FFFFFF !important;color:#1a2333 !important;border-color:#D7DEE8 !important;font-size:1.02rem !important;padding:.55rem .8rem !important}
-#m-config input[style*="background:#111"]:focus{outline:none;border-color:#2E75B6 !important;box-shadow:0 0 0 3px rgba(46,117,182,.15)}
-#m-config .fgroup label{color:#5B667A !important;font-size:.8rem !important}
-#m-config div[style*="letter-spacing"][style*="uppercase"]{font-size:.95rem !important}
-#m-config .tbtn{background:#2E75B6;color:#fff;border:none}
-#m-config .tbtn.green{background:#1B8A4A}
+#m-config #config-sections > div, #adm-panel-config #config-sections > div{background:#FFFFFF !important;border-color:#E3E8F0 !important;margin-bottom:.9rem}
+#m-config div[style*="color:#fff"], #adm-panel-config div[style*="color:#fff"]{color:#1a2333 !important}
+#m-config span[style*="color:#fff"], #adm-panel-config span[style*="color:#fff"]{color:#1a2333 !important}
+#m-config div[style*="color:var(--muted)"], #adm-panel-config div[style*="color:var(--muted)"]{color:#5B667A !important}
+#m-config span[style*="color:var(--muted)"], #adm-panel-config span[style*="color:var(--muted)"]{color:#5B667A !important}
+#m-config div[style*="color:var(--gold)"], #adm-panel-config div[style*="color:var(--gold)"]{color:#B0750A !important}
+#m-config span[style*="color:var(--gold)"], #adm-panel-config span[style*="color:var(--gold)"]{color:#B0750A !important}
+#m-config input[style*="background:#111"], #adm-panel-config input[style*="background:#111"]{background:#FFFFFF !important;color:#1a2333 !important;border-color:#D7DEE8 !important;font-size:1.02rem !important;padding:.55rem .8rem !important}
+#m-config input[style*="background:#111"]:focus, #adm-panel-config input[style*="background:#111"]:focus{outline:none;border-color:#2E75B6 !important;box-shadow:0 0 0 3px rgba(46,117,182,.15)}
+#m-config .fgroup label, #adm-panel-config .fgroup label{color:#5B667A !important;font-size:.8rem !important}
+#m-config div[style*="letter-spacing"][style*="uppercase"], #adm-panel-config div[style*="letter-spacing"][style*="uppercase"]{font-size:.95rem !important}
+#m-config .tbtn, #adm-panel-config .tbtn{background:#2E75B6;color:#fff;border:none}
+#m-config .tbtn.green, #adm-panel-config .tbtn.green{background:#1B8A4A}
 
 /* ════ MODAL NUEVO LOTE — tema claro ════ */
 #m-addlot .modal{background:#FFFFFF;border:1px solid #E3E8F0;box-shadow:0 20px 60px rgba(20,30,60,.3)}
@@ -490,6 +490,22 @@ tr.pend{border-left:3px solid var(--gold)}
 #m-addlot div[style*="color:var(--muted)"]{color:#5B667A !important}
 #m-addlot .lot-tag{background:#FDF4E3;color:#B0750A !important;border:1px solid #EBD9AE}
 #m-addlot .btn-ghost{background:#F1F4F9;color:#5B667A;border:1px solid #D7DEE8}
+
+/* ════ ADMIN — MENÚ LATERAL ════ */
+#screen-admin .adm-layout{flex:1;display:flex;min-height:0}
+.adm-sidebar{width:225px;flex-shrink:0;background:#FFFFFF;border-right:1px solid #E3E8F0;display:flex;flex-direction:column;gap:.35rem;padding:1.1rem .7rem;overflow-y:auto}
+.adm-side-title{font-size:.72rem;letter-spacing:3px;text-transform:uppercase;color:#7A879B;font-weight:700;padding:.2rem .6rem .6rem}
+.adm-nav{display:flex;align-items:center;gap:.6rem;background:transparent;border:none;text-align:left;color:#40506a;font-family:inherit;font-size:.98rem;font-weight:600;padding:.7rem .8rem;border-radius:10px;cursor:pointer;transition:.15s}
+.adm-nav:hover{background:#F1F4F9}
+.adm-nav.on{background:#EBF3FB;color:#2E75B6}
+.adm-nav .an-ic{font-size:1.1rem;width:1.5rem;text-align:center}
+.adm-panel{display:none;flex-direction:column;gap:1rem;flex:1;min-height:0}
+.adm-panel.on{display:flex}
+/* Compradores embebido dentro del panel admin */
+#adm-panel-comp #screen-compradores{display:flex !important;position:static;height:auto;flex:1;min-height:0;flex-direction:column;overflow:visible}
+#adm-panel-comp #screen-compradores .topbar{display:none}
+#adm-panel-comp #screen-compradores .comp-body{overflow-y:visible;flex:none;padding:0;background:transparent}
+@media (max-width:800px){.adm-sidebar{width:64px}.adm-nav{justify-content:center;padding:.7rem .3rem}.adm-nav .an-ic{width:auto}.adm-nav{font-size:0}.adm-nav .an-ic{font-size:1.25rem}.adm-side-title{display:none}}
 </style>
 
 </head>
@@ -515,14 +531,7 @@ tr.pend{border-left:3px solid var(--gold)}
       <div class="menu-desc">Panel del martillero. Gestiona lotes, precios y peso en tiempo real durante el remate.</div>
       <div class="menu-btn">Acceder al panel <span>→</span></div>
     </div>
-    <div class="menu-card comp" onclick="goToWithPin('compradores')">
-      <div class="menu-icon">👤</div>
-      <div class="menu-title">Compradores</div>
-      <div class="menu-title-sep"></div>
-      <div class="menu-desc">Asigna compradores a los lotes vendidos. Se actualiza en tiempo real desde Supabase.</div>
-      <div class="menu-btn">Acceder al módulo <span>→</span></div>
-    </div>
-    <div class="menu-card adm" onclick="goToWithPin('admin')">
+        <div class="menu-card adm" onclick="goToWithPin('admin')">
       <div class="menu-icon">📊</div>
       <div class="menu-title">Administración</div>
       <div class="menu-title-sep"></div>
@@ -899,7 +908,16 @@ tr.pend{border-left:3px solid var(--gold)}
     <button class="tbtn" onclick="openDeleteRemateModal()" style="font-size:.62rem;padding:.25rem .65rem;border-color:var(--red);color:var(--red);">🗑 Eliminar remate</button>
     <button class="back-btn" onclick="goTo('menu')">← Menú</button>
   </div>
+  <div class="adm-layout">
+  <nav class="adm-sidebar">
+    <div class="adm-side-title">Menú</div>
+    <button class="adm-nav on" onclick="admShowPanel('resumen',this)"><span class="an-ic">📊</span> Resumen</button>
+    <button class="adm-nav" onclick="admShowPanel('comp',this)"><span class="an-ic">👤</span> Asignar Comprador</button>
+    <button class="adm-nav" onclick="admShowPanel('reportes',this)"><span class="an-ic">📄</span> Reportes</button>
+    <button class="adm-nav" onclick="admShowPanel('config',this)"><span class="an-ic">⚙</span> Configuración</button>
+  </nav>
   <div class="admin-body">
+    <div id="adm-panel-resumen" class="adm-panel on">
     <div class="top-bar">
       <label>Remate</label>
       <select id="adm-remate-sel" onchange="admLoadRemate(this.value)" style="flex:1;min-width:200px">
@@ -918,12 +936,19 @@ tr.pend{border-left:3px solid var(--gold)}
       <div class="stat-card"><div class="icon-badge ic-gold">%</div><div class="sv" id="as-comision" style="color:#B0750A;font-size:1.1rem">$0</div><div class="sl">Comisión total</div></div>
       <div class="stat-card"><div class="icon-badge ic-red">👤</div><div class="sv" id="as-sincomp" style="color:#C0392B">0</div><div class="sl">Sin comprador</div></div>
     </div>
-    <!-- Botón que abre el modal de Configuración -->
-    <div style="display:flex;justify-content:flex-end;flex-shrink:0;">
-      <button class="tbtn" onclick="openConfigModal()" style="font-size:1rem;padding:.5rem 1.1rem;">⚙ Configuración (datos bancarios y contraseñas)</button>
+    <div class="tabs">
+      <button class="tab on" onclick="admShowTab('comp',this)">Compradores</button>
+      <button class="tab" onclick="admShowTab('vend',this)">Vendedores</button>
+      <button class="tab" onclick="admShowTab('def',this)">Defensas</button>
+      <button class="tab" onclick="admShowTab('res',this)">Resumen</button>
     </div>
+    <div id="adm-tab-comp" class="tab-content on"><div class="tbl-wrap"><div class="tbl-scroll"><table><thead><tr><th>N°</th><th>Comprador</th><th>CI</th><th>Categoría</th><th>Lote</th><th>Cant.</th><th>P/U</th><th>Monto</th><th>Comisión</th><th>Total $us</th><th>Total Bs.</th></tr></thead><tbody id="adm-tbody-comp"></tbody></table></div></div></div>
+    <div id="adm-tab-vend" class="tab-content"><div class="tbl-wrap"><div class="tbl-scroll"><table><thead><tr><th>N°</th><th>Vendedor</th><th>CI Comprador</th><th>Categoría</th><th>Lote</th><th>Cant.</th><th>P/U</th><th>Monto</th><th>Comisión</th><th>Liq. Pagable</th><th>Total Bs.</th></tr></thead><tbody id="adm-tbody-vend"></tbody></table></div></div></div>
+    <div id="adm-tab-def" class="tab-content"><div class="tbl-wrap"><div class="tbl-scroll"><table><thead><tr><th>N°</th><th>Propietario</th><th>Categoría</th><th>Lote</th><th>Cant.</th><th>P/U</th><th>Monto</th><th>Com. 0.5%</th></tr></thead><tbody id="adm-tbody-def"></tbody></table></div></div></div>
+    <div id="adm-tab-res" class="tab-content"><div class="tbl-wrap" style="padding:1.5rem"><div id="adm-resumen" style="font-size:.88rem;color:var(--muted);line-height:2">Seleccioná un remate.</div></div></div>
+    </div><!-- fin adm-panel-resumen -->
 
-    <!-- ══ PANEL DE CONFIGURACIÓN (se muestra dentro del modal) ══ -->
+    <div id="adm-panel-config" class="adm-panel">
     <div id="config-sections">
     <!-- Bank account fields - saved in Firebase -->
     <div style="background:var(--panel);border:1px solid var(--gold);border-radius:8px;padding:.8rem 1rem;display:flex;flex-direction:column;gap:.6rem;flex-shrink:0;">
@@ -1027,8 +1052,9 @@ tr.pend{border-left:3px solid var(--gold)}
       <div style="font-size:.65rem;color:var(--muted);">Dejar vacío = acceso libre. Los cambios aplican inmediatamente.</div>
     </div>
     </div>
-    <!-- ══ FIN PANEL DE CONFIGURACIÓN ══ -->
+    </div><!-- fin adm-panel-config -->
 
+    <div id="adm-panel-reportes" class="adm-panel">
     <div class="export-bar">
       <h3>Exportar</h3>
       <button class="btn btn-gold" onclick="admExportExcel()">⬇ Excel completo (4 hojas)</button>
@@ -1052,17 +1078,11 @@ tr.pend{border-left:3px solid var(--gold)}
     <!-- Dropdown suggestions - fixed position to avoid overflow clipping -->
     <div id="adm-suggestions" style="display:none;position:fixed;z-index:9999;background:#1a2744;border:1px solid var(--gold);border-radius:8px;max-height:260px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.7);min-width:320px;"></div>
 
-    <div class="tabs">
-      <button class="tab on" onclick="admShowTab('comp',this)">Compradores</button>
-      <button class="tab" onclick="admShowTab('vend',this)">Vendedores</button>
-      <button class="tab" onclick="admShowTab('def',this)">Defensas</button>
-      <button class="tab" onclick="admShowTab('res',this)">Resumen</button>
-    </div>
-    <div id="adm-tab-comp" class="tab-content on"><div class="tbl-wrap"><div class="tbl-scroll"><table><thead><tr><th>N°</th><th>Comprador</th><th>CI</th><th>Categoría</th><th>Lote</th><th>Cant.</th><th>P/U</th><th>Monto</th><th>Comisión</th><th>Total $us</th><th>Total Bs.</th></tr></thead><tbody id="adm-tbody-comp"></tbody></table></div></div></div>
-    <div id="adm-tab-vend" class="tab-content"><div class="tbl-wrap"><div class="tbl-scroll"><table><thead><tr><th>N°</th><th>Vendedor</th><th>CI Comprador</th><th>Categoría</th><th>Lote</th><th>Cant.</th><th>P/U</th><th>Monto</th><th>Comisión</th><th>Liq. Pagable</th><th>Total Bs.</th></tr></thead><tbody id="adm-tbody-vend"></tbody></table></div></div></div>
-    <div id="adm-tab-def" class="tab-content"><div class="tbl-wrap"><div class="tbl-scroll"><table><thead><tr><th>N°</th><th>Propietario</th><th>Categoría</th><th>Lote</th><th>Cant.</th><th>P/U</th><th>Monto</th><th>Com. 0.5%</th></tr></thead><tbody id="adm-tbody-def"></tbody></table></div></div></div>
-    <div id="adm-tab-res" class="tab-content"><div class="tbl-wrap" style="padding:1.5rem"><div id="adm-resumen" style="font-size:.88rem;color:var(--muted);line-height:2">Seleccioná un remate.</div></div></div>
-  </div>
+    </div><!-- fin adm-panel-reportes -->
+
+    <div id="adm-panel-comp" class="adm-panel"></div>
+  </div><!-- fin admin-body -->
+  </div><!-- fin adm-layout -->
 </div>
 
 <!-- ════ MODALS ════ -->
@@ -4057,20 +4077,25 @@ function admExportCSV(tipo) {
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 
-// ── Modal de Configuración ──
-// Las secciones (#config-sections) se mueven al modal una sola vez y quedan ahí.
-function ensureConfigInModal(){
-  var sections = document.getElementById('config-sections');
-  var body = document.getElementById('config-modal-body');
-  if (sections && body && sections.parentNode !== body) body.appendChild(sections);
+// ── Menú lateral del módulo Administración ──
+function admShowPanel(name, btn){
+  document.querySelectorAll('#screen-admin .adm-panel').forEach(function(p){p.classList.remove('on');});
+  var p=document.getElementById('adm-panel-'+name); if(p)p.classList.add('on');
+  document.querySelectorAll('#screen-admin .adm-nav').forEach(function(b){b.classList.remove('on');});
+  if(btn)btn.classList.add('on');
+  if(name==='comp') admEmbedCompradores();
 }
-function openConfigModal(){
-  ensureConfigInModal();
-  document.getElementById('m-config').classList.add('open');
+// Mueve la pantalla de Compradores dentro del panel del admin (una sola vez)
+function admEmbedCompradores(){
+  var scr=document.getElementById('screen-compradores');
+  var host=document.getElementById('adm-panel-comp');
+  if(scr && host && scr.parentNode!==host){ host.appendChild(scr); }
+  try{ compLoadRematesList(); }catch(e){}
 }
-function closeConfigModal(){
-  document.getElementById('m-config').classList.remove('open');
-}
+// (legado) config ahora vive en su propio panel del sidebar
+function ensureConfigInModal(){}
+function openConfigModal(){ admShowPanel('config'); }
+function closeConfigModal(){}
 function setText(id,val){var el=document.getElementById(id);if(el)el.textContent=val;}
 function setFlip(id,val){var el=document.getElementById(id);if(!el||el.textContent===val)return;el.textContent=val;el.classList.remove('num-flip');void el.offsetWidth;el.classList.add('num-flip');}
 
