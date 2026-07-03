@@ -17,6 +17,12 @@
   .sv{font-size:1.8rem;font-weight:900;font-family:"Courier New",monospace;line-height:1}
   .sl{font-size:.66rem;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-top:.25rem}
   .chart-box{margin-top:1rem;background:#fff;border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem}
+  .bar-row{display:grid;grid-template-columns:190px 1fr 110px;align-items:center;gap:.7rem;margin:.45rem 0}
+  .bar-name{font-size:.82rem;font-weight:600;color:#1a2333;text-align:right}
+  .bar-track{background:#EEF1F6;border-radius:6px;height:22px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:6px;min-width:2px;transition:width .4s}
+  .bar-val{font-size:.82rem;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .bar-total{display:flex;justify-content:space-between;border-top:2px solid #1a2333;margin-top:.8rem;padding-top:.55rem;font-weight:900;font-size:.95rem}
   .chart-title{margin:0 0 .9rem;font-size:.95rem;font-weight:800;color:#1a2333}
   .chart-row{display:flex;align-items:center;gap:1.6rem;flex-wrap:wrap}
   .pie{width:180px;height:180px;border-radius:50%;flex-shrink:0;background:#eee;box-shadow:0 1px 4px rgba(0,0,0,.08)}
@@ -46,6 +52,13 @@
       <div id="legend" class="legend"></div>
     </div>
     <div id="chart-empty" class="muted" style="display:none;margin-top:.5rem">Sin datos para mostrar todavía.</div>
+  </div>
+
+  <div class="chart-box">
+    <h3 class="chart-title">Ingresos por comisión del remate ($us)</h3>
+    <div id="bars"></div>
+    <div class="bar-total"><span>TOTAL INGRESOS COMISIONES</span><span id="bars-total">$0</span></div>
+    <div id="bars-empty" class="muted" style="display:none;margin-top:.5rem">Sin datos para mostrar todavía.</div>
   </div>
 
 <script>
@@ -84,6 +97,61 @@
     setT('as-sincomp', sinComp);
 
     renderPie(lotes);
+    renderBars(lotes);
+  }
+
+  // Detección de defensa: bandera o CI comprador = CI propietario (misma regla que el index)
+  function esDefensa(l){
+    if (l.es_defensa) return true;
+    if (!l.comprador) return false;
+    var p=String(l.ci_propietario||'').replace(/[^0-9]/g,'');
+    var c=String(l.comprador_ci||'').replace(/[^0-9]/g,'');
+    return !!(p && c && p.length>=6 && c.length>=6 && p===c);
+  }
+
+  function renderBars(lotes){
+    var barsEl = document.getElementById('bars');
+    var totEl  = document.getElementById('bars-total');
+    var emptyEl= document.getElementById('bars-empty');
+
+    var ing = { compra:0, venta:0, plataforma:0, defSocio:0, defNoSocio:0 };
+    lotes.forEach(function(l){
+      var m=(+l.precio||0)*(+l.cantidad||0);
+      if(!m) return;
+      if (esDefensa(l)) {
+        // Defensa: solo paga la comisión de defensa (0.5% socio / 1% no socio)
+        var pct = (l.defensa_com!=null ? +l.defensa_com : 0.5);
+        if (pct === 0.5) ing.defSocio    += m*0.005;
+        else             ing.defNoSocio  += m*0.01;
+      } else if (l.comprador) {
+        ing.venta += m*com; // lado vendedor siempre com%
+        if (l.otra_plataforma) ing.plataforma += m*0.01; // remate se queda con 1%
+        else                   ing.compra     += m*com;
+      }
+    });
+
+    var items = [
+      { name:'Compras ('+(com*100).toFixed(0)+'%)',      val:ing.compra,     color:'#2E75B6' },
+      { name:'Ventas ('+(com*100).toFixed(0)+'%)',       val:ing.venta,      color:'#1B8A4A' },
+      { name:'Otra plataforma (1%)',                     val:ing.plataforma, color:'#7E57C2' },
+      { name:'Defensa socios (0.5%)',                    val:ing.defSocio,   color:'#B0750A' },
+      { name:'Defensa no socios (1%)',                   val:ing.defNoSocio, color:'#C0392B' }
+    ];
+    var total = items.reduce(function(a,c){ return a+c.val; },0);
+    var max   = Math.max.apply(null, items.map(function(c){ return c.val; }));
+
+    if (!total) { barsEl.innerHTML=''; totEl.textContent='$0'; emptyEl.style.display='block'; return; }
+    emptyEl.style.display='none';
+
+    barsEl.innerHTML = items.map(function(c){
+      var w = max ? (c.val/max*100) : 0;
+      return '<div class="bar-row">' +
+             '<span class="bar-name">'+c.name+'</span>' +
+             '<div class="bar-track"><div class="bar-fill" style="width:'+w.toFixed(1)+'%;background:'+c.color+'"></div></div>' +
+             '<span class="bar-val">$'+c.val.toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span>' +
+             '</div>';
+    }).join('');
+    totEl.textContent = '$'+total.toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2});
   }
 
   var PALETTE = ['#2E75B6','#1B8A4A','#B0750A','#C0392B','#7E57C2','#00897B','#EF6C00','#5C6BC0','#D81B60','#8D6E63','#039BE5','#7CB342'];
