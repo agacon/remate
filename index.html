@@ -1071,6 +1071,7 @@ tr.pend{border-left:3px solid var(--gold)}
     <div class="export-bar">
       <h3>Exportar</h3>
       <button class="btn btn-gold" onclick="admExportExcel()">⬇ Excel completo (4 hojas)</button>
+      <button class="btn btn-gold" onclick="admExportPlataforma()">🌐 Excel otra plataforma</button>
       <button class="btn btn-blue" onclick="admImprimir()">🖨 Imprimir</button>
     </div>
     <!-- Filter by comprador/vendedor with autocomplete -->
@@ -1262,6 +1263,13 @@ tr.pend{border-left:3px solid var(--gold)}
         </select>
       </div>
     </div>
+    <div class="fgroup" style="margin:.2rem 0 .6rem;padding:.55rem .6rem;background:#1a2744;border:1px solid var(--border);border-radius:6px">
+      <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;margin:0;font-size:.85rem">
+        <input type="checkbox" id="mc-plataforma" style="width:auto;margin:0;cursor:pointer">
+        <span>🌐 Compra mediante otra plataforma</span>
+      </label>
+      <div style="font-size:.62rem;color:var(--muted);margin-top:.3rem">Del 3%: 2% para la plataforma, 1% queda para el remate</div>
+    </div>
     <div style="display:flex;gap:.6rem">
       <button class="btn btn-green" style="flex:1" onclick="compSaveComprador()">✓ GUARDAR</button>
       <button class="btn btn-ghost" onclick="closeModal('m-comp-buyer')">CANCELAR</button>
@@ -1385,7 +1393,8 @@ async function supaGetLotes(remateId) {
       saved: r.saved, montoTotal: r.monto_total, comision: r.comision,
       totalConCom: r.total_con_com, comprador: r.comprador,
       compradorCI: r.comprador_ci, compradorTel: r.comprador_tel,
-      esDefensa: r.es_defensa, defensaCom: r.defensa_com
+      esDefensa: r.es_defensa, defensaCom: r.defensa_com,
+      otraPlataforma: !!r.otra_plataforma
     };
   });
 }
@@ -2362,6 +2371,7 @@ function compOpenModal(lotKey) {
   cbDef.checked = !!lot.esDefensa;
   document.getElementById('mc-defensa-com').value = (lot.defensaCom!=null ? String(lot.defensaCom) : '0.5');
   compToggleDefensa();
+  document.getElementById('mc-plataforma').checked = !!lot.otraPlataforma;
   document.getElementById('mc-search-nombre').value='';
   document.getElementById('mc-search-ci').value='';
   document.getElementById('mc-suggestions').style.display='none';
@@ -2415,17 +2425,20 @@ function compSaveComprador() {
     }
   }
 
+  var otraPlat = document.getElementById('mc-plataforma').checked;
+
   var update = {comprador:nombre, compradorCI:ci, compradorTel:tel,
-    esDefensa: esDefensa, defensaCom: esDefensa ? comPct : null};
+    esDefensa: esDefensa, defensaCom: esDefensa ? comPct : null, otraPlataforma: otraPlat};
 
   supa.from('lotes').update({
     comprador:    nombre,
     comprador_ci: ci,
     comprador_tel:tel,
     es_defensa:   esDefensa,
-    defensa_com:  esDefensa ? comPct : null
+    defensa_com:  esDefensa ? comPct : null,
+    otra_plataforma: otraPlat
   }).eq('remate_id', compRemateId).eq('lote_key', compCurrentLotKey).then(function(res) {
-    if (res.error) { toast('Error guardando comprador', true); return; }
+    if (res.error) { toast('Error guardando comprador'+(String(res.error.message||'').indexOf('otra_plataforma')>=0?' — falta la columna otra_plataforma en la base':''), true); return; }
   });
   closeModal('m-comp-buyer');
 
@@ -2975,6 +2988,79 @@ function admImprimir() {
   w.document.close();
   w.focus();
   setTimeout(function(){ try { w.print(); } catch(e){} }, 350);
+}
+
+// Excel de compras "mediante otra plataforma": 3 hojas —
+// COM 3% (total cobrado), COM 2% (para la plataforma), COM 1% (queda para el remate)
+async function admExportPlataforma() {
+  var lots = admLotes.filter(function(l){ return l.otraPlataforma && l.comprador && !lotEsDefensa(l); });
+  if(!lots.length){ toast('No hay compras mediante otra plataforma en este remate', true); return; }
+  var tc    = parseFloat(document.getElementById('adm-tc').value)||6.96;
+  var fecha = new Date().toLocaleDateString('es-BO',{day:'2-digit',month:'2-digit',year:'numeric'});
+  var selEl = document.getElementById('adm-remate-sel');
+  var selTxt= selEl.options[selEl.selectedIndex] ? selEl.options[selEl.selectedIndex].text : 'Remate';
+  toast('Generando Excel otra plataforma...');
+  try {
+    var wb = new ExcelJS.Workbook(); wb.creator='AGACON';
+    function border(){return {top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}};}
+    function hdrFill(c){return {type:'pattern',pattern:'solid',fgColor:{argb:'FF'+c}};}
+    var BLUEBG='1F4E79', YELLOW='FFF2CC';
+
+    function buildSheet(nombre, pct, subtitulo) {
+      var ws = wb.addWorksheet(nombre);
+      [4,26,14,8,8,10,12,12,12,7,12].forEach(function(w,i){ ws.getColumn(i+1).width=w; });
+      ws.mergeCells(1,1,1,11);
+      var t1=ws.getCell(1,1); t1.value='AGACON — '+selTxt+' — FECHA: '+fecha;
+      t1.font={name:'Calibri',bold:true,size:13,color:{argb:'FF1F4E79'}};
+      ws.mergeCells(2,1,2,11);
+      var t2=ws.getCell(2,1); t2.value='COMPRAS MEDIANTE OTRA PLATAFORMA — '+subtitulo;
+      t2.font={name:'Calibri',bold:true,size:11};
+      var hd=['N°','COMPRADOR','CATEGORÍA','LOTE','CANT.','P/U','MONTO','COM '+pct+'%','COM Bs.','T/C','COM Bs. TOTAL'];
+      var hr=ws.getRow(4); hr.height=20;
+      hd.forEach(function(h,i){ var c=hr.getCell(i+1); c.value=h; c.border=border();
+        c.font={name:'Calibri',bold:true,size:10,color:{argb:'FFFFFFFF'}}; c.fill=hdrFill(BLUEBG);
+        c.alignment={horizontal:'center',vertical:'middle'}; });
+      var row=5, n=1;
+      lots.forEach(function(l){
+        var r=ws.getRow(row); r.height=18;
+        r.getCell(1).value=n; r.getCell(2).value=l.comprador+(l.compradorCI?' (CI: '+l.compradorCI+')':'');
+        r.getCell(3).value=l.categoria||''; r.getCell(4).value=l.lote||0;
+        r.getCell(5).value=l.cantidad||0; r.getCell(6).value=l.precio||0;
+        r.getCell(7).value={formula:'E'+row+'*F'+row};
+        r.getCell(8).value={formula:'G'+row+'*'+pct+'%'};
+        r.getCell(9).value={formula:'H'+row+'*'+tc};
+        r.getCell(10).value=tc;
+        r.getCell(11).value={formula:'H'+row+'*J'+row};
+        for(var c=1;c<=11;c++){ var cc=r.getCell(c); cc.border=border(); cc.font={name:'Calibri',size:10};
+          cc.alignment={horizontal:(c===2||c===3)?'left':'right',vertical:'middle'};
+          if(c>=6) cc.numFmt='#,##0.00'; if(c===10) cc.numFmt='0.00'; }
+        row++; n++;
+      });
+      // TOTALES
+      var rt=ws.getRow(row); rt.height=20;
+      for(var c2=1;c2<=11;c2++){ var ct=rt.getCell(c2); ct.border=border();
+        ct.font={name:'Calibri',bold:true,size:11}; ct.fill=hdrFill(YELLOW);
+        ct.alignment={horizontal:'right',vertical:'middle'}; ct.numFmt='#,##0.00'; }
+      ws.mergeCells(row,1,row,6);
+      rt.getCell(1).value='TOTALES'; rt.getCell(1).alignment={horizontal:'left',vertical:'middle'};
+      rt.getCell(7).value={formula:'SUM(G5:G'+(row-1)+')'};
+      rt.getCell(8).value={formula:'SUM(H5:H'+(row-1)+')'};
+      rt.getCell(9).value={formula:'SUM(I5:I'+(row-1)+')'};
+      rt.getCell(11).value={formula:'SUM(K5:K'+(row-1)+')'};
+      return ws;
+    }
+
+    buildSheet('COM 3% TOTAL', 3, 'COMISIÓN TOTAL COBRADA (3%)');
+    buildSheet('COM 2% PLATAFORMA', 2, 'PARTE PARA LA PLATAFORMA (2%)');
+    buildSheet('COM 1% REMATE', 1, 'PARTE QUE QUEDA PARA EL REMATE (1%)');
+
+    var buf = await wb.xlsx.writeBuffer();
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+    a.download='AGACON_otra_plataforma_'+fecha.replace(/\//g,'-')+'.xlsx';
+    a.click();
+    toast('Excel otra plataforma exportado ✓');
+  } catch(e) { console.error(e); toast('Error generando Excel: '+e.message, true); }
 }
 
 async function admExportExcel() {
