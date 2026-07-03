@@ -68,7 +68,14 @@
     var cab   = lotes.reduce(function(a,l){ return a+(+l.cantidad||0); },0);
     var monto = lotes.reduce(function(a,l){ return a+(+l.precio||0)*(+l.cantidad||0); },0);
     var sinComp = lotes.filter(function(l){ return !l.comprador; }).length;
-    var comisionTot = monto*com*2;
+    // Comisión total = lado vendedor (com%) + lado comprador.
+    // Si la compra fue "mediante otra plataforma", del 3% del comprador solo el 1% queda
+    // para el remate (el 2% va a la plataforma), así que se suma al 1%.
+    var comisionTot = lotes.reduce(function(a,l){
+      var m=(+l.precio||0)*(+l.cantidad||0);
+      var ladoComprador = l.otra_plataforma ? m*0.01 : m*com;
+      return a + m*com + ladoComprador;
+    },0);
 
     setT('as-lotes', lotes.length);
     setT('as-cabezas', cab);
