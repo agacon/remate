@@ -526,6 +526,36 @@ tr.pend{border-left:3px solid var(--gold)}
 #adm-panel-comp #screen-compradores .topbar{display:none}
 #adm-panel-comp #screen-compradores .comp-body{overflow-y:visible;flex:none;padding:0;background:transparent}
 @media (max-width:800px){.adm-sidebar{width:68px}.adm-brand{justify-content:center;padding:1rem .3rem}.adm-brand .brand-tx{display:none}.adm-nav-group{padding:.7rem .3rem}.adm-side-title{display:none}.adm-nav{justify-content:center;padding:.7rem .3rem}.adm-nav .an-tx{display:none}.adm-foot{justify-content:center;padding:.9rem .3rem}.adm-foot .foot-tx{display:none}}
+
+/* ── Responsive Administración (celular) ── */
+@media (max-width:640px){
+  #screen-admin .admin-body{padding:.5rem;gap:.6rem}
+  #screen-admin .adm-sidebar{width:52px}
+  #screen-admin .adm-brand{padding:.7rem .2rem}
+  #screen-admin .adm-brand .brand-logo{width:30px;height:30px}
+  #screen-admin .adm-nav{padding:.6rem .2rem}
+  /* Barra superior de remate: apila los controles */
+  #screen-admin .top-bar{padding:.5rem .6rem;gap:.4rem}
+  #screen-admin .top-bar label{font-size:.62rem}
+  #screen-admin .top-bar select,#screen-admin .top-bar input{min-width:0;flex:1 1 100%}
+  #screen-admin .top-bar .tbtn,#screen-admin .top-bar button{flex:1 1 100%;justify-content:center}
+  /* Botones de exportar / pestañas a ancho completo repartido */
+  #screen-admin .export-bar{gap:.4rem}
+  #screen-admin .export-bar h3{flex:1 1 100%;margin:0}
+  #screen-admin .export-bar .btn{flex:1 1 auto;font-size:.66rem;padding:.5rem .5rem;letter-spacing:.3px}
+  #screen-admin .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  #screen-admin .tabs .tab{white-space:nowrap;font-size:.72rem;padding:.45rem .7rem}
+  /* Tarjetas de resumen: 2 por fila en el celular */
+  #screen-admin .summary-grid{grid-template-columns:repeat(2,1fr)!important;gap:.5rem}
+  /* Tablas: dejar scroll horizontal pero limitar alto y compactar texto */
+  #screen-admin .tbl-scroll{max-height:calc(100vh - 250px)}
+  #screen-admin table{font-size:.72rem}
+  #screen-admin th,#screen-admin td{padding:.35rem .45rem;white-space:nowrap}
+  #screen-admin .topbar{padding:.5rem .7rem}
+  #screen-admin .topbar-title{font-size:.9rem}
+  /* El iframe del resumen ocupa toda la pantalla útil */
+  #screen-admin #resumen-frame{min-height:80vh}
+}
 </style>
 
 </head>
