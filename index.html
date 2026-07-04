@@ -941,7 +941,7 @@ tr.pend{border-left:3px solid var(--gold)}
             <th>Orden</th><th>Lote</th><th>Propietario</th><th>Cant.</th>
             <th>Categoría</th><th>Raza</th><th>Precio U.</th>
             <th>Total</th><th>Com. 3%</th><th>Liq. Pagable</th>
-            <th>Comprador</th><th>Estado</th><th>Acción</th>
+            <th>Comprador</th><th>Acción</th>
           </tr></thead>
           <tbody id="comp-tbody"></tbody>
         </table>
@@ -2255,7 +2255,7 @@ function compRenderTable() {
   if(!rows.length){
     var tr=document.createElement('tr');
     var td=document.createElement('td');
-    td.colSpan=11;td.style.cssText='text-align:center;color:#888;padding:2rem';
+    td.colSpan=12;td.style.cssText='text-align:center;color:#888;padding:2rem';
     td.textContent='No hay lotes con este filtro';
     tr.appendChild(td);tbody.appendChild(tr);return;
   }
@@ -2301,12 +2301,6 @@ function compRenderTable() {
     tdBuyer.textContent=hasBuyer?l.comprador:'—';
     if(l.compradorCI){var br=document.createElement('br');var small=document.createElement('small');small.style.cssText='color:#888;font-size:.66rem';small.textContent='CI: '+l.compradorCI;tdBuyer.appendChild(br);tdBuyer.appendChild(small);}
     tr.appendChild(tdBuyer);
-    // Estado
-    var tdBadge=document.createElement('td');
-    var badge=document.createElement('span');
-    badge.className='badge '+(hasBuyer?'badge-d':'badge-p');
-    badge.textContent=hasBuyer?'Asignado':'Pendiente';
-    tdBadge.appendChild(badge);tr.appendChild(tdBadge);
     // Accion
     var tdBtn=document.createElement('td');
     var btn=document.createElement('button');
