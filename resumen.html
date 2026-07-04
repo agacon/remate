@@ -59,19 +59,19 @@
   </div>
 
   <div class="chart-box">
+    <h3 class="chart-title">Ingresos por comisión del remate ($us)</h3>
+    <div id="bars"></div>
+    <div class="bar-total"><span>TOTAL INGRESOS COMISIONES</span><span id="bars-total">$0</span></div>
+    <div id="bars-empty" class="muted" style="display:none;margin-top:.5rem">Sin datos para mostrar todavía.</div>
+  </div>
+
+  <div class="chart-box">
     <h3 class="chart-title">Categorías — lotes y monto generado</h3>
     <div class="chart-row">
       <div id="pie" class="pie"></div>
       <div id="legend" class="legend"></div>
     </div>
     <div id="chart-empty" class="muted" style="display:none;margin-top:.5rem">Sin datos para mostrar todavía.</div>
-  </div>
-
-  <div class="chart-box">
-    <h3 class="chart-title">Ingresos por comisión del remate ($us)</h3>
-    <div id="bars"></div>
-    <div class="bar-total"><span>TOTAL INGRESOS COMISIONES</span><span id="bars-total">$0</span></div>
-    <div id="bars-empty" class="muted" style="display:none;margin-top:.5rem">Sin datos para mostrar todavía.</div>
   </div>
 
 <script>
@@ -94,23 +94,15 @@
     var cab   = lotes.reduce(function(a,l){ return a+(+l.cantidad||0); },0);
     var monto = lotes.reduce(function(a,l){ return a+(+l.precio||0)*(+l.cantidad||0); },0);
     var sinComp = lotes.filter(function(l){ return !l.comprador; }).length;
-    // Comisión total = lado vendedor (com%) + lado comprador.
-    // Si la compra fue "mediante otra plataforma", del 3% del comprador solo el 1% queda
-    // para el remate (el 2% va a la plataforma), así que se suma al 1%.
-    var comisionTot = lotes.reduce(function(a,l){
-      var m=(+l.precio||0)*(+l.cantidad||0);
-      var ladoComprador = l.otra_plataforma ? m*0.01 : m*com;
-      return a + m*com + ladoComprador;
-    },0);
 
     setT('as-lotes', lotes.length);
     setT('as-cabezas', cab);
     setT('as-monto', '$'+fmt(monto));
-    setT('as-comision', '$'+comisionTot.toFixed(0));
     setT('as-sincomp', sinComp);
 
     renderPie(lotes);
-    renderBars(lotes);
+    var totalIngresos = renderBars(lotes); // total de comisiones que queda para el remate
+    setT('as-comision', '$'+totalIngresos.toFixed(0));
   }
 
   // Detección de defensa: bandera o CI comprador = CI propietario (misma regla que el index)
@@ -153,7 +145,7 @@
     var total = items.reduce(function(a,c){ return a+c.val; },0);
     var max   = Math.max.apply(null, items.map(function(c){ return c.val; }));
 
-    if (!total) { barsEl.innerHTML=''; totEl.textContent='$0'; emptyEl.style.display='block'; return; }
+    if (!total) { barsEl.innerHTML=''; totEl.textContent='$0'; emptyEl.style.display='block'; return 0; }
     emptyEl.style.display='none';
 
     barsEl.innerHTML = items.map(function(c){
@@ -165,6 +157,7 @@
              '</div>';
     }).join('');
     totEl.textContent = '$'+total.toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2});
+    return total;
   }
 
   var PALETTE = ['#2E75B6','#1B8A4A','#B0750A','#C0392B','#7E57C2','#00897B','#EF6C00','#5C6BC0','#D81B60','#8D6E63','#039BE5','#7CB342'];
