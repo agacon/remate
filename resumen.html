@@ -23,6 +23,19 @@
   .bar-fill{height:100%;border-radius:6px;min-width:2px;transition:width .4s}
   .bar-val{font-size:.82rem;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
   .bar-total{display:flex;justify-content:space-between;border-top:2px solid #1a2333;margin-top:.8rem;padding-top:.55rem;font-weight:900;font-size:.95rem}
+  @media (max-width:640px){
+    body{padding:8px}
+    .summary-grid{grid-template-columns:repeat(2,1fr);gap:.5rem}
+    .stat-card{padding:.6rem .7rem}
+    .sv{font-size:1.4rem}
+    .chart-box{padding:.7rem .8rem}
+    .chart-row{gap:.8rem}
+    .pie{width:140px;height:140px;margin:0 auto}
+    .legend{min-width:0}
+    .bar-row{grid-template-columns:120px 1fr;gap:.4rem}
+    .bar-val{grid-column:2;text-align:right;font-size:.74rem}
+    .bar-name{font-size:.74rem}
+  }
   .chart-title{margin:0 0 .9rem;font-size:.95rem;font-weight:800;color:#1a2333}
   .chart-row{display:flex;align-items:center;gap:1.6rem;flex-wrap:wrap}
   .pie{width:180px;height:180px;border-radius:50%;flex-shrink:0;background:#eee;box-shadow:0 1px 4px rgba(0,0,0,.08)}
