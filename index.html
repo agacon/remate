@@ -4317,15 +4317,17 @@ function admGetFilteredLotes() {
   var palabrasBuscadas = normForFilter(admFilterText).split(' ').filter(function(w){ return w.length > 2; });
 
   function propietarioMatcheaPersona(lote) {
-    // Primero: CI propietario exacto si el lote lo tiene
+    // Si el lote tiene CI de propietario y buscamos con CI: se decide SOLO por CI.
+    // Un CI distinto = OTRA persona, aunque el nombre se parezca (hermanos, etc.)
     if (admFilterCI && lote.ciPropietario) {
       var ciPropNum = lote.ciPropietario.replace(/[^0-9]/g,'');
-      if (ciPropNum && ciPropNum === admFilterCI) return true;
+      if (ciPropNum && ciPropNum.length >= 6) return ciPropNum === admFilterCI;
     }
-    // Fallback: similitud de nombre
+    // Fallback por nombre SOLO si el lote no tiene CI de propietario (2+ palabras en común)
     if (!lote.propietario) return false;
     var normProp = normForFilter(lote.propietario).split(' ').filter(function(w){ return w.length > 2; });
-    return palabrasBuscadas.some(function(w){ return normProp.indexOf(w) >= 0; });
+    var comunes = palabrasBuscadas.filter(function(w){ return normProp.indexOf(w) >= 0; });
+    return comunes.length >= 2;
   }
 
   return admLotes.filter(function(l){
@@ -4414,8 +4416,13 @@ async function admExportSingle() {
   function esPropietarioPersona(l){
     if (personaCINum && personaCINum.length>=6 && l.ciPropietario){
       var pc = String(l.ciPropietario).replace(/[^0-9]/g,'');
-      if (pc && pc===personaCINum) return true;
+      if (pc && pc.length>=6){
+        // Ambos tienen CI: se decide SOLO por CI. Un CI distinto = OTRA persona,
+        // aunque el nombre se parezca (ej: hermanos con los mismos apellidos).
+        return pc===personaCINum;
+      }
     }
+    // Sin CI para comparar: recién ahí se usa el nombre (2+ palabras coinciden)
     var palabrasProp = normForFilter(l.propietario||'').split(' ').filter(function(w){ return w.length>2; });
     if(!palabrasProp.length || !palabrasPersona.length) return false;
     var comunes = palabrasProp.filter(function(w){ return palabrasPersona.indexOf(w)>=0; });
