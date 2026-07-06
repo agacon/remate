@@ -4323,11 +4323,14 @@ function admGetFilteredLotes() {
       var ciPropNum = lote.ciPropietario.replace(/[^0-9]/g,'');
       if (ciPropNum && ciPropNum.length >= 6) return ciPropNum === admFilterCI;
     }
-    // Fallback por nombre SOLO si el lote no tiene CI de propietario (2+ palabras en común)
+    // Fallback por nombre SOLO si el lote no tiene CI de propietario:
+    // un nombre debe CONTENER completamente al otro (2+ palabras)
     if (!lote.propietario) return false;
     var normProp = normForFilter(lote.propietario).split(' ').filter(function(w){ return w.length > 2; });
-    var comunes = palabrasBuscadas.filter(function(w){ return normProp.indexOf(w) >= 0; });
-    return comunes.length >= 2;
+    if (normProp.length<2 || palabrasBuscadas.length<2) return false;
+    var aEnB = palabrasBuscadas.every(function(w){ return normProp.indexOf(w) >= 0; });
+    var bEnA = normProp.every(function(w){ return palabrasBuscadas.indexOf(w) >= 0; });
+    return aEnB || bEnA;
   }
 
   return admLotes.filter(function(l){
@@ -4403,7 +4406,7 @@ async function admExportSingle() {
   var nombreUpper = personaNombre.toUpperCase();
 
   // Compras: usar lotesFiltrados directamente (ya tiene el filtro nombre+CI correcto)
-  var lotesCompras = lotesFiltrados.filter(function(l){ return !lotEsDefensa(l) && l.comprador; });
+  var lotesCompras = admLotes.filter(function(l){ return !lotEsDefensa(l) && esCompradorPersona(l); });
 
   // Ventas y Defensas: buscar por nombre como propietario
   // Si hay CI de comprador, usarlo para ser más preciso en ventas también
@@ -4413,20 +4416,34 @@ async function admExportSingle() {
   // no deje afuera sus lotes (ej: "JEAN PAUL TORO" vs "JEAN PAUL TORO LEDEZMA").
   var personaCINum = (personaCI || admFilterCI || '').replace(/[^0-9]/g,'');
   var palabrasPersona = normForFilter(personaNombre||'').split(' ').filter(function(w){ return w.length>2; });
+  // Emparejamiento de nombres: uno debe CONTENER completamente al otro (2+ palabras).
+  // Así "JEAN PAUL TORO" ⊂ "JEAN PAUL TORO LEDEZMA" empareja (misma persona, nombre corto),
+  // pero "...HAGE DANIEL" vs "...HAGE FRANK WILLIAM" NO (hermanos: cada uno tiene nombres propios).
+  function nombreContiene(a, b){ // ¿todas las palabras de a están en b?
+    return a.length>=2 && a.every(function(w){ return b.indexOf(w)>=0; });
+  }
+  function matchNombre(palabrasProp){
+    if(!palabrasProp.length || !palabrasPersona.length) return false;
+    return nombreContiene(palabrasProp, palabrasPersona) || nombreContiene(palabrasPersona, palabrasProp);
+  }
   function esPropietarioPersona(l){
     if (personaCINum && personaCINum.length>=6 && l.ciPropietario){
       var pc = String(l.ciPropietario).replace(/[^0-9]/g,'');
       if (pc && pc.length>=6){
-        // Ambos tienen CI: se decide SOLO por CI. Un CI distinto = OTRA persona,
-        // aunque el nombre se parezca (ej: hermanos con los mismos apellidos).
+        // Ambos tienen CI: se decide SOLO por CI. Un CI distinto = OTRA persona.
         return pc===personaCINum;
       }
     }
-    // Sin CI para comparar: recién ahí se usa el nombre (2+ palabras coinciden)
-    var palabrasProp = normForFilter(l.propietario||'').split(' ').filter(function(w){ return w.length>2; });
-    if(!palabrasProp.length || !palabrasPersona.length) return false;
-    var comunes = palabrasProp.filter(function(w){ return palabrasPersona.indexOf(w)>=0; });
-    return comunes.length>=2;
+    return matchNombre(normForFilter(l.propietario||'').split(' ').filter(function(w){ return w.length>2; }));
+  }
+  // ¿La persona es realmente el COMPRADOR de este lote? (para la hoja de COMPRAS)
+  function esCompradorPersona(l){
+    if(!l.comprador) return false;
+    if (personaCINum && personaCINum.length>=6 && l.compradorCI){
+      var cc = String(l.compradorCI).replace(/[^0-9]/g,'');
+      if (cc && cc.length>=6) return cc===personaCINum;
+    }
+    return matchNombre(normForFilter(l.comprador||'').split(' ').filter(function(w){ return w.length>2; }));
   }
   var lotesVentas = admLotes.filter(function(l){
     if (lotEsDefensa(l)) return false;
