@@ -4405,38 +4405,24 @@ async function admExportSingle() {
 
   var nombreUpper = personaNombre.toUpperCase();
 
-  // Compras: usar lotesFiltrados directamente (ya tiene el filtro nombre+CI correcto)
-  var lotesCompras = admLotes.filter(function(l){ return !lotEsDefensa(l) && esCompradorPersona(l); });
-
-  // Ventas y Defensas: buscar por nombre como propietario
-  // Si hay CI de comprador, usarlo para ser más preciso en ventas también
-  // Ventas y Defensas: la persona es el PROPIETARIO del lote.
-  // Se empareja por CI del propietario (si está) y, si no, por coincidencia de palabras del
-  // nombre — NUNCA por "includes", para que un nombre más largo o más corto con el MISMO CI
-  // no deje afuera sus lotes (ej: "JEAN PAUL TORO" vs "JEAN PAUL TORO LEDEZMA").
+  // ── Definir el emparejamiento por persona ANTES de usarlo ──
+  // Se empareja por CI (si está) y, si no, por nombre: un nombre debe CONTENER al otro (2+ palabras).
+  // Así "JEAN PAUL TORO" ⊂ "JEAN PAUL TORO LEDEZMA" empareja (misma persona), pero
+  // "...HAGE DANIEL" vs "...HAGE FRANK WILLIAM" NO (hermanos con nombres propios distintos).
   var personaCINum = (personaCI || admFilterCI || '').replace(/[^0-9]/g,'');
   var palabrasPersona = normForFilter(personaNombre||'').split(' ').filter(function(w){ return w.length>2; });
-  // Emparejamiento de nombres: uno debe CONTENER completamente al otro (2+ palabras).
-  // Así "JEAN PAUL TORO" ⊂ "JEAN PAUL TORO LEDEZMA" empareja (misma persona, nombre corto),
-  // pero "...HAGE DANIEL" vs "...HAGE FRANK WILLIAM" NO (hermanos: cada uno tiene nombres propios).
-  function nombreContiene(a, b){ // ¿todas las palabras de a están en b?
-    return a.length>=2 && a.every(function(w){ return b.indexOf(w)>=0; });
-  }
-  function matchNombre(palabrasProp){
-    if(!palabrasProp.length || !palabrasPersona.length) return false;
-    return nombreContiene(palabrasProp, palabrasPersona) || nombreContiene(palabrasPersona, palabrasProp);
+  function nombreContiene(a, b){ return a.length>=2 && a.every(function(w){ return b.indexOf(w)>=0; }); }
+  function matchNombre(palabras){
+    if(!palabras.length || !palabrasPersona.length) return false;
+    return nombreContiene(palabras, palabrasPersona) || nombreContiene(palabrasPersona, palabras);
   }
   function esPropietarioPersona(l){
     if (personaCINum && personaCINum.length>=6 && l.ciPropietario){
       var pc = String(l.ciPropietario).replace(/[^0-9]/g,'');
-      if (pc && pc.length>=6){
-        // Ambos tienen CI: se decide SOLO por CI. Un CI distinto = OTRA persona.
-        return pc===personaCINum;
-      }
+      if (pc && pc.length>=6) return pc===personaCINum; // ambos con CI: solo CI decide
     }
     return matchNombre(normForFilter(l.propietario||'').split(' ').filter(function(w){ return w.length>2; }));
   }
-  // ¿La persona es realmente el COMPRADOR de este lote? (para la hoja de COMPRAS)
   function esCompradorPersona(l){
     if(!l.comprador) return false;
     if (personaCINum && personaCINum.length>=6 && l.compradorCI){
@@ -4445,14 +4431,13 @@ async function admExportSingle() {
     }
     return matchNombre(normForFilter(l.comprador||'').split(' ').filter(function(w){ return w.length>2; }));
   }
-  var lotesVentas = admLotes.filter(function(l){
-    if (lotEsDefensa(l)) return false;
-    return esPropietarioPersona(l);
-  });
-  var lotesDefensas = admLotes.filter(function(l){
-    if (!lotEsDefensa(l)) return false;
-    return esPropietarioPersona(l);
-  });
+
+  // Compras: la persona es el COMPRADOR del lote
+  var lotesCompras = admLotes.filter(function(l){ return !lotEsDefensa(l) && esCompradorPersona(l); });
+  // Ventas: la persona es el PROPIETARIO y no es defensa
+  var lotesVentas = admLotes.filter(function(l){ return !lotEsDefensa(l) && esPropietarioPersona(l); });
+  // Defensas: la persona es el PROPIETARIO y es defensa
+  var lotesDefensas = admLotes.filter(function(l){ return lotEsDefensa(l) && esPropietarioPersona(l); });
   // Resolver comisión de cada defensa: socio → 0.5%; si no está en la lista → preguntar (una vez por persona).
   // Si se resuelve por primera vez, se guarda en la base para no volver a preguntar.
   var defensaCache = {};
