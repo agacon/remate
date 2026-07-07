@@ -206,6 +206,11 @@ td{padding:.7rem .85rem;font-size:1rem;border-bottom:1px solid rgba(255,255,255,
 #screen-compradores th{padding:.36rem .4rem;font-size:.62rem;letter-spacing:.3px}
 #screen-compradores .btn-asign{padding:.26rem .5rem;font-size:.68rem}
 #screen-compradores .badge{padding:.12rem .38rem;font-size:.62rem}
+.th-f{display:flex;align-items:center;gap:.25rem;justify-content:space-between}
+.th-lupa{background:none;border:none;cursor:pointer;font-size:.72rem;padding:0 2px;opacity:.55;line-height:1}
+.th-lupa:hover{opacity:1}
+.th-lupa.on{opacity:1;filter:drop-shadow(0 0 2px var(--blue))}
+.col-filter{width:100%;margin-top:.25rem;padding:.2rem .35rem;font-size:.72rem;border:1px solid var(--blue);border-radius:4px;background:#fff;color:#1a2333}
 tr:hover td{background:rgba(255,255,255,.03)}
 tr.done td{opacity:.6}
 tr.pend{border-left:3px solid var(--gold)}
@@ -939,10 +944,16 @@ tr.pend{border-left:3px solid var(--gold)}
       <div class="tbl-scroll">
         <table>
           <thead><tr>
-            <th>Orden</th><th>Lote</th><th>Propietario</th><th>Cant.</th>
-            <th>Categoría</th><th>Raza</th><th>Precio U.</th>
+            <th>Orden</th>
+            <th><div class="th-f"><span>Lote</span><button class="th-lupa" onclick="compToggleColFilter('lote')" title="Filtrar por lote">🔍</button></div><input class="col-filter" id="cf-lote" style="display:none" oninput="compSetColFilter('lote',this.value)" placeholder="N° lote"></th>
+            <th><div class="th-f"><span>Propietario</span><button class="th-lupa" onclick="compToggleColFilter('propietario')" title="Filtrar por propietario">🔍</button></div><input class="col-filter" id="cf-propietario" style="display:none" oninput="compSetColFilter('propietario',this.value)" placeholder="Nombre..."></th>
+            <th><div class="th-f"><span>Cant.</span><button class="th-lupa" onclick="compToggleColFilter('cantidad')" title="Filtrar por cantidad">🔍</button></div><input class="col-filter" id="cf-cantidad" style="display:none" oninput="compSetColFilter('cantidad',this.value)" placeholder="Cant."></th>
+            <th><div class="th-f"><span>Categoría</span><button class="th-lupa" onclick="compToggleColFilter('categoria')" title="Filtrar por categoría">🔍</button></div><input class="col-filter" id="cf-categoria" style="display:none" oninput="compSetColFilter('categoria',this.value)" placeholder="Categoría..."></th>
+            <th><div class="th-f"><span>Raza</span><button class="th-lupa" onclick="compToggleColFilter('raza')" title="Filtrar por raza">🔍</button></div><input class="col-filter" id="cf-raza" style="display:none" oninput="compSetColFilter('raza',this.value)" placeholder="Raza..."></th>
+            <th><div class="th-f"><span>Precio U.</span><button class="th-lupa" onclick="compToggleColFilter('precio')" title="Filtrar por precio">🔍</button></div><input class="col-filter" id="cf-precio" style="display:none" oninput="compSetColFilter('precio',this.value)" placeholder="Precio"></th>
             <th>Total</th><th>Com. 3%</th><th>Liq. Pagable</th>
-            <th>Comprador</th><th>Acción</th>
+            <th><div class="th-f"><span>Comprador</span><button class="th-lupa" onclick="compToggleColFilter('comprador')" title="Filtrar por comprador">🔍</button></div><input class="col-filter" id="cf-comprador" style="display:none" oninput="compSetColFilter('comprador',this.value)" placeholder="Comprador..."></th>
+            <th>Acción</th>
           </tr></thead>
           <tbody id="comp-tbody"></tbody>
         </table>
@@ -2269,11 +2280,40 @@ function compLoadRemate(remId) {
   _compPoller = setInterval(fetchAndRender, 3000);
 }
 
+// Filtros por columna (lupita en cada título de la tabla)
+var compColFilters = {};
+function compToggleColFilter(field){
+  var inp=document.getElementById('cf-'+field);
+  var lupa=inp ? inp.parentNode.querySelector('.th-lupa') : null;
+  if(!inp) return;
+  var visible = inp.style.display!=='none' && inp.style.display!=='';
+  if(visible){
+    inp.style.display='none'; inp.value=''; if(lupa) lupa.classList.remove('on');
+    delete compColFilters[field]; compRenderTable();
+  } else {
+    inp.style.display='block'; if(lupa) lupa.classList.add('on'); inp.focus();
+  }
+}
+function compSetColFilter(field, val){
+  val=(val||'').trim().toLowerCase();
+  if(val) compColFilters[field]=val; else delete compColFilters[field];
+  compRenderTable();
+}
+
 function compRenderTable() {
   var tbody=document.getElementById('comp-tbody');
   var rows=compLotes.filter(function(l){return l.saved;});
   if(compFilterMode==='pendientes') rows=rows.filter(function(l){return !l.comprador;});
   if(compFilterMode==='asignados')  rows=rows.filter(function(l){return !!l.comprador;});
+  // Filtros por columna (lupita en cada título)
+  Object.keys(compColFilters).forEach(function(field){
+    var q=compColFilters[field];
+    rows=rows.filter(function(l){
+      var v=(l[field]!=null ? String(l[field]) : '').toLowerCase();
+      if(field==='lote') return v===q;      // lote: coincidencia exacta
+      return v.indexOf(q)>=0;               // resto: contiene
+    });
+  });
   // Mostrar el más nuevo primero: orden decreciente (los lotes nuevos aparecen arriba)
   rows.sort(function(a,b){ return (Number(b.orden)||0) - (Number(a.orden)||0); });
   tbody.innerHTML='';
@@ -3193,6 +3233,13 @@ function buildResumen(lotes, tc, comPct, fecha, remateNum) {
   return ws;
 }
 
+function admFechaRemate(){
+  var sel=document.getElementById('adm-remate-sel');
+  var t=(sel&&sel.options[sel.selectedIndex])?sel.options[sel.selectedIndex].text:'';
+  var m=t.match(/(\d{4})[\/\-](\d{2})[\/\-](\d{2})/);
+  return m ? (m[3]+'/'+m[2]+'/'+m[1]) : new Date().toLocaleDateString('es-BO',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+
 // Imprime el contenido de los Excel (todas sus hojas, cada una en su página).
 // tipo: 'completo' (Compradores, Plataforma, Vendedores, Defensas, Resumen) | 'plataforma' (3%/2%/1%)
 function admImprimirExcel(tipo) {
@@ -3202,7 +3249,7 @@ function admImprimirExcel(tipo) {
   var comPct=(com*100);
   var selEl = document.getElementById('adm-remate-sel');
   var selTxt= selEl.options[selEl.selectedIndex] ? selEl.options[selEl.selectedIndex].text : 'Remate';
-  var fecha = new Date().toLocaleDateString('es-BO');
+  var fecha = admFechaRemate();
   function money(n){ return '$'+(n||0).toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2}); }
   function bs(n){ return 'Bs.'+(n||0).toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2}); }
   function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
@@ -3350,7 +3397,7 @@ function admImprimir() {
   if (fi && fi.textContent.trim()) filtroInfo = fi.textContent.trim();
 
   var tablaHTML = activeContent.innerHTML;
-  var fecha = new Date().toLocaleDateString('es-BO');
+  var fecha = admFechaRemate();
 
   var w = window.open('', '_blank');
   if (!w) { toast('Permití las ventanas emergentes para poder imprimir', true); return; }
@@ -3387,7 +3434,7 @@ async function admExportPlataforma() {
   var lots = admLotes.filter(function(l){ return l.otraPlataforma && l.comprador && !lotEsDefensa(l); });
   if(!lots.length){ toast('No hay compras mediante otra plataforma en este remate', true); return; }
   var tc    = parseFloat(document.getElementById('adm-tc').value)||6.96;
-  var fecha = new Date().toLocaleDateString('es-BO',{day:'2-digit',month:'2-digit',year:'numeric'});
+  var fecha = admFechaRemate();
   var selEl = document.getElementById('adm-remate-sel');
   var selTxt= selEl.options[selEl.selectedIndex] ? selEl.options[selEl.selectedIndex].text : 'Remate';
   toast('Generando Excel otra plataforma...');
@@ -3459,7 +3506,7 @@ async function admExportExcel() {
   var tc     = parseFloat(document.getElementById('adm-tc').value)||6.96;
   var comPct = parseFloat(document.getElementById('adm-com').value)||3;
   var bank   = getBankData();
-  var fecha  = new Date().toLocaleDateString('es-BO',{day:'2-digit',month:'2-digit',year:'numeric'});
+  var fecha  = admFechaRemate();
   var selEl  = document.getElementById('adm-remate-sel');
   var selTxt = selEl.options[selEl.selectedIndex] ? selEl.options[selEl.selectedIndex].text : '';
   var remNum = selTxt.replace(/ *[(][^)]+[)]$/, '').trim() || ('Remate '+fecha);
@@ -4426,7 +4473,7 @@ async function admExportSingle() {
   var tc     = parseFloat(document.getElementById('adm-tc').value)||6.96;
   var comPct = parseFloat(document.getElementById('adm-com').value)||3;
   var bank   = getBankData();
-  var fecha  = new Date().toLocaleDateString('es-BO',{day:'2-digit',month:'2-digit',year:'numeric'});
+  var fecha  = admFechaRemate();
   var selEl  = document.getElementById('adm-remate-sel');
   var selTxt = selEl.options[selEl.selectedIndex] ? selEl.options[selEl.selectedIndex].text : '';
   var remateNumeroSingle = (function(){ var m=selTxt.match(/N[°º]?\s*(\d+)/i); return m?m[1]:selTxt.replace(/ *[(][^)]+[)]$/,'').trim(); })();
@@ -4663,8 +4710,10 @@ async function admExportSingle() {
         ccD.font={name:'Calibri',bold:true,size:11}; ccD.fill=hdrFill(GRANDBG);
         ccD.alignment={horizontal:'right',vertical:'middle'};
       }
-      wsD.mergeCells(row,1,row,7);
+      wsD.mergeCells(row,1,row,3);
       rtD.getCell(1).value='TOTALES'; rtD.getCell(1).alignment={horizontal:'left',vertical:'middle'};
+      rtD.getCell(4).value={formula:'SUM(D6:D'+endDef+')'}; rtD.getCell(4).numFmt='#,##0';
+      rtD.getCell(6).value={formula:'SUM(F6:F'+endDef+')'}; rtD.getCell(6).numFmt='#,##0.00';
       rtD.getCell(8).value={formula:'SUM(H6:H'+endDef+')'}; rtD.getCell(8).numFmt='#,##0.00';
       rtD.getCell(9).value={formula:'SUM(I6:I'+endDef+')'}; rtD.getCell(9).numFmt='#,##0.00'; rtD.getCell(9).fill=hdrFill(YELLOW);
       row++;
