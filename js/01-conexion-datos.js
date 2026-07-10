@@ -26,6 +26,13 @@ async function checkConnection() {
     if (txt) txt.textContent = ok ? 'Conectado a Supabase' : 'Sin conexión';
     var pill = document.getElementById('menu-conn-pill');
     if (pill) pill.className = 'menu-conn-pill ' + (ok ? 'ok' : '');
+    // Login screen connection pill
+    var ldot = document.getElementById('login-conn-dot');
+    if (ldot) ldot.className = 'conn-dot ' + (ok ? 'conn-ok' : 'conn-err');
+    var ltxt = document.getElementById('login-conn-txt');
+    if (ltxt) ltxt.textContent = ok ? 'Conectado a Supabase' : 'Sin conexión';
+    var lpill = document.getElementById('login-conn-pill');
+    if (lpill) lpill.className = 'menu-conn-pill ' + (ok ? 'ok' : '');
     ['comp-conn','adm-conn'].forEach(function(id) {
       var el = document.getElementById(id);
       if (el) { el.textContent = ok ? '⬤ Conectado' : '⬤ Sin conexión'; el.className = 'conn-badge ' + (ok ? 'badge-ok' : 'badge-err'); }

@@ -371,9 +371,9 @@ function opConfirmExit() {
   // Only ask if remate has started and has saved lots
   var savedCount = lots.filter(function(l){ return l.saved; }).length;
   if (savedCount > 0) {
-    if (!confirm('¿Seguro que deseas salir del operador?\n\nEl remate quedara guardado en Firebase y podras continuar luego.')) return;
+    if (!confirm('¿Seguro que deseas cerrar sesión?\n\nEl remate quedara guardado en Supabase y podras continuar luego.')) return;
   }
-  goTo('menu');
+  logout();
 }
 
 // ════ CONTRATO PANEL — timer 30s ════

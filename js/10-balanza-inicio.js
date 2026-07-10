@@ -167,8 +167,10 @@ var _origRenderOp = typeof renderOp === 'function' ? renderOp : null;
   if (params.get('pantalla') === 'publica') {
     // This is the public window - go straight to public and poll localStorage
     document.addEventListener('DOMContentLoaded', function() {
-      // Hide menu, show public directly
+      // Hide menu + login, show public directly
       document.getElementById('menu-screen').style.display = 'none';
+      var _lg = document.getElementById('login-screen');
+      if (_lg) _lg.style.display = 'none';
       document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
       var el = document.getElementById('screen-public');
       if (el) el.classList.add('active');
