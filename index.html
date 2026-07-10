@@ -14,32 +14,85 @@
 
 <!-- ════ LOGIN ════ -->
 <div id="login-screen">
-  <div class="login-box">
-    <div class="menu-logo">
-      <img id="login-logo-img" alt="AGACON">
-      <h1>AGACON</h1>
-      <div class="logo-sep"></div>
-      <p>Asociación de Ganaderos de Concepción</p>
-      <div class="menu-conn-pill" id="login-conn-pill">
-        <span class="conn-dot conn-err" id="login-conn-dot"></span>
-        <span id="login-conn-txt">Conectando a Supabase...</span>
+  <div class="login-wrap">
+
+    <!-- HERO (izquierda, solo en pantallas grandes) -->
+    <div class="login-hero">
+      <div class="login-hero-overlay"></div>
+      <div class="login-hero-content">
+        <img class="login-hero-logo js-agacon-logo" id="login-logo-img" alt="AGACON">
+        <h1 class="login-hero-title">AGACON</h1>
+        <div class="login-hero-sep"></div>
+        <p class="login-hero-sub">Asociación de Ganaderos<br>de Concepción</p>
+        <div class="login-features">
+          <div class="login-feature">
+            <span class="lf-ic"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></span>
+            <span>Sistema de gestión<br>para el sector ganadero</span>
+          </div>
+          <div class="login-feature">
+            <span class="lf-ic"><svg viewBox="0 0 24 24"><polyline points="3 17 9 11 13 15 21 7"></polyline><polyline points="15 7 21 7 21 13"></polyline></svg></span>
+            <span>Transparencia, control<br>y productividad</span>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="login-card">
-      <div class="login-title">Iniciar sesión</div>
-      <div class="login-fgroup">
-        <label>Usuario</label>
-        <input type="text" id="login-user" autocomplete="username" placeholder="usuario"
-          onkeydown="if(event.key==='Enter'){document.getElementById('login-password').focus();}">
+
+    <!-- FORMULARIO (derecha, único visible en celular) -->
+    <div class="login-panel">
+      <div class="login-card">
+        <div class="login-mobile-brand">
+          <img class="js-agacon-logo" id="login-mobile-logo" alt="AGACON">
+          <span>AGACON</span>
+        </div>
+        <div class="login-lock">
+          <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>
+        </div>
+        <h2 class="login-welcome">Bienvenido</h2>
+        <p class="login-welcome-sub">Inicia sesión para continuar</p>
+        <div class="login-welcome-sep"></div>
+
+        <div class="login-fgroup">
+          <label>Usuario</label>
+          <div class="login-input-wrap">
+            <span class="li-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"></path></svg></span>
+            <input type="text" id="login-user" autocomplete="username" placeholder="Ingresa tu usuario"
+              onkeydown="if(event.key==='Enter'){document.getElementById('login-password').focus();}">
+          </div>
+        </div>
+
+        <div class="login-fgroup">
+          <label>Contraseña</label>
+          <div class="login-input-wrap">
+            <span class="li-ic"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg></span>
+            <input type="password" id="login-password" autocomplete="current-password" placeholder="Ingresa tu contraseña"
+              onkeydown="if(event.key==='Enter') doLogin()">
+            <button type="button" class="li-eye" id="login-eye" title="Mostrar/ocultar" onclick="toggleLoginPassword()">
+              <svg id="login-eye-svg" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="login-row">
+          <label class="login-remember"><input type="checkbox" id="login-remember"> Recordarme</label>
+          <span class="login-forgot" onclick="loginForgot()">¿Olvidaste tu contraseña?</span>
+        </div>
+
+        <div id="login-error" class="login-error"></div>
+
+        <button class="login-btn" id="login-btn" onclick="doLogin()">
+          <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>
+          Iniciar sesión
+        </button>
+
+        <div class="login-foot-divider"><img class="js-agacon-logo" id="login-foot-logo" alt=""></div>
+        <div class="login-foot2">AGACON — Asociación de Ganaderos de Concepción</div>
+        <div class="login-conn">
+          <span class="conn-dot conn-err" id="login-conn-dot"></span>
+          <span id="login-conn-txt">Conectando…</span>
+        </div>
       </div>
-      <div class="login-fgroup">
-        <label>Contraseña</label>
-        <input type="password" id="login-password" autocomplete="current-password" placeholder="••••••••"
-          onkeydown="if(event.key==='Enter') doLogin()">
-      </div>
-      <div id="login-error" class="login-error"></div>
-      <button class="btn btn-green login-btn" id="login-btn" onclick="doLogin()">ENTRAR →</button>
     </div>
+
   </div>
 </div>
 
