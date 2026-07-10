@@ -504,26 +504,26 @@ tr.pend{border-left:3px solid var(--gold)}
 
 /* ════ ADMIN — MENÚ LATERAL ════ */
 #screen-admin .adm-layout{flex:1;display:flex;min-height:0}
-.adm-sidebar{width:250px;flex-shrink:0;background:linear-gradient(185deg,#1b2942 0%,#0f1a2e 100%);border-right:1px solid #0b1424;display:flex;flex-direction:column;padding:0;overflow-y:auto}
+.adm-sidebar{width:250px;flex-shrink:0;background:linear-gradient(185deg,#154d2c 0%,#0a2f18 100%);border-right:1px solid #082414;display:flex;flex-direction:column;padding:0;overflow-y:auto}
 .adm-brand{display:flex;align-items:center;gap:.72rem;padding:1.25rem 1.15rem;border-bottom:1px solid rgba(255,255,255,.07)}
 .adm-brand .brand-logo{width:40px;height:40px;border-radius:10px;object-fit:contain;background:#fff;padding:3px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.25)}
 .adm-brand .brand-tx{display:flex;flex-direction:column;line-height:1.18}
 .adm-brand .brand-tx b{color:#fff;font-size:1.08rem;font-weight:800;letter-spacing:.3px}
-.adm-brand .brand-tx span{color:#7f8fab;font-size:.6rem;letter-spacing:2px;text-transform:uppercase;font-weight:600}
+.adm-brand .brand-tx span{color:#8fb59d;font-size:.6rem;letter-spacing:2px;text-transform:uppercase;font-weight:600}
 .adm-nav-group{display:flex;flex-direction:column;gap:.28rem;padding:.95rem .7rem;flex:1}
-.adm-side-title{font-size:.6rem;letter-spacing:2.5px;text-transform:uppercase;color:#5f6f8c;font-weight:700;padding:.2rem .7rem .55rem}
-.adm-nav{display:flex;align-items:center;gap:.78rem;background:transparent;border:none;text-align:left;color:#aab6cc;font-family:inherit;font-size:.94rem;font-weight:600;padding:.72rem .8rem;border-radius:11px;cursor:pointer;transition:.16s;position:relative}
-.adm-nav:hover{background:rgba(255,255,255,.06);color:#e8eefb}
-.adm-nav.on{background:linear-gradient(90deg,#2a4a78,#22395c);color:#fff;box-shadow:0 4px 12px rgba(8,16,34,.4)}
+.adm-side-title{font-size:.6rem;letter-spacing:2.5px;text-transform:uppercase;color:#6f9a80;font-weight:700;padding:.2rem .7rem .55rem}
+.adm-nav{display:flex;align-items:center;gap:.78rem;background:transparent;border:none;text-align:left;color:#b3ccbb;font-family:inherit;font-size:.94rem;font-weight:600;padding:.72rem .8rem;border-radius:11px;cursor:pointer;transition:.16s;position:relative}
+.adm-nav:hover{background:rgba(255,255,255,.07);color:#eafff1}
+.adm-nav.on{background:linear-gradient(90deg,#1f7a45,#166034);color:#fff;box-shadow:0 4px 12px rgba(6,30,16,.42)}
 .adm-nav .an-ic{width:22px;height:22px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .adm-nav .an-ic svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .adm-foot{display:flex;align-items:center;gap:.68rem;padding:.95rem 1.1rem;border-top:1px solid rgba(255,255,255,.07);cursor:pointer;transition:.16s}
 .adm-foot:hover{background:rgba(255,255,255,.05)}
-.adm-foot .foot-av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2a4a78,#16223a);display:flex;align-items:center;justify-content:center;color:#9fb4d8;flex-shrink:0}
+.adm-foot .foot-av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#1f7a45,#0f3a22);display:flex;align-items:center;justify-content:center;color:#a7d3b8;flex-shrink:0}
 .adm-foot .foot-av svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .adm-foot .foot-tx{display:flex;flex-direction:column;line-height:1.2}
-.adm-foot .foot-tx b{color:#e8eefb;font-size:.82rem;font-weight:700}
-.adm-foot .foot-tx span{color:#6f7f9c;font-size:.6rem}
+.adm-foot .foot-tx b{color:#eafff1;font-size:.82rem;font-weight:700}
+.adm-foot .foot-tx span{color:#7fa88d;font-size:.6rem}
 .adm-panel{display:none;flex-direction:column;gap:1rem;flex:1;min-height:0}
 .adm-panel.on{display:flex}
 /* Compradores embebido dentro del panel admin */
