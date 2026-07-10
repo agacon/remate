@@ -563,18 +563,72 @@ tr.pend{border-left:3px solid var(--gold)}
 }
 
 /* ════════════ LOGIN ════════════ */
-#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;background:#F4F6FA}
-.login-box{display:flex;flex-direction:column;align-items:center;gap:1.6rem;width:100%;max-width:400px}
-.login-box .menu-logo img{width:88px;height:88px}
-.login-box .menu-logo h1{font-size:2.2rem;letter-spacing:8px}
-.login-card{background:#fff;border:1px solid #E3E8F0;border-radius:16px;padding:1.8rem 1.6rem;width:100%;box-shadow:0 8px 30px rgba(20,30,60,.08);display:flex;flex-direction:column;gap:.9rem;box-sizing:border-box}
-.login-title{font-size:1rem;font-weight:800;letter-spacing:1px;color:#1F2937;text-align:center;text-transform:uppercase}
-.login-fgroup{display:flex;flex-direction:column;gap:.35rem}
-.login-fgroup label{font-size:.72rem;font-weight:700;letter-spacing:1px;color:#5B667A;text-transform:uppercase}
-.login-fgroup input{background:#F7F9FC;border:1px solid #D8DFEA;color:#1a2333;border-radius:8px;padding:.7rem .85rem;font-size:1rem;font-family:inherit;width:100%;box-sizing:border-box;transition:.15s}
-.login-fgroup input:focus{outline:none;border-color:var(--green);background:#fff;box-shadow:0 0 0 3px rgba(39,174,96,.12)}
-.login-fgroup input::placeholder{color:#AAB4C2}
-.login-error{color:var(--red);font-size:.8rem;min-height:1.1rem;text-align:center}
-.login-btn{width:100%;padding:.8rem;font-size:.9rem;font-weight:800;letter-spacing:1px;margin-top:.2rem}
-.login-user-badge{font-size:.68rem;font-weight:700;color:var(--muted);letter-spacing:.5px;white-space:nowrap}
-@media(max-width:560px){#login-screen{padding:1.2rem;align-items:flex-start;padding-top:7vh}.login-box .menu-logo h1{font-size:2rem;letter-spacing:6px}}
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;min-height:100dvh;padding:2rem;background:#EEF1F6;box-sizing:border-box}
+.login-wrap{display:flex;width:100%;max-width:1060px;min-height:600px;max-height:92vh;background:#fff;border-radius:22px;overflow:hidden;box-shadow:0 24px 60px rgba(20,50,35,.18)}
+
+/* ---- HERO (izquierda) ---- */
+.login-hero{position:relative;flex:1 1 54%;background:url('../img/hero.jpg') center/cover no-repeat;display:flex;align-items:center;justify-content:center;padding:2.4rem;color:#fff}
+.login-hero-overlay{position:absolute;inset:0;background:linear-gradient(155deg,rgba(26,110,55,.62) 0%,rgba(20,92,46,.72) 45%,rgba(12,66,33,.9) 100%)}
+.login-hero-content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;text-align:center;max-width:400px;width:100%}
+.login-hero-logo{width:148px;height:148px;border-radius:50%;background:#fff;padding:7px;object-fit:contain;box-shadow:0 10px 34px rgba(0,0,0,.28)}
+.login-hero-title{font-size:3.4rem;font-weight:900;letter-spacing:12px;margin:1.1rem 0 .1rem;text-shadow:0 2px 14px rgba(0,0,0,.35)}
+.login-hero-sep{width:70px;height:4px;background:#2ecc71;border-radius:4px;margin:.5rem 0 .9rem}
+.login-hero-sub{font-size:.86rem;letter-spacing:3px;text-transform:uppercase;font-weight:600;opacity:.96;margin:0 0 2rem;line-height:1.5}
+.login-features{display:flex;flex-direction:column;align-self:stretch;text-align:left}
+.login-feature{display:flex;align-items:center;gap:.85rem;font-size:.94rem;line-height:1.3;padding:1rem 0}
+.login-feature+.login-feature{border-top:1px solid rgba(255,255,255,.22)}
+.lf-ic{flex-shrink:0;width:42px;height:42px;border-radius:11px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center}
+.lf-ic svg{width:21px;height:21px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---- FORMULARIO (derecha) ---- */
+.login-panel{flex:1 1 46%;display:flex;align-items:center;justify-content:center;padding:2.4rem 2rem;background:#fff}
+.login-card{width:100%;max-width:360px;display:flex;flex-direction:column}
+.login-mobile-brand{display:none;align-items:center;justify-content:center;gap:.6rem;margin-bottom:1.2rem}
+.login-mobile-brand img{width:52px;height:52px;object-fit:contain;border-radius:50%;box-shadow:0 4px 16px rgba(27,138,74,.25)}
+.login-mobile-brand span{font-size:1.6rem;font-weight:900;letter-spacing:5px;color:#1F2937}
+.login-lock{width:74px;height:74px;border-radius:50%;background:#E7F7EE;display:flex;align-items:center;justify-content:center;margin:0 auto .8rem}
+.login-lock svg{width:32px;height:32px;stroke:#1B8A4A;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.login-welcome{font-size:2rem;font-weight:800;color:#1F2937;text-align:center;margin:.1rem 0 .25rem}
+.login-welcome-sub{font-size:.95rem;color:#7A879B;text-align:center;margin:0}
+.login-welcome-sep{width:54px;height:3px;background:#1B8A4A;border-radius:3px;margin:.9rem auto 1.5rem}
+.login-fgroup{display:flex;flex-direction:column;gap:.45rem;margin-bottom:1rem}
+.login-fgroup label{font-size:.84rem;font-weight:700;color:#374151}
+.login-input-wrap{position:relative;display:flex;align-items:center}
+.li-ic{position:absolute;left:.9rem;display:flex;pointer-events:none}
+.li-ic svg{width:18px;height:18px;stroke:#1B8A4A;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.login-input-wrap input{width:100%;box-sizing:border-box;padding:.85rem 2.7rem;border:1.5px solid #E3E8F0;border-radius:12px;font-size:1rem;font-family:inherit;color:#1a2333;background:#fff;transition:.15s}
+.login-input-wrap input::placeholder{color:#AAB4C2}
+.login-input-wrap input:focus{outline:none;border-color:#1B8A4A;box-shadow:0 0 0 3px rgba(27,138,74,.12)}
+.li-eye{position:absolute;right:.55rem;background:none;border:none;cursor:pointer;padding:.35rem;display:flex;color:#9AA4B5}
+.li-eye:hover{color:#1B8A4A}
+.li-eye svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.login-row{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin:.1rem 0 1.2rem;font-size:.85rem;flex-wrap:wrap}
+.login-remember{display:flex;align-items:center;gap:.45rem;color:#5B667A;cursor:pointer;user-select:none}
+.login-remember input{width:16px;height:16px;accent-color:#1B8A4A;cursor:pointer}
+.login-forgot{color:#1B8A4A;font-weight:700;cursor:pointer}
+.login-forgot:hover{text-decoration:underline}
+.login-error{color:var(--red);font-size:.85rem;min-height:1.1rem;text-align:center;margin-bottom:.4rem}
+.login-btn{display:flex;align-items:center;justify-content:center;gap:.55rem;width:100%;padding:.95rem;border:none;border-radius:12px;background:#1B7A3E;color:#fff;font-size:1rem;font-weight:800;letter-spacing:.5px;cursor:pointer;transition:.15s;box-shadow:0 10px 22px rgba(27,122,62,.28)}
+.login-btn:hover{background:#166534}
+.login-btn:active{transform:translateY(1px)}
+.login-btn:disabled{opacity:.7;cursor:default}
+.login-btn svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.login-foot-divider{display:flex;align-items:center;gap:.8rem;margin:1.7rem 0 .7rem}
+.login-foot-divider::before,.login-foot-divider::after{content:"";flex:1;height:1px;background:#E7ECF3}
+.login-foot-divider img{width:26px;height:26px;object-fit:contain;opacity:.85}
+.login-foot2{text-align:center;font-size:.78rem;color:#9AA4B5}
+.login-conn{display:flex;align-items:center;justify-content:center;gap:.4rem;font-size:.7rem;color:#AAB4C2;margin-top:.55rem}
+.login-conn .conn-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+
+/* ---- Responsive: en celular se muestra SOLO el login ---- */
+@media(max-width:860px){
+  #login-screen{padding:0;background:#fff}
+  .login-wrap{max-width:440px;min-height:0;max-height:none;height:100dvh;border-radius:0;box-shadow:none}
+  .login-hero{display:none}
+  .login-panel{flex:1;padding:2rem 1.5rem}
+  .login-mobile-brand{display:flex}
+}
+@media(max-width:400px){
+  .login-panel{padding:1.6rem 1.2rem}
+  .login-welcome{font-size:1.7rem}
+}
