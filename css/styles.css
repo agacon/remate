@@ -561,3 +561,20 @@ tr.pend{border-left:3px solid var(--gold)}
   /* El iframe del resumen ocupa toda la pantalla útil */
   #screen-admin #resumen-frame{min-height:80vh}
 }
+
+/* ════════════ LOGIN ════════════ */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;background:#F4F6FA}
+.login-box{display:flex;flex-direction:column;align-items:center;gap:1.6rem;width:100%;max-width:400px}
+.login-box .menu-logo img{width:88px;height:88px}
+.login-box .menu-logo h1{font-size:2.2rem;letter-spacing:8px}
+.login-card{background:#fff;border:1px solid #E3E8F0;border-radius:16px;padding:1.8rem 1.6rem;width:100%;box-shadow:0 8px 30px rgba(20,30,60,.08);display:flex;flex-direction:column;gap:.9rem;box-sizing:border-box}
+.login-title{font-size:1rem;font-weight:800;letter-spacing:1px;color:#1F2937;text-align:center;text-transform:uppercase}
+.login-fgroup{display:flex;flex-direction:column;gap:.35rem}
+.login-fgroup label{font-size:.72rem;font-weight:700;letter-spacing:1px;color:#5B667A;text-transform:uppercase}
+.login-fgroup input{background:#F7F9FC;border:1px solid #D8DFEA;color:#1a2333;border-radius:8px;padding:.7rem .85rem;font-size:1rem;font-family:inherit;width:100%;box-sizing:border-box;transition:.15s}
+.login-fgroup input:focus{outline:none;border-color:var(--green);background:#fff;box-shadow:0 0 0 3px rgba(39,174,96,.12)}
+.login-fgroup input::placeholder{color:#AAB4C2}
+.login-error{color:var(--red);font-size:.8rem;min-height:1.1rem;text-align:center}
+.login-btn{width:100%;padding:.8rem;font-size:.9rem;font-weight:800;letter-spacing:1px;margin-top:.2rem}
+.login-user-badge{font-size:.68rem;font-weight:700;color:var(--muted);letter-spacing:.5px;white-space:nowrap}
+@media(max-width:560px){#login-screen{padding:1.2rem;align-items:flex-start;padding-top:7vh}.login-box .menu-logo h1{font-size:2rem;letter-spacing:6px}}
