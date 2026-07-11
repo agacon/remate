@@ -388,6 +388,7 @@ async function admExportSingle() {
         : ['N°','CATEGORÍA','LOTE','CANT.','P/U','MONTO','COM %','TOTAL COM. $us','TOTAL COM. Bs.','',''];
       var hr=ws.getRow(5); hr.height=28;
       cols.forEach(function(h,i){
+        if(h==='') return; // no pintar columnas vacías (DEFENSAS usa solo 9)
         var c=hr.getCell(i+1); c.value=h;
         c.font={name:'Calibri',bold:true,size:10}; c.fill=hdrFill(HDRBG);
         c.border=border(); c.alignment={horizontal:'center',vertical:'middle',wrapText:true};
@@ -533,21 +534,21 @@ async function admExportSingle() {
         r.getCell(3).value=Math.round(usd*tc*100)/100; r.getCell(3).numFmt='#,##0.00'; r.getCell(3).alignment={horizontal:'right',vertical:'middle'};
       }
     }
-    function ecHdrLine(rowN, title, bg) {
+    function ecHdrLine(rowN, title, bg, fg) {
       var r=wsEC.getRow(rowN); r.height=20;
       wsEC.mergeCells(rowN,1,rowN,3);
-      var c=r.getCell(1); c.value=title; c.font={name:'Calibri',bold:true,size:12,color:{argb:'FFFFFFFF'}};
+      var c=r.getCell(1); c.value=title; c.font={name:'Calibri',bold:true,size:12,color:{argb:'FF'+(fg||'1F2937')}};
       c.fill=hdrFill(bg||'1F4E79'); c.border=border(); c.alignment={horizontal:'left',vertical:'middle'};
     }
 
     // Estado de cuenta con detalle por lote
     wsEC.columns=[{width:5},{width:30},{width:14},{width:8},{width:10},{width:14},{width:14},{width:15},{width:15}];
 
-    function ecSectionHdr(rowN, title, bg) {
+    function ecSectionHdr(rowN, title, bg, fg) {
       var r=wsEC.getRow(rowN); r.height=20;
       wsEC.mergeCells(rowN,1,rowN,9);
       var c=r.getCell(1); c.value=title;
-      c.font={name:'Calibri',bold:true,size:11,color:{argb:'FFFFFFFF'}};
+      c.font={name:'Calibri',bold:true,size:11,color:{argb:'FF'+(fg||'1F2937')}};
       c.fill=hdrFill(bg||'1F4E79'); c.border=border();
       c.alignment={horizontal:'left',vertical:'middle'};
     }
@@ -595,13 +596,13 @@ async function admExportSingle() {
         editAs: 'oneCell'
       });
     }
-    ecHdrLine(ecR, 'ESTADO DE CUENTA — '+personaNombre.toUpperCase()+(personaCI?' (CI: '+personaCI+')':''), '1F4E79'); ecR++;
+    ecHdrLine(ecR, 'ESTADO DE CUENTA — '+personaNombre.toUpperCase()+(personaCI?' (CI: '+personaCI+')':''), 'DDEBE2', '1B4D2E'); ecR++;
     var rt=wsEC.getRow(ecR); rt.getCell(1).value='Remate N° '+remateNumeroSingle+' — Fecha: '+fecha;
     rt.getCell(1).font={name:'Calibri',bold:true,size:11}; wsEC.mergeCells(ecR,1,ecR,9); ecR+=2;
 
     // ── COMPRAS detalle ──
     if(lotesCompras.length){
-      ecSectionHdr(ecR,'🛒  COMPRAS — lo que debe pagar','2E75B6'); ecR++;
+      ecSectionHdr(ecR,'🛒  COMPRAS — lo que debe pagar','DEEBF7','1F4E79'); ecR++;
       ecColHdr(ecR,['N°','PROPIETARIO','CATEGORÍA','LOTE','CANT.','P/U $us','MONTO $us','LIQ. PAGAR $us','LIQ. PAGAR Bs.']); ecR++;
       lotesCompras.forEach(function(l,i){
         var m=(l.precio||0)*(l.cantidad||0),c=m*comPct/100,liq=m+c;
@@ -613,7 +614,7 @@ async function admExportSingle() {
 
     // ── VENTAS detalle ──
     if(lotesVentas.length){
-      ecSectionHdr(ecR,'🏷  VENTAS — lo que debe cobrar','375623'); ecR++;
+      ecSectionHdr(ecR,'🏷  VENTAS — lo que debe cobrar','E2EFDA','375623'); ecR++;
       ecColHdr(ecR,['N°','COMPRADOR','CATEGORÍA','LOTE','CANT.','P/U $us','MONTO $us','LIQ. COBRAR $us','LIQ. COBRAR Bs.']); ecR++;
       lotesVentas.forEach(function(l,i){
         var m=(l.precio||0)*(l.cantidad||0),c=m*comPct/100,liq=m-c;
@@ -625,7 +626,7 @@ async function admExportSingle() {
 
     // ── DEFENSAS detalle ──
     if(lotesDefensas.length){
-      ecSectionHdr(ecR,'🛡  DEFENSAS — propios animales (solo comisión)','C55A11'); ecR++;
+      ecSectionHdr(ecR,'🛡  DEFENSAS — propios animales (solo comisión)','FCE9DC','9A4B0F'); ecR++;
       ecColHdr(ecR,['N°','CATEGORÍA','RAZA','LOTE','CANT.','P/U $us','MONTO $us','COM. $us','COM. Bs.']); ecR++;
       lotesDefensas.forEach(function(l,i){
         var m=(l.precio||0)*(l.cantidad||0),pct=l.defensaCom||0.5,com=m*pct/100;
@@ -651,13 +652,15 @@ async function admExportSingle() {
     });
     rSaldo.getCell(8).value=Math.round(Math.abs(saldo)*100)/100;
     rSaldo.getCell(9).value=Math.round(Math.abs(saldo)*tc*100)/100;
+    // Resaltar en AMARILLO el resultado en Bs. (el monto que se paga/cobra)
+    rSaldo.getCell(9).fill=hdrFill('FFE699');
     ecR+=2;
 
     // ── DATOS BANCARIOS ──
     if(saldoPos){
       // SALDO A FAVOR → AGACON le paga al cliente: campos vacíos para
       // completar a mano con los datos del cliente y enviar al contador.
-      ecSectionHdr(ecR,'DATOS BANCARIOS DEL CLIENTE — completar para el pago','375623'); ecR++;
+      ecSectionHdr(ecR,'DATOS BANCARIOS DEL CLIENTE — completar para el pago','DDEBE2','1B4D2E'); ecR++;
       ['TITULAR:','BANCO:','NRO. DE CUENTA:'].forEach(function(lbl){
         wsEC.mergeCells(ecR,1,ecR,9);
         var rr=wsEC.getRow(ecR); rr.height=20;
@@ -669,7 +672,7 @@ async function admExportSingle() {
       });
     } else if(bank.tipo||bank.cuenta||bank.titular1){
       // SALDO A PAGAR → el cliente paga a AGACON: se muestran los datos de AGACON.
-      ecSectionHdr(ecR,'DATOS BANCARIOS PARA TRANSFERENCIA','375623'); ecR++;
+      ecSectionHdr(ecR,'DATOS BANCARIOS PARA TRANSFERENCIA','DDEBE2','1B4D2E'); ecR++;
       var bankLines=[
         {t:bank.tipo, bold:false, color:'000000'},
         {t:bank.cuenta, bold:true, color:'C00000'},
