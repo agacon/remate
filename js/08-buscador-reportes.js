@@ -346,6 +346,13 @@ async function admExportSingle() {
   try {
     var wb = new ExcelJS.Workbook();
     wb.creator = 'AGACON';
+    // Logo AGACON (verde suave) para la cabecera de cada hoja
+    var logoImgId = null;
+    try {
+      if (typeof AGACON_LOGO_REPORTE === 'string' && AGACON_LOGO_REPORTE.indexOf('base64,') !== -1) {
+        logoImgId = wb.addImage({ base64: AGACON_LOGO_REPORTE.split('base64,')[1], extension: 'png' });
+      }
+    } catch (e) { console.warn('[AGACON] no se pudo registrar el logo:', e); }
     var yr = fecha.split('/')[2] || new Date().getFullYear();
     var YELLOW='FFFFCC', TOTBG='D9D9D9', HDRBG='D9E1F2', GRANDBG='BDD7EE';
 
@@ -354,6 +361,18 @@ async function admExportSingle() {
     function setW(ws) { ws.columns=[{width:5},{width:30},{width:12},{width:10},{width:10},{width:10},{width:14},{width:14},{width:15},{width:9},{width:16}]; }
 
     function writePersonaTitulo(ws, seccion) {
+      // Impresión: ajustar todo el ancho a una página (como el reporte impreso)
+      ws.pageSetup = { orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:0,
+        margins:{left:0.4,right:0.4,top:0.5,bottom:0.5,header:0.2,footer:0.2} };
+      // Logo AGACON arriba a la derecha (verde suave)
+      if (logoImgId !== null) {
+        ws.getRow(1).height = 22; ws.getRow(2).height = 22; ws.getRow(3).height = 22;
+        ws.addImage(logoImgId, {
+          tl: { col: 9.35, row: 0.15 },
+          ext: { width: 104, height: 80 },
+          editAs: 'oneCell'
+        });
+      }
       ws.getRow(1).getCell(1).value = 'AGACON — REMATE N° '+remateNumeroSingle+' — FECHA: '+fecha;
       ws.getRow(1).getCell(1).font = {name:'Calibri',bold:true,size:12};
       ws.getRow(2).getCell(1).value = 'PERSONA: '+personaNombre.toUpperCase()+(personaCI?' — CI: '+personaCI:'');
@@ -565,6 +584,17 @@ async function admExportSingle() {
     }
 
     // Título persona
+    // Impresión: ajustar el ancho a una página + logo AGACON arriba a la derecha
+    wsEC.pageSetup = { orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:0,
+      margins:{left:0.4,right:0.4,top:0.5,bottom:0.5,header:0.2,footer:0.2} };
+    if (logoImgId !== null) {
+      wsEC.getRow(1).height = 24; wsEC.getRow(2).height = 20; wsEC.getRow(3).height = 30;
+      wsEC.addImage(logoImgId, {
+        tl: { col: 7.6, row: 0.1 },
+        ext: { width: 94, height: 72 },
+        editAs: 'oneCell'
+      });
+    }
     ecHdrLine(ecR, 'ESTADO DE CUENTA — '+personaNombre.toUpperCase()+(personaCI?' (CI: '+personaCI+')':''), '1F4E79'); ecR++;
     var rt=wsEC.getRow(ecR); rt.getCell(1).value='Remate N° '+remateNumeroSingle+' — Fecha: '+fecha;
     rt.getCell(1).font={name:'Calibri',bold:true,size:11}; wsEC.mergeCells(ecR,1,ecR,9); ecR+=2;
@@ -624,7 +654,21 @@ async function admExportSingle() {
     ecR+=2;
 
     // ── DATOS BANCARIOS ──
-    if(bank.tipo||bank.cuenta||bank.titular1){
+    if(saldoPos){
+      // SALDO A FAVOR → AGACON le paga al cliente: campos vacíos para
+      // completar a mano con los datos del cliente y enviar al contador.
+      ecSectionHdr(ecR,'DATOS BANCARIOS DEL CLIENTE — completar para el pago','375623'); ecR++;
+      ['TITULAR:','BANCO:','NRO. DE CUENTA:'].forEach(function(lbl){
+        wsEC.mergeCells(ecR,1,ecR,9);
+        var rr=wsEC.getRow(ecR); rr.height=20;
+        var c=rr.getCell(1);
+        c.value=lbl+'  ';
+        c.font={name:'Calibri',bold:true,size:11};
+        c.border=border(); c.alignment={horizontal:'left',vertical:'middle'};
+        ecR++;
+      });
+    } else if(bank.tipo||bank.cuenta||bank.titular1){
+      // SALDO A PAGAR → el cliente paga a AGACON: se muestran los datos de AGACON.
       ecSectionHdr(ecR,'DATOS BANCARIOS PARA TRANSFERENCIA','375623'); ecR++;
       var bankLines=[
         {t:bank.tipo, bold:false, color:'000000'},
