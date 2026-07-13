@@ -632,3 +632,21 @@ tr.pend{border-left:3px solid var(--gold)}
   .login-panel{padding:1.6rem 1.2rem}
   .login-welcome{font-size:1.7rem}
 }
+
+/* ════════════ SOCIOS (Administración) ════════════ */
+.socios-head{gap:.8rem;flex-wrap:wrap}
+.socios-head-tools{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.socios-search{background:#fff;border:1.5px solid #E3E8F0;border-radius:9px;padding:.5rem .8rem;font-size:.88rem;font-family:inherit;color:#1a2333;width:250px;transition:.15s}
+.socios-search:focus{outline:none;border-color:#1B8A4A;box-shadow:0 0 0 3px rgba(27,138,74,.12)}
+.socios-search::placeholder{color:#AAB4C2}
+.socios-add-btn{padding:.5rem 1rem;font-size:.82rem;font-weight:800;border-radius:9px}
+.socios-count-pill{font-size:.62rem;font-weight:700;color:#1B8A4A;background:#E7F7EE;border-radius:20px;padding:.15rem .6rem;margin-left:.4rem;letter-spacing:.5px;text-transform:none}
+.socio-edit-btn{background:#EEF4FF;border:1px solid #D5E2F7;color:#2A4A78;border-radius:7px;padding:.32rem .7rem;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;white-space:nowrap}
+.socio-edit-btn:hover{background:#DFEAFB}
+#m-socio .socio-modal{background:#fff;border:1px solid #E3E8F0;box-shadow:0 20px 60px rgba(20,30,60,.3)}
+#m-socio .socio-modal h3{color:#1F2937}
+#m-socio .fgroup label{color:#5B667A}
+#m-socio .fgroup input{background:#F7F9FC;border:1.5px solid #D8DFEA;color:#1a2333;border-radius:8px}
+#m-socio .fgroup input:focus{border-color:#1B8A4A;background:#fff;box-shadow:0 0 0 3px rgba(27,138,74,.12)}
+#m-socio .btn{font-family:inherit;cursor:pointer}
+@media(max-width:700px){.socios-search{width:100%}.socios-head-tools{width:100%}}

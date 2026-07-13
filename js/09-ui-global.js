@@ -12,6 +12,7 @@ function admShowPanel(name, btn){
   document.querySelectorAll('#screen-admin .adm-nav').forEach(function(b){b.classList.remove('on');});
   if(btn)btn.classList.add('on');
   if(name==='comp') admEmbedCompradores();
+  if(name==='socios' && typeof sociosAdminLoad==='function') sociosAdminLoad();
 }
 // Mueve la pantalla de Compradores dentro del panel del admin (una sola vez)
 function admEmbedCompradores(){

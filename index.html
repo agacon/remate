@@ -524,6 +524,7 @@
       <button class="adm-nav on" onclick="admShowPanel('resumen',this)"><span class="an-ic"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg></span><span class="an-tx">Resumen</span></button>
       <button class="adm-nav" onclick="admShowPanel('comp',this)"><span class="an-ic"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span><span class="an-tx">Asignar Comprador</span></button>
       <button class="adm-nav" onclick="admShowPanel('reportes',this)"><span class="an-ic"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></span><span class="an-tx">Reportes</span></button>
+      <button class="adm-nav" onclick="admShowPanel('socios',this)"><span class="an-ic"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span><span class="an-tx">Socios</span></button>
       <button class="adm-nav" onclick="admShowPanel('config',this)"><span class="an-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></span><span class="an-tx">Configuración</span></button>
     </div>
     <div class="adm-foot" onclick="logout()" title="Cerrar sesión">
@@ -702,6 +703,53 @@
     <div id="adm-tab-def" class="tab-content"><div class="tbl-wrap"><div class="tbl-scroll"><table><thead><tr><th>N°</th><th>Propietario</th><th>Categoría</th><th>Lote</th><th>Cant.</th><th>P/U</th><th>Monto</th><th>Com. defensa</th></tr></thead><tbody id="adm-tbody-def"></tbody></table></div></div></div>
     <div id="adm-tab-res" class="tab-content"><div class="tbl-wrap" style="padding:1.5rem"><div id="adm-resumen" style="font-size:.88rem;color:var(--muted);line-height:2">Seleccioná un remate.</div></div></div>
     </div><!-- fin adm-panel-reportes -->
+
+    <div id="adm-panel-socios" class="adm-panel">
+      <div class="tbl-wrap">
+        <div class="tbl-head socios-head">
+          <h2>👥 SOCIOS <span id="socios-adm-count" class="socios-count-pill"></span></h2>
+          <div class="socios-head-tools">
+            <input type="text" id="socios-adm-search" class="socios-search"
+              placeholder="🔍 Buscar por nombre o CI..." oninput="sociosAdminFilter()">
+            <button class="btn btn-green socios-add-btn" onclick="sociosAdminNew()">+ Añadir socio</button>
+          </div>
+        </div>
+        <div class="tbl-scroll">
+          <table>
+            <thead>
+              <tr><th style="width:52px;">N°</th><th>NOMBRE</th><th>CI</th><th>TELÉFONO</th><th style="width:90px;">ACCIÓN</th></tr>
+            </thead>
+            <tbody id="socios-adm-tbody">
+              <tr><td colspan="5" style="text-align:center;color:var(--muted);">Cargando socios...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div><!-- fin adm-panel-socios -->
+
+    <!-- Modal añadir/editar socio -->
+    <div class="overlay" id="m-socio" style="z-index:500;">
+      <div class="modal socio-modal">
+        <h3 id="m-socio-title" style="font-size:1rem;letter-spacing:2px;">AÑADIR SOCIO</h3>
+        <div class="fgroup">
+          <label>Nombre completo *</label>
+          <input type="text" id="m-socio-nombre" placeholder="Apellidos y nombres">
+        </div>
+        <div class="fgroup">
+          <label>CI *</label>
+          <input type="text" id="m-socio-ci" placeholder="Ej: 3228076 SC">
+        </div>
+        <div class="fgroup">
+          <label>Teléfono (opcional)</label>
+          <input type="text" id="m-socio-tel" placeholder="Ej: 71234567">
+        </div>
+        <div id="m-socio-error" style="color:var(--red);font-size:.8rem;min-height:1rem;"></div>
+        <div style="display:flex;gap:.6rem;justify-content:flex-end;">
+          <button class="btn" onclick="closeModal('m-socio')">Cancelar</button>
+          <button class="btn btn-green" id="m-socio-save" onclick="sociosAdminSave()">Guardar</button>
+        </div>
+      </div>
+    </div>
 
     <div id="adm-panel-comp" class="adm-panel"></div>
   </div><!-- fin admin-body -->
@@ -924,5 +972,6 @@
 <script src="js/09-ui-global.js"></script>
 <script src="js/10-balanza-inicio.js"></script>
 <script src="js/11-login.js"></script>
+<script src="js/12-socios-admin.js"></script>
 </body>
 </html>
