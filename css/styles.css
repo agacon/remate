@@ -268,7 +268,11 @@ tr.pend{border-left:3px solid var(--gold)}
 .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:#fff;padding:.62rem 1.3rem;border-radius:7px;font-weight:700;font-size:.8rem;z-index:300;transition:transform .28s;pointer-events:none;white-space:nowrap}
 .toast.show{transform:translateX(-50%) translateY(0)}
 .toast.err{background:var(--red)}
-::-webkit-scrollbar{width:3px} ::-webkit-scrollbar-thumb{background:var(--border)}
+::-webkit-scrollbar{width:12px;height:12px}
+::-webkit-scrollbar-track{background:rgba(0,0,0,.06)}
+::-webkit-scrollbar-thumb{background:#9aa7b8;border-radius:8px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:#6f7f93;background-clip:padding-box}
+*{scrollbar-width:auto;scrollbar-color:#9aa7b8 rgba(0,0,0,.06)}
 @keyframes numFlip{0%{transform:scaleY(1.1)}100%{transform:scaleY(1)}}
 .num-flip{animation:numFlip .15s ease-out}
 
@@ -650,3 +654,15 @@ tr.pend{border-left:3px solid var(--gold)}
 #m-socio .fgroup input:focus{border-color:#1B8A4A;background:#fff;box-shadow:0 0 0 3px rgba(27,138,74,.12)}
 #m-socio .btn{font-family:inherit;cursor:pointer}
 @media(max-width:700px){.socios-search{width:100%}.socios-head-tools{width:100%}}
+
+/* ════ Scrollbar más gruesa en la tabla de Asignar Comprador ════ */
+#screen-compradores .tbl-scroll::-webkit-scrollbar,
+#adm-panel-comp .tbl-scroll::-webkit-scrollbar{width:16px;height:16px}
+#screen-compradores .tbl-scroll::-webkit-scrollbar-track,
+#adm-panel-comp .tbl-scroll::-webkit-scrollbar-track{background:#EEF2F7;border-radius:10px}
+#screen-compradores .tbl-scroll::-webkit-scrollbar-thumb,
+#adm-panel-comp .tbl-scroll::-webkit-scrollbar-thumb{background:#8A99AD;border-radius:10px;border:3px solid #EEF2F7;background-clip:padding-box}
+#screen-compradores .tbl-scroll::-webkit-scrollbar-thumb:hover,
+#adm-panel-comp .tbl-scroll::-webkit-scrollbar-thumb:hover{background:#5f6f85;background-clip:padding-box}
+#screen-compradores .tbl-scroll,
+#adm-panel-comp .tbl-scroll{scrollbar-width:auto;scrollbar-color:#8A99AD #EEF2F7}
