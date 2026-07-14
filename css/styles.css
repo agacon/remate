@@ -667,6 +667,7 @@ tr.pend{border-left:3px solid var(--gold)}
 #screen-compradores .tbl-scroll,
 #adm-panel-comp .tbl-scroll{scrollbar-width:auto;scrollbar-color:#8A99AD #EEF2F7}
 
-/* ════ Filas de DEFENSA en Asignar Comprador: fondo amarillo suave ════ */
-tr.row-defensa td{background:#FFF6D6}
-tr.row-defensa.done td{background:#FFF9E4}
+/* ════ Filas de DEFENSA en Asignar Comprador: fondo amarillo ════ */
+tr.row-defensa td{background:#FFE8A3}
+tr.row-defensa.done td{background:#FFEFBC}
+.tag-defensa{display:inline-block;background:#B8860B;color:#fff;font-size:.6rem;font-weight:800;letter-spacing:.5px;border-radius:4px;padding:.1rem .4rem;margin-top:.2rem}
