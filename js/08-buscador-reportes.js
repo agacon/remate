@@ -386,7 +386,7 @@ async function admExportSingle() {
         : seccion==='VENTAS'
         ? ['N°','COMPRADOR','CATEGORÍA','LOTE','CANT.','P/U','MONTO','COM '+comPct+'%','LIQ. A COBRAR $us','T/C','LIQ. A COBRAR Bs.']
         : ['N°','CATEGORÍA','LOTE','CANT.','P/U','MONTO','COM %','TOTAL COM. $us','TOTAL COM. Bs.','',''];
-      var hr=ws.getRow(5); hr.height=22;
+      var hr=ws.getRow(5); hr.height=30;
       cols.forEach(function(h,i){
         if(h==='') return; // no pintar columnas vacías (DEFENSAS usa solo 9)
         var c=hr.getCell(i+1); c.value=h;
