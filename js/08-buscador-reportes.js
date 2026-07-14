@@ -358,18 +358,18 @@ async function admExportSingle() {
 
     function border() { var s={style:'thin',color:{argb:'FFAAAAAA'}}; return {top:s,bottom:s,left:s,right:s}; }
     function hdrFill(c) { return {type:'pattern',pattern:'solid',fgColor:{argb:'FF'+c}}; }
-    function setW(ws) { ws.columns=[{width:5},{width:30},{width:12},{width:10},{width:10},{width:10},{width:14},{width:14},{width:15},{width:9},{width:16}]; }
+    function setW(ws) { ws.columns=[{width:4},{width:27},{width:11},{width:7},{width:7},{width:9},{width:11},{width:10},{width:13},{width:6},{width:14}]; }
 
     function writePersonaTitulo(ws, seccion) {
-      // Impresión: ajustar todo el ancho a una página (como el reporte impreso)
-      ws.pageSetup = { orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:0,
-        margins:{left:0.4,right:0.4,top:0.5,bottom:0.5,header:0.2,footer:0.2} };
+      // Impresión: horizontal, todo el ancho en una página, márgenes ajustados
+      ws.pageSetup = { orientation:'landscape', fitToPage:true, fitToWidth:1, fitToHeight:0,
+        margins:{left:0.3,right:0.3,top:0.4,bottom:0.4,header:0.15,footer:0.15} };
       // Logo AGACON arriba a la derecha (verde suave)
       if (logoImgId !== null) {
-        ws.getRow(1).height = 22; ws.getRow(2).height = 22; ws.getRow(3).height = 22;
+        ws.getRow(1).height = 18; ws.getRow(2).height = 18; ws.getRow(3).height = 18;
         ws.addImage(logoImgId, {
-          tl: { col: 9.35, row: 0.15 },
-          ext: { width: 104, height: 80 },
+          tl: { col: 9.35, row: 0.1 },
+          ext: { width: 86, height: 66 },
           editAs: 'oneCell'
         });
       }
@@ -386,7 +386,7 @@ async function admExportSingle() {
         : seccion==='VENTAS'
         ? ['N°','COMPRADOR','CATEGORÍA','LOTE','CANT.','P/U','MONTO','COM '+comPct+'%','LIQ. A COBRAR $us','T/C','LIQ. A COBRAR Bs.']
         : ['N°','CATEGORÍA','LOTE','CANT.','P/U','MONTO','COM %','TOTAL COM. $us','TOTAL COM. Bs.','',''];
-      var hr=ws.getRow(5); hr.height=28;
+      var hr=ws.getRow(5); hr.height=22;
       cols.forEach(function(h,i){
         if(h==='') return; // no pintar columnas vacías (DEFENSAS usa solo 9)
         var c=hr.getCell(i+1); c.value=h;
