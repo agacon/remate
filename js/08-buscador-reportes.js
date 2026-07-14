@@ -536,7 +536,7 @@ async function admExportSingle() {
     }
     function ecHdrLine(rowN, title, bg, fg) {
       var r=wsEC.getRow(rowN); r.height=20;
-      wsEC.mergeCells(rowN,1,rowN,3);
+      wsEC.mergeCells(rowN,1,rowN,7);
       var c=r.getCell(1); c.value=title; c.font={name:'Calibri',bold:true,size:12,color:{argb:'FF'+(fg||'1F2937')}};
       c.fill=hdrFill(bg||'1F4E79'); c.border=border(); c.alignment={horizontal:'left',vertical:'middle'};
     }
@@ -569,12 +569,18 @@ async function admExportSingle() {
         else{c.alignment={horizontal:i<=1?'left':'center',vertical:'middle'};}
       });
     }
-    function ecSubtotalRow(rowN, label, usd, bg) {
+    function ecSubtotalRow(rowN, label, usd, bg, cant) {
       var r=wsEC.getRow(rowN); r.height=16;
-      wsEC.mergeCells(rowN,1,rowN,6);
+      wsEC.mergeCells(rowN,1,rowN,4);
       var cl=r.getCell(1); cl.value=label;
       cl.font={name:'Calibri',bold:true,size:10}; cl.fill=hdrFill(bg||TOTBG);
       cl.border=border(); cl.alignment={horizontal:'right',vertical:'middle'};
+      // Total de cabezas en la columna CANT.
+      var c5=r.getCell(5); c5.fill=hdrFill(bg||TOTBG); c5.border=border();
+      c5.font={name:'Calibri',bold:true,size:10};
+      c5.alignment={horizontal:'center',vertical:'middle'};
+      if(cant!=null) c5.value=cant;
+      var c6=r.getCell(6); c6.fill=hdrFill(bg||TOTBG); c6.border=border();
       [7,8,9].forEach(function(ci){
         var c=r.getCell(ci); c.fill=hdrFill(bg||TOTBG); c.border=border();
         c.font={name:'Calibri',bold:true,size:10}; c.numFmt='#,##0.00';
@@ -585,9 +591,9 @@ async function admExportSingle() {
     }
 
     // Título persona
-    // Impresión: ajustar el ancho a una página + logo AGACON arriba a la derecha
-    wsEC.pageSetup = { orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:0,
-      margins:{left:0.4,right:0.4,top:0.5,bottom:0.5,header:0.2,footer:0.2} };
+    // Impresión: horizontal, ancho ajustado a una página + logo AGACON arriba a la derecha
+    wsEC.pageSetup = { orientation:'landscape', fitToPage:true, fitToWidth:1, fitToHeight:0,
+      margins:{left:0.3,right:0.3,top:0.4,bottom:0.4,header:0.15,footer:0.15} };
     if (logoImgId !== null) {
       wsEC.getRow(1).height = 24; wsEC.getRow(2).height = 20; wsEC.getRow(3).height = 30;
       wsEC.addImage(logoImgId, {
@@ -609,7 +615,7 @@ async function admExportSingle() {
         ecLoteRow(ecR,[i+1,l.propietario||'—',l.categoria||'',l.lote,l.cantidad,l.precio||0,m,liq,liq*tc],'FFFFFF');
         ecR++;
       });
-      ecSubtotalRow(ecR,'SUBTOTAL COMPRAS (a pagar)',totalCompra,'BDD7EE'); ecR+=2;
+      ecSubtotalRow(ecR,'SUBTOTAL COMPRAS (a pagar)',totalCompra,'BDD7EE',lotesCompras.reduce(function(s,l){return s+(+l.cantidad||0);},0)); ecR+=2;
     }
 
     // ── VENTAS detalle ──
@@ -621,7 +627,7 @@ async function admExportSingle() {
         ecLoteRow(ecR,[i+1,l.comprador||'SIN COMPRADOR',l.categoria||'',l.lote,l.cantidad,l.precio||0,m,liq,liq*tc],'FFFFFF');
         ecR++;
       });
-      ecSubtotalRow(ecR,'SUBTOTAL VENTAS (a cobrar)',totalVenta,'E2EFDA'); ecR+=2;
+      ecSubtotalRow(ecR,'SUBTOTAL VENTAS (a cobrar)',totalVenta,'E2EFDA',lotesVentas.reduce(function(s,l){return s+(+l.cantidad||0);},0)); ecR+=2;
     }
 
     // ── DEFENSAS detalle ──
@@ -633,7 +639,7 @@ async function admExportSingle() {
         ecLoteRow(ecR,[i+1,l.categoria||'—',l.raza||'—',l.lote,l.cantidad,l.precio||0,m,com,com*tc],'FFFFFF');
         ecR++;
       });
-      ecSubtotalRow(ecR,'SUBTOTAL DEFENSA (comisión a pagar)',totalDefCom,'FCE4D6'); ecR+=2;
+      ecSubtotalRow(ecR,'SUBTOTAL DEFENSA (comisión a pagar)',totalDefCom,'FCE4D6',lotesDefensas.reduce(function(s,l){return s+(+l.cantidad||0);},0)); ecR+=2;
     }
 
     // ── SALDO NETO ──

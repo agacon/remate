@@ -103,6 +103,7 @@ function compRenderTable() {
     tdProp.style.cssText=fontSize;
     tdProp.textContent=l.propietario||'—';
     if(l.ciPropietario){var brP=document.createElement('br');var smP=document.createElement('small');smP.style.cssText='color:#888;font-size:.66rem';smP.textContent='CI: '+l.ciPropietario;tdProp.appendChild(brP);tdProp.appendChild(smP);}
+    if(l.esDefensa){var brD=document.createElement('br');var tag=document.createElement('span');tag.className='tag-defensa';tag.textContent='🛡 DEFENSA';tdProp.appendChild(brD);tdProp.appendChild(tag);}
     tr.appendChild(tdProp);
     // Cantidad
     tr.appendChild(cell(l.cantidad, fontBig+';text-align:center'));
