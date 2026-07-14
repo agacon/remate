@@ -60,7 +60,7 @@ function parseXLS(buffer, name) {
     for (var i=0;i<raw.length;i++) { if(raw[i]&&String(raw[i][0]).toUpperCase().trim()==='LOTE'){hi=i;break;} }
     if (hi<0) { toast('No se encontro encabezado LOTE', true); return; }
     var H = raw[hi].map(function(h){ return h?String(h).toUpperCase().trim():''; });
-    var c = {lote:H.indexOf('LOTE'),orden:H.indexOf('ORDEN'),propietario:H.findIndex(function(h){return h==='PROPIETARIO';}),ciProp:H.findIndex(function(h){var hn=h.replace(/[^A-Z]/g,'');return hn.indexOf('CI')>=0 && hn.indexOf('PROP')>=0;}),estancia:H.indexOf('ESTANCIA'),cantidad:H.indexOf('CANTIDAD'),categoria:H.indexOf('CATEGORIA'),raza:H.indexOf('RAZA'),edad:H.indexOf('EDAD'),obs:H.findIndex(function(h){return h==='OBS.'||h==='OBS';})};
+    var c = {lote:H.indexOf('LOTE'),orden:H.indexOf('ORDEN'),propietario:H.findIndex(function(h){return h==='PROPIETARIO';}),ciProp:H.findIndex(function(h){var hn=h.replace(/[^A-ZÉ]/g,'').replace(/É/g,'E');return hn==='CI' || hn==='NROCI' || hn==='CINRO' || hn.indexOf('CEDULA')>=0 || (hn.indexOf('CI')>=0 && (hn.indexOf('PROP')>=0 || hn.indexOf('VEND')>=0));}),estancia:H.indexOf('ESTANCIA'),cantidad:H.indexOf('CANTIDAD'),categoria:H.indexOf('CATEGORIA'),raza:H.indexOf('RAZA'),edad:H.indexOf('EDAD'),obs:H.findIndex(function(h){return h==='OBS.'||h==='OBS';})};
     var data = [];
     for (var i=hi+1;i<raw.length;i++) {
       var r=raw[i]; if(!r) continue;
