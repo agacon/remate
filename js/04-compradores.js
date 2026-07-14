@@ -88,6 +88,7 @@ function compRenderTable() {
     var hasBuyer=!!l.comprador;
     var tr=document.createElement('tr');
     tr.className=hasBuyer?'done':'pend';
+    if(l.esDefensa) tr.classList.add('row-defensa');
     function cell(text,style){var td=document.createElement('td');td.textContent=text;if(style)td.style.cssText=style;return td;}
     var dispMonto    = l.montoTotal   || total;
     var dispCom      = l.comision     || parseFloat((total*0.03).toFixed(2));
@@ -112,7 +113,7 @@ function compRenderTable() {
     // Precio unitario
     tr.appendChild(cell('$us '+(l.precio||0), fontBig+';color:#1a2333'));
     // Total
-    tr.appendChild(cell('$us '+dispMonto.toLocaleString(), fontBig+';color:#f39c12'));
+    tr.appendChild(cell('$us '+dispMonto.toLocaleString(), fontBig+';color:#4a4a4a'));
     // Comision 3%
     tr.appendChild(cell('$us '+dispCom.toFixed(2), fontSize+';color:#555'));
     // Liq. Pagable
