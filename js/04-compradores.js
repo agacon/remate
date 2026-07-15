@@ -28,7 +28,7 @@ function compLoadRemate(remId) {
   if (_compPoller) clearInterval(_compPoller);
   function fetchAndRender() {
     supaGetLotes(remId).then(function(lotes) {
-      compLotes = lotes;
+      compLotes = lotes.filter(function(l){return l.saved;});
       compRenderTable();
       compUpdateStats();
     });

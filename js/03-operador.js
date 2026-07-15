@@ -21,6 +21,7 @@ document.getElementById('file-in').addEventListener('change', function(e){ if(e.
 // Update remate ID preview as user types
 document.getElementById('remate-num').addEventListener('input', function() {
   updateRematePreview();
+  opCheckExistingRemate();
 });
 
 function updateRematePreview() {
@@ -163,6 +164,16 @@ async function initFirebaseRemate() {
   localStorage.setItem('agacon_remateId', remateId);
   localStorage.setItem('agacon_remateNombre', nombreRemate);
   toast('Iniciado: ' + nombreRemate);
+
+  // Subir el catálogo COMPLETO en segundo plano (lotes sin trabajar incluidos).
+  // Esto permite reanudar el remate desde la nube sin volver a subir el Excel.
+  (async function(){
+    for (var i = 0; i < lots.length; i++) {
+      if (!lots[i].saved) {
+        try { await supaUpsertLote(remateId, lots[i]); } catch(e) {}
+      }
+    }
+  })();
 
   // Poll for buyer updates from compradores module
   startLotesPolling(remateId, function(remoteLotes) {
@@ -644,3 +655,90 @@ var compLotes=[], compFilterMode='todos', compRemateId=null, compCurrentLotKey=n
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initDrag);
   else initDrag();
 })();
+
+/* ═══════════════════════════════════════════════
+   REANUDAR REMATE — detecta un remate existente por
+   número y permite continuarlo desde la nube, sin
+   volver a subir el Excel.
+   ═══════════════════════════════════════════════ */
+var _resumeRemate = null, _resumeTimer = null, _resumeToken = 0;
+
+function opCheckExistingRemate() {
+  clearTimeout(_resumeTimer);
+  _resumeTimer = setTimeout(async function() {
+    var box = document.getElementById('op-resume-box');
+    if (!box) return;
+    var num = parseInt(document.getElementById('remate-num').value);
+    if (!num) { box.style.display = 'none'; _resumeRemate = null; return; }
+    var tok = ++_resumeToken;
+    try {
+      var res = await supa.from('remates').select('*')
+        .eq('numero', num).order('creado_en', {ascending:false}).limit(1);
+      if (tok !== _resumeToken) return; // llegó tarde, hay otra consulta en curso
+      var row = res.data && res.data[0];
+      if (!row) { box.style.display = 'none'; _resumeRemate = null; return; }
+      var lotes = await supaGetLotes(row.id);
+      if (tok !== _resumeToken) return;
+      var con = lotes.filter(function(l){ return l.saved; }).length;
+      _resumeRemate = { row: row, lotes: lotes };
+      document.getElementById('op-resume-txt').innerHTML =
+        '<b>' + (row.nombre || ('REMATE N°'+num)) + '</b> ya existe en la nube: ' +
+        lotes.length + ' lotes, ' + con + ' trabajados.';
+      box.style.display = 'flex';
+    } catch(e) { /* sin conexión: no mostrar nada */ }
+  }, 450);
+}
+
+function opResumeRemate() {
+  if (!_resumeRemate) return;
+  var row = _resumeRemate.row;
+  var con = _resumeRemate.lotes.filter(function(l){ return l.saved; }).length;
+  if (!confirm('¿Querés continuar "' + (row.nombre||'este remate') + '" donde quedó?\n\n' +
+    'Se cargarán ' + _resumeRemate.lotes.length + ' lotes desde la nube (' + con +
+    ' ya trabajados). No hace falta volver a subir el Excel.')) return;
+
+  lots = _resumeRemate.lotes.slice().sort(function(a,b){ return (a.orden||0)-(b.orden||0); });
+  remateId = row.id;
+  localStorage.setItem('agacon_remateId', remateId);
+  localStorage.setItem('agacon_remateNombre', row.nombre || '');
+  if (row.tc) document.getElementById('remate-tc').value = row.tc;
+  document.getElementById('remate-num').value = row.numero != null ? row.numero : '';
+  updateRematePreview();
+
+  // Posicionarse en el primer lote sin trabajar
+  cur = lots.findIndex(function(l){ return !l.saved; });
+  if (cur < 0) cur = Math.max(lots.length - 1, 0);
+
+  document.getElementById('op-import').style.display = 'none';
+  document.getElementById('op-panel').style.display = 'grid';
+  document.getElementById('op-live-badge').style.display = 'inline';
+
+  // Sincronización de compradores asignados remotamente (igual que al iniciar)
+  startLotesPolling(remateId, function(remoteLotes) {
+    var updated = false;
+    remoteLotes.forEach(function(fbLot) {
+      var local = lots.find(function(l){ return l.lote===fbLot.lote && l.orden===fbLot.orden; });
+      if (local && fbLot.comprador && !local.comprador) {
+        local.comprador=fbLot.comprador; local.compradorCI=fbLot.compradorCI||''; local.compradorTel=fbLot.compradorTel||'';
+        updated = true;
+      }
+    });
+    if (updated) { renderSidebar(); toast('Comprador asignado remotamente'); }
+  });
+
+  renderOp();
+  setInterval(function(){ var e=document.getElementById('op-date'); if(e) e.textContent = new Date().toLocaleString('es-BO',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'}); }, 1000);
+  toast('Continuando: ' + (row.nombre || 'remate') + ' — lote ' + (lots[cur] ? lots[cur].lote : ''));
+}
+
+// Reanudar directamente desde la tabla de remates de la pantalla de inicio
+async function opResumeFromList(idx) {
+  var row = (window._opRematesCache || [])[idx];
+  if (!row) return;
+  toast('Cargando remate…');
+  try {
+    var lotes = await supaGetLotes(row.id);
+    _resumeRemate = { row: row, lotes: lotes };
+    opResumeRemate();
+  } catch(e) { toast('No se pudo cargar el remate', true); }
+}

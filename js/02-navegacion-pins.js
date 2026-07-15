@@ -98,12 +98,13 @@ function opLoadRemates() {
     var data = res.data || [];
     if (res.error) { tbody.innerHTML = '<tr><td colspan="3" style="padding:.8rem;color:#C0392B;text-align:center">Error al cargar</td></tr>'; return; }
     if (!data.length) { tbody.innerHTML = '<tr><td colspan="3" style="padding:.8rem;color:#9AA4B5;text-align:center">Aún no hay remates</td></tr>'; return; }
-    tbody.innerHTML = data.map(function(r){
+    window._opRematesCache = data;
+    tbody.innerHTML = data.map(function(r, idx){
       var hora = r.creado_en ? new Date(r.creado_en).toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit'}) : '';
       var nombre = r.nombre || ('Remate '+(r.fecha||''));
-      return '<tr style="border-bottom:1px solid #EEF1F6">'+
+      return '<tr style="border-bottom:1px solid #EEF1F6;cursor:pointer" title="Continuar este remate" onclick="opResumeFromList('+idx+')">'+
         '<td style="padding:.4rem .5rem;font-weight:800;color:#1B8A4A">'+(r.numero!=null?r.numero:'—')+'</td>'+
-        '<td style="padding:.4rem .5rem;color:#1a2333">'+nombre+'</td>'+
+        '<td style="padding:.4rem .5rem;color:#1a2333">'+nombre+' <span style="color:#1B8A4A;font-size:.7rem;font-weight:700">▶ continuar</span></td>'+
         '<td style="padding:.4rem .5rem;color:#5B667A;white-space:nowrap">'+(r.fecha||'')+(hora?' · '+hora:'')+'</td>'+
       '</tr>';
     }).join('');
