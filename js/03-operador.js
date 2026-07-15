@@ -605,3 +605,42 @@ function exportCSV(){var cols=['orden','lote','propietario','estancia','cantidad
 //  COMPRADORES MODULE
 // ════════════════════════════════════════
 var compLotes=[], compFilterMode='todos', compRemateId=null, compCurrentLotKey=null;
+
+/* ── Arrastre del panel flotante "Nuevo Lote" ── */
+(function(){
+  function initDrag(){
+    var head = document.getElementById('m-addlot-drag');
+    var panel = document.getElementById('m-addlot');
+    if(!head || !panel) return;
+    var sx=0, sy=0, ox=0, oy=0, dragging=false;
+    function down(e){
+      if(e.target.classList.contains('mini-close')) return;
+      dragging=true;
+      var p = e.touches ? e.touches[0] : e;
+      sx=p.clientX; sy=p.clientY;
+      var r = panel.getBoundingClientRect();
+      ox=r.left; oy=r.top;
+      // pasar a coordenadas left/top para mover libre
+      panel.style.left=r.left+'px'; panel.style.top=r.top+'px'; panel.style.right='auto';
+      e.preventDefault();
+    }
+    function move(e){
+      if(!dragging) return;
+      var p = e.touches ? e.touches[0] : e;
+      var nl = ox + (p.clientX-sx), nt = oy + (p.clientY-sy);
+      // mantener dentro de la ventana
+      nl = Math.max(4, Math.min(nl, window.innerWidth - panel.offsetWidth - 4));
+      nt = Math.max(4, Math.min(nt, window.innerHeight - 40));
+      panel.style.left=nl+'px'; panel.style.top=nt+'px';
+    }
+    function up(){ dragging=false; }
+    head.addEventListener('mousedown', down);
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+    head.addEventListener('touchstart', down, {passive:false});
+    document.addEventListener('touchmove', move, {passive:false});
+    document.addEventListener('touchend', up);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initDrag);
+  else initDrag();
+})();

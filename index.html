@@ -667,9 +667,10 @@
     <div class="export-bar">
       <h3>Exportar</h3>
       <button class="btn btn-gold" onclick="admExportExcel()">⬇ Excel completo</button>
-      <button class="btn btn-blue" onclick="admImprimirExcel('completo')">🖨 Imprimir completo</button>
+      <button class="btn btn-blue btn-icon" onclick="admImprimirExcel('completo')" title="Imprimir completo">🖨</button>
       <button class="btn btn-gold" onclick="admExportPlataforma()">🌐 Excel otra plataforma</button>
-      <button class="btn btn-blue" onclick="admImprimirExcel('plataforma')">🖨 Imprimir plataforma</button>
+      <button class="btn btn-blue btn-icon" onclick="admImprimirExcel('plataforma')" title="Imprimir plataforma">🖨</button>
+      <button class="btn btn-gold" onclick="admExportParticipantes()" title="Excel con la lista de participantes">⬇ 👥 Participantes</button>
     </div>
     <!-- Filter by comprador/vendedor with autocomplete -->
     <div style="display:flex;align-items:flex-start;gap:.7rem;flex-wrap:wrap;flex-shrink:0;">
@@ -781,11 +782,14 @@
   </div>
 </div>
 
-<!-- Add lot modal -->
-<div class="overlay" id="m-addlot">
-  <div class="modal">
-    <h3>➕ Nuevo Lote</h3>
-    <div style="font-size:.75rem;color:var(--muted)">Se inserta entre lotes sin alterar el orden existente.</div>
+<!-- Add lot: panel flotante (no bloquea el operador) -->
+<div class="mini-panel" id="m-addlot">
+  <div class="mini-inner">
+    <div class="mini-head" id="m-addlot-drag">
+      <span>➕ Nuevo Lote</span>
+      <button class="mini-close" onclick="closeModal('m-addlot')" title="Cerrar">✕</button>
+    </div>
+    <div style="font-size:.68rem;color:var(--muted)">Se inserta entre lotes sin alterar el orden. Podés seguir operando mientras lo llenás.</div>
     <div class="fgroup"><label>Insertar después del lote</label>
       <select id="al-after" onchange="updateAddLotPreview()" style="background:#fff;border:1px solid #D7DEE8;color:#1a2333;border-radius:6px;padding:.5rem .75rem;font-size:.88rem;width:100%">
         <option value="-1">— Al inicio —</option>

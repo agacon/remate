@@ -1055,3 +1055,116 @@ async function admExportExcel() {
   }
 }
 
+
+/* ═══════════════════════════════════════════════
+   LISTA DE PARTICIPANTES (Excel) — agrupada por nombre.
+   Columnas: COMPRÓ / VENDIÓ / DEFENDIÓ (cabezas).
+   Sirve como base de control para imprimir los
+   reportes individuales de cada participante.
+   ═══════════════════════════════════════════════ */
+async function admExportParticipantes() {
+  if(!admLotes.length){ toast('No hay datos para exportar', true); return; }
+  var selEl = document.getElementById('adm-remate-sel');
+  var selTxt= selEl.options[selEl.selectedIndex] ? selEl.options[selEl.selectedIndex].text : 'Remate';
+  var fecha = admFechaRemate();
+
+  // Agrupar por nombre normalizado (mayúsculas, sin espacios dobles)
+  var parts = {}; // clave → {nombre, ci, compro, vendio, defendio}
+  function P(nombre, ci){
+    var k = String(nombre||'').trim().toUpperCase().replace(/\s+/g,' ');
+    if(!k) return null;
+    if(!parts[k]) parts[k] = { nombre:k, ci:'', compro:0, vendio:0, defendio:0 };
+    if(ci && !parts[k].ci) parts[k].ci = ci;
+    return parts[k];
+  }
+  admLotes.forEach(function(l){
+    var cant = +l.cantidad||0;
+    if(lotEsDefensa(l)){
+      var d = P(l.propietario, l.ciPropietario);
+      if(d) d.defendio += cant;
+    } else if(l.comprador){
+      var c = P(l.comprador, l.compradorCI);
+      if(c) c.compro += cant;
+      var v = P(l.propietario, l.ciPropietario);
+      if(v) v.vendio += cant;
+    }
+  });
+  var keys = Object.keys(parts).sort();
+  if(!keys.length){ toast('No hay participantes para listar', true); return; }
+
+  toast('Generando Excel...');
+  try {
+    var wb = new ExcelJS.Workbook();
+    wb.creator = 'AGACON';
+    var logoImgId = null;
+    try {
+      if (typeof AGACON_LOGO_REPORTE === 'string' && AGACON_LOGO_REPORTE.indexOf('base64,') !== -1) {
+        logoImgId = wb.addImage({ base64: AGACON_LOGO_REPORTE.split('base64,')[1], extension: 'png' });
+      }
+    } catch(e) {}
+
+    var ws = wb.addWorksheet('PARTICIPANTES');
+    ws.columns=[{width:5},{width:40},{width:15},{width:10},{width:10},{width:11}];
+    ws.pageSetup = { orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:0,
+      margins:{left:0.4,right:0.4,top:0.5,bottom:0.5,header:0.2,footer:0.2} };
+
+    function hdrFill(c){ return {type:'pattern',pattern:'solid',fgColor:{argb:'FF'+c}}; }
+    function border(){ var s={style:'thin',color:{argb:'FFAAAAAA'}}; return {top:s,bottom:s,left:s,right:s}; }
+
+    // Título + logo
+    ws.getRow(1).height=18; ws.getRow(2).height=18; ws.getRow(3).height=18;
+    if(logoImgId!==null) ws.addImage(logoImgId,{tl:{col:4.5,row:0.1},ext:{width:86,height:66},editAs:'oneCell'});
+    ws.getRow(1).getCell(1).value='AGACON — '+selTxt;
+    ws.getRow(1).getCell(1).font={name:'Calibri',bold:true,size:12};
+    ws.getRow(2).getCell(1).value='LISTA DE PARTICIPANTES — cabezas compradas, vendidas y defendidas';
+    ws.getRow(2).getCell(1).font={name:'Calibri',bold:true,size:11,color:{argb:'FF1B4D2E'}};
+    ws.getRow(3).getCell(1).value='Generado: '+fecha;
+    ws.getRow(3).getCell(1).font={name:'Calibri',size:10,color:{argb:'FF777777'}};
+
+    // Encabezados
+    var hr=ws.getRow(5); hr.height=22;
+    ['N°','PARTICIPANTE','CI','COMPRÓ','VENDIÓ','DEFENDIÓ'].forEach(function(h,i){
+      var c=hr.getCell(i+1); c.value=h;
+      c.font={name:'Calibri',bold:true,size:10,color:{argb:'FF1B4D2E'}};
+      c.fill=hdrFill('DDEBE2'); c.border=border();
+      c.alignment={horizontal:i<2?'left':'center',vertical:'middle'};
+    });
+
+    // Filas
+    var R=6, tC=0, tV=0, tD=0;
+    keys.forEach(function(k,idx){
+      var p=parts[k]; tC+=p.compro; tV+=p.vendio; tD+=p.defendio;
+      var r=ws.getRow(R);
+      var vals=[idx+1, p.nombre, p.ci||'—', p.compro||'—', p.vendio||'—', p.defendio||'—'];
+      vals.forEach(function(v,i){
+        var c=r.getCell(i+1); c.value=v; c.border=border();
+        c.font={name:'Calibri',size:10};
+        c.alignment={horizontal:i<2?'left':'center',vertical:'middle'};
+      });
+      R++;
+    });
+
+    // Totales
+    var rt=ws.getRow(R); rt.height=18;
+    ws.mergeCells(R,1,R,2);
+    var ct=rt.getCell(1); ct.value='TOTALES — '+keys.length+' participantes';
+    ct.font={name:'Calibri',bold:true,size:10}; ct.fill=hdrFill('FFE699'); ct.border=border();
+    ct.alignment={horizontal:'right',vertical:'middle'};
+    [['',3],[tC,4],[tV,5],[tD,6]].forEach(function(pair){
+      var c=rt.getCell(pair[1]); if(pair[0]!=='') c.value=pair[0];
+      c.fill=hdrFill('FFE699'); c.border=border();
+      c.font={name:'Calibri',bold:true,size:10};
+      c.alignment={horizontal:'center',vertical:'middle'};
+    });
+
+    var buf = await wb.xlsx.writeBuffer();
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+    a.download='AGACON_participantes_'+fecha.replace(/\//g,'-')+'.xlsx';
+    a.click();
+    toast('Excel de participantes generado ✓');
+  } catch(e) {
+    console.error('[AGACON] participantes:', e);
+    toast('Error generando el Excel', true);
+  }
+}
