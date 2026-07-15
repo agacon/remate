@@ -1058,7 +1058,7 @@ async function admExportExcel() {
 
 /* ═══════════════════════════════════════════════
    LISTA DE PARTICIPANTES (Excel) — agrupada por nombre.
-   Columnas: COMPRÓ / VENDIÓ / DEFENDIÓ (cabezas).
+   Columnas: lotes comprados / vendidos / defendidos.
    Sirve como base de control para imprimir los
    reportes individuales de cada participante.
    ═══════════════════════════════════════════════ */
@@ -1078,15 +1078,15 @@ async function admExportParticipantes() {
     return parts[k];
   }
   admLotes.forEach(function(l){
-    var cant = +l.cantidad||0;
+    // Se cuenta 1 por LOTE (no la cantidad de animales)
     if(lotEsDefensa(l)){
       var d = P(l.propietario, l.ciPropietario);
-      if(d) d.defendio += cant;
+      if(d) d.defendio += 1;
     } else if(l.comprador){
       var c = P(l.comprador, l.compradorCI);
-      if(c) c.compro += cant;
+      if(c) c.compro += 1;
       var v = P(l.propietario, l.ciPropietario);
-      if(v) v.vendio += cant;
+      if(v) v.vendio += 1;
     }
   });
   var keys = Object.keys(parts).sort();
@@ -1104,7 +1104,7 @@ async function admExportParticipantes() {
     } catch(e) {}
 
     var ws = wb.addWorksheet('PARTICIPANTES');
-    ws.columns=[{width:5},{width:40},{width:15},{width:10},{width:10},{width:11}];
+    ws.columns=[{width:5},{width:40},{width:15},{width:11},{width:11},{width:12}];
     ws.pageSetup = { orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:0,
       margins:{left:0.4,right:0.4,top:0.5,bottom:0.5,header:0.2,footer:0.2} };
 
@@ -1116,18 +1116,18 @@ async function admExportParticipantes() {
     if(logoImgId!==null) ws.addImage(logoImgId,{tl:{col:4.5,row:0.1},ext:{width:86,height:66},editAs:'oneCell'});
     ws.getRow(1).getCell(1).value='AGACON — '+selTxt;
     ws.getRow(1).getCell(1).font={name:'Calibri',bold:true,size:12};
-    ws.getRow(2).getCell(1).value='LISTA DE PARTICIPANTES — cabezas compradas, vendidas y defendidas';
+    ws.getRow(2).getCell(1).value='LISTA DE PARTICIPANTES — lotes comprados, vendidos y defendidos';
     ws.getRow(2).getCell(1).font={name:'Calibri',bold:true,size:11,color:{argb:'FF1B4D2E'}};
     ws.getRow(3).getCell(1).value='Generado: '+fecha;
     ws.getRow(3).getCell(1).font={name:'Calibri',size:10,color:{argb:'FF777777'}};
 
     // Encabezados
     var hr=ws.getRow(5); hr.height=22;
-    ['N°','PARTICIPANTE','CI','COMPRÓ','VENDIÓ','DEFENDIÓ'].forEach(function(h,i){
+    ['N°','PARTICIPANTE','CI','L. COMPRA','L. VENTA','L. DEFENSA'].forEach(function(h,i){
       var c=hr.getCell(i+1); c.value=h;
       c.font={name:'Calibri',bold:true,size:10,color:{argb:'FF1B4D2E'}};
       c.fill=hdrFill('DDEBE2'); c.border=border();
-      c.alignment={horizontal:i<2?'left':'center',vertical:'middle'};
+      c.alignment={horizontal:i<2?'left':'center',vertical:'middle',wrapText:true};
     });
 
     // Filas
