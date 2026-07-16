@@ -12,8 +12,12 @@ var TAB_KEY      = 'agacon_tab';        // vive solo en esta pestaña (sessionSt
 // Rol → pantalla del sistema
 function routeToRole(rol) {
   if (rol === 'admin')            goTo('admin');
+  else if (rol === 'directiva')   goTo('admin');   // ve admin, restringido a Resumen
   else if (rol === 'compradores') goTo('compradores');
   else                            goTo('operador');
+  if (rol === 'directiva' && typeof applyDirectivaMode === 'function') {
+    setTimeout(applyDirectivaMode, 60);
+  }
 }
 
 // Pintar el nombre del usuario conectado en las barras superiores

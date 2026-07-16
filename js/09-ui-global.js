@@ -5,8 +5,29 @@
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 
+// ── Rol DIRECTIVA: solo puede ver el Resumen ──
+function isDirectiva(){
+  return typeof authUser !== 'undefined' && authUser && authUser.rol === 'directiva';
+}
+function applyDirectivaMode(){
+  // Ocultar todo el menú lateral excepto Resumen
+  document.querySelectorAll('#screen-admin .adm-nav').forEach(function(b){
+    var tx = (b.textContent||'').toUpperCase();
+    if (tx.indexOf('RESUMEN') === -1) b.style.display = 'none';
+  });
+  // Solo lectura: no puede cambiar T/C ni comisión
+  ['adm-tc','adm-com'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) { el.disabled = true; el.title = 'Solo lectura (cuenta directiva)'; }
+  });
+  // Asegurar que el panel visible sea el Resumen
+  var first = document.querySelector('#screen-admin .adm-nav');
+  admShowPanel('resumen', first);
+}
+
 // ── Menú lateral del módulo Administración ──
 function admShowPanel(name, btn){
+  if (isDirectiva() && name !== 'resumen') return; // directiva: solo Resumen
   document.querySelectorAll('#screen-admin .adm-panel').forEach(function(p){p.classList.remove('on');});
   var p=document.getElementById('adm-panel-'+name); if(p)p.classList.add('on');
   document.querySelectorAll('#screen-admin .adm-nav').forEach(function(b){b.classList.remove('on');});
