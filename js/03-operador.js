@@ -128,6 +128,76 @@ function downloadTemplate() {
   toast('Plantilla descargada ✓');
 }
 
+// ════ MONEDA DEL REMATE ($us / Bs.) ════
+var remateMoneda = 'USD';
+var MONEDA_PASOS = { USD: [5,10,50,100], BOB: [50,100,200,500,1000] };
+
+function monSym()   { return remateMoneda === 'BOB' ? 'Bs.' : '$us'; }
+function monShort() { return remateMoneda === 'BOB' ? 'Bs.' : '$'; }
+
+function opSetMoneda(m) {
+  remateMoneda = (m === 'BOB') ? 'BOB' : 'USD';
+  var u = document.getElementById('mon-usd'), b = document.getElementById('mon-bob');
+  if (u && b) {
+    var on  = 'background:var(--gold);color:#000;';
+    var off = 'background:transparent;color:var(--gold);';
+    var base = 'padding:.35rem .7rem;border-radius:6px;border:1px solid var(--gold);font-weight:900;font-size:.85rem;cursor:pointer;';
+    u.style.cssText = base + (remateMoneda === 'USD' ? on : off);
+    b.style.cssText = base + (remateMoneda === 'BOB' ? on : off);
+  }
+  aplicarMonedaUI();
+}
+
+function aplicarMonedaUI() {
+  var lbl = document.getElementById('price-unit-lbl');
+  if (lbl) lbl.textContent = 'Precio Unitario (' + monSym() + ')';
+  var plbl = document.getElementById('pf-price-lbl');
+  if (plbl) plbl.textContent = 'PRECIO ' + (remateMoneda === 'BOB' ? 'Bs.' : '$us.');
+  renderPriceButtons();
+  if (typeof lots !== 'undefined' && lots.length) { try { renderOp(); } catch(e) {} }
+}
+
+function renderPriceButtons() {
+  var pasos = MONEDA_PASOS[remateMoneda] || MONEDA_PASOS.USD;
+  var add = document.getElementById('pgrid-add'), sub = document.getElementById('pgrid-sub');
+  if (!add || !sub) return;
+  function mk(v, neg) {
+    return '<button class="pbtn ' + (neg ? 'pbtn-sub' : 'pbtn-add') + '" onclick="adjPrice(' + (neg ? -v : v) + ')">' +
+      '<span class="pbtn-val">' + (neg ? '-' : '+') + v + '</span><span class="pbtn-lbl">' + monSym() + '</span></button>';
+  }
+  add.innerHTML = pasos.map(function(v){ return mk(v, false); }).join('');
+  sub.innerHTML = pasos.map(function(v){ return mk(v, true); }).join('');
+  add.style.gridTemplateColumns = 'repeat(' + pasos.length + ',1fr)';
+  sub.style.gridTemplateColumns = 'repeat(' + pasos.length + ',1fr)';
+}
+
+// Edición manual del precio: tocar el número grande y escribirlo
+function editPriceManual() {
+  var l = lots[cur]; if (!l) return;
+  var v = prompt('Escribir precio unitario (' + monSym() + '):', l.precio || 0);
+  if (v === null) return;
+  v = String(v).trim().replace(/\s/g, '');
+  if (/^\d{1,3}(\.\d{3})+$/.test(v)) v = v.replace(/\./g, ''); // 4.350 → 4350 (miles)
+  v = parseFloat(v.replace(',', '.'));
+  if (isNaN(v) || v < 0) { toast('Precio inválido', true); return; }
+  l.precio = v;
+  renderOp();
+  if (l.saved) syncLot(l);
+}
+
+// Tamaño del precio en pantalla pública según cantidad de dígitos (Bs. usa más)
+function pubPriceFont(str) {
+  var n = String(str).replace(/[^0-9]/g, '').length;
+  if (n >= 6) return 'clamp(3rem,9vw,9rem)';
+  if (n === 5) return 'clamp(3.5rem,11vw,11rem)';
+  if (n === 4) return 'clamp(4rem,13vw,13rem)';
+  return 'clamp(5rem,16vw,16rem)';
+}
+function applyPubPriceSize(v) {
+  var el = document.getElementById('pf-price');
+  if (el && el.parentElement) el.parentElement.style.fontSize = pubPriceFont(v);
+}
+
 function startRemate() {
   if(!lots.length) return;
   cur = 0;
@@ -135,6 +205,7 @@ function startRemate() {
   var panel = document.getElementById('op-panel');
   panel.style.display = 'grid';
   document.getElementById('op-live-badge').style.display = 'inline';
+  aplicarMonedaUI();
   initFirebaseRemate();
   renderOp();
   setInterval(function(){ document.getElementById('op-date').textContent = new Date().toLocaleString('es-BO',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'}); }, 1000);
@@ -148,16 +219,24 @@ async function initFirebaseRemate() {
   var yyyy = now.getFullYear();
   var mm   = String(now.getMonth()+1).padStart(2,'0');
   var dd   = String(now.getDate()).padStart(2,'0');
-  var nombreRemate = 'REMATE N°'+num+' — '+yyyy+'/'+mm+'/'+dd;
+  var nombreRemate = 'REMATE N°'+num+' — '+yyyy+'/'+mm+'/'+dd+' ('+(remateMoneda==='BOB'?'Bs.':'$us')+')';
 
-  var res = await supa.from('remates').insert({
+  var payload = {
     fecha: dd+'/'+mm+'/'+yyyy,
     nombre: nombreRemate,
     numero: parseInt(num),
     tc: parseFloat(document.getElementById('remate-tc').value) || 9.80,
+    moneda: remateMoneda,
     creado_en: Date.now(),
     estado: 'activo'
-  }).select('id').single();
+  };
+  var res = await supa.from('remates').insert(payload).select('id').single();
+  if (res.error && String(res.error.message||'').toLowerCase().indexOf('moneda') >= 0) {
+    // La columna "moneda" aún no existe en Supabase: crear el remate igual (la moneda queda en el nombre)
+    delete payload.moneda;
+    res = await supa.from('remates').insert(payload).select('id').single();
+    if (!res.error) toast('Aviso: falta la columna "moneda" en Supabase — el remate se creó igual', true);
+  }
 
   if (res.error) { toast('Error creando remate: '+res.error.message, true); return; }
   remateId = res.data.id;
@@ -341,7 +420,7 @@ function renderSidebar() {
         (l.saved&&!l.comprador?'<div class="li-nobuy">sin comprador</div>':'')+
         (l.comprador?'<div class="li-buyer">'+l.comprador+'</div>':'')+
       '</div>'+
-      '<div class="li-price">'+(l.precio?'$'+l.precio:'')+'</div>';
+      '<div class="li-price">'+(l.precio?monShort()+l.precio:'')+'</div>';
     list.appendChild(div);
   });
   var items = list.querySelectorAll('.lot-item');
@@ -370,7 +449,7 @@ function updateTotal(l){
   var monto = (l.precio||0)*(l.cantidad||0);
   var com   = monto * 0.03;
   var total = monto + com;
-  setText('op-total', '$us '+monto.toLocaleString());
+  setText('op-total', monSym()+' '+monto.toLocaleString());
   // Store on lot for Firebase sync
   l.montoTotal  = monto;
   l.comision    = parseFloat(com.toFixed(2));
@@ -394,16 +473,16 @@ function contratoFill(l) {
   var setT = function(id,v){ var e=document.getElementById(id); if(e) e.textContent=v||'—'; };
   setT('op-propietario',      l.propietario);
   setT('op-lote-num',         l.lote);
-  setT('op-precio-display',   '$us '+(l.precio||0));
+  setT('op-precio-display',   monSym()+' '+(l.precio||0));
   setT('op-cantidad-display', l.cantidad);
   setT('op-cat-display',      l.categoria);
   setT('op-raza-display',     l.raza);
   var monto = (l.precio||0)*(l.cantidad||0);
   var com   = monto * 0.03;
   var total = monto + com;
-  setT('op-box-total',     '$us '+monto.toLocaleString());
-  setT('op-box-com',       '$us '+com.toFixed(2));
-  setT('op-box-total-com', '$us '+total.toFixed(2));
+  setT('op-box-total',     monSym()+' '+monto.toLocaleString());
+  setT('op-box-com',       monSym()+' '+com.toFixed(2));
+  setT('op-box-total-com', monSym()+' '+total.toFixed(2));
   var dot  = document.getElementById('buyer-dot');
   var disp = document.getElementById('buyer-display');
   if (l.comprador) {
@@ -493,6 +572,9 @@ function renderPublic() {
   setFlip('pf-lote',    String(l.lote||'—'));
   setFlip('pf-cant',    String(l.cantidad||'—'));
   setFlip('pf-price',   String(l.precio||'0'));
+  applyPubPriceSize(l.precio||'0');
+  var _plbl = document.getElementById('pf-price-lbl');
+  if (_plbl) _plbl.textContent = 'PRECIO ' + (remateMoneda === 'BOB' ? 'Bs.' : '$us.');
   setText('pf-cat',     l.categoria||'—');
   setText('pf-raza',    l.raza||'—');
   setText('pf-edad',    l.edad||'—');
@@ -501,7 +583,7 @@ function renderPublic() {
   var promEl = document.getElementById('pf-promedio');
   if(promEl) promEl.textContent = prom ? String(prom) : '—';
   // localStorage for external tab
-  try{ localStorage.setItem(LS_KEY, JSON.stringify({lote:l.lote||'—',cant:l.cantidad||'—',peso:peso||'—',prom:prom||'—',precio:l.precio||'0',categoria:l.categoria||'—',raza:l.raza||'—',edad:l.edad||'—',estancia:l.estancia||'—',ts:Date.now()})); }catch(e){}
+  try{ localStorage.setItem(LS_KEY, JSON.stringify({lote:l.lote||'—',cant:l.cantidad||'—',peso:peso||'—',prom:prom||'—',precio:l.precio||'0',categoria:l.categoria||'—',raza:l.raza||'—',edad:l.edad||'—',estancia:l.estancia||'—',mon:remateMoneda,ts:Date.now()})); }catch(e){}
 }
 
 function showPublic() {
@@ -606,7 +688,7 @@ function openExportModal() {
   document.getElementById('export-summary').innerHTML=
     'Lotes guardados: <b style="color:var(--green)">'+saved.length+'</b> / '+lots.length+'<br>'+
     'Sin comprador: <b style="color:var(--gold)">'+saved.filter(function(l){return !l.comprador;}).length+'</b><br>'+
-    'Monto total: <b style="color:var(--gold)">$'+monto.toLocaleString()+'</b>';
+    'Monto total: <b style="color:var(--gold)">'+monShort()+monto.toLocaleString()+'</b>';
   openModal('m-export');
 }
 function exportJSON(){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(lots,null,2)],{type:'application/json'}));a.download='agacon_remate.json';a.click();toast('JSON exportado');}
@@ -702,6 +784,9 @@ function opResumeRemate() {
   localStorage.setItem('agacon_remateId', remateId);
   localStorage.setItem('agacon_remateNombre', row.nombre || '');
   if (row.tc) document.getElementById('remate-tc').value = row.tc;
+  // Restaurar la moneda del remate (columna moneda, o detectarla del nombre como respaldo)
+  var monRow = row.moneda || ((row.nombre||'').indexOf('(Bs.)') >= 0 ? 'BOB' : 'USD');
+  opSetMoneda(monRow);
   document.getElementById('remate-num').value = row.numero != null ? row.numero : '';
   updateRematePreview();
 

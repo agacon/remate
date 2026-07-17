@@ -174,6 +174,12 @@
         <span style="font-size:.62rem;letter-spacing:2px;color:var(--gold);text-transform:uppercase;white-space:nowrap;font-weight:700;">N° Remate</span>
         <input type="number" id="remate-num" placeholder="5" min="1" style="background:transparent;border:none;color:#fff;font-size:1.6rem;font-weight:900;font-family:'Courier New',monospace;width:62px;outline:none;text-align:center;">
         <span style="width:1px;height:26px;background:var(--border)"></span>
+        <span style="font-size:.62rem;letter-spacing:2px;color:var(--gold);text-transform:uppercase;white-space:nowrap;font-weight:700;">Moneda</span>
+        <div style="display:flex;gap:.3rem;">
+          <button type="button" id="mon-usd" onclick="opSetMoneda('USD')" style="padding:.35rem .7rem;border-radius:6px;border:1px solid var(--gold);background:var(--gold);color:#000;font-weight:900;font-size:.85rem;cursor:pointer;">$us</button>
+          <button type="button" id="mon-bob" onclick="opSetMoneda('BOB')" style="padding:.35rem .7rem;border-radius:6px;border:1px solid var(--gold);background:transparent;color:var(--gold);font-weight:900;font-size:.85rem;cursor:pointer;">Bs.</button>
+        </div>
+        <span style="width:1px;height:26px;background:var(--border)"></span>
         <span style="font-size:.62rem;letter-spacing:2px;color:var(--gold);text-transform:uppercase;white-space:nowrap;font-weight:700;">T/C</span>
         <input type="number" id="remate-tc" value="9.80" step="0.01" min="1" title="Tipo de cambio del remate (Bs por $us)" style="background:transparent;border:none;color:#fff;font-size:1.4rem;font-weight:900;font-family:'Courier New',monospace;width:74px;outline:none;text-align:center;">
         <span id="remate-id-preview" style="font-size:.72rem;color:var(--muted);font-style:italic;flex:1;min-width:130px;">REMATE N°— — ----/--/--</span>
@@ -336,17 +342,17 @@
               <label>⚖ PESO (kg)</label>
               <input type="number" id="f-peso" placeholder="0" min="0" step="1" oninput="onPesoChange()">
             </div>
-            <div class="price-box-title">Precio Unitario ($us)</div>
-            <div class="price-digit" id="op-price">0</div>
+            <div class="price-box-title" id="price-unit-lbl">Precio Unitario ($us)</div>
+            <div class="price-digit" id="op-price" onclick="editPriceManual()" title="Tocá el número para escribir el precio" style="cursor:pointer;">0</div>
             <div class="pgrid-label lbl-add">▲ SUMAR</div>
-            <div class="price-btn-grid">
+            <div class="price-btn-grid" id="pgrid-add">
               <button class="pbtn pbtn-add" onclick="adjPrice(5)"><span class="pbtn-val">+5</span><span class="pbtn-lbl">$us</span></button>
               <button class="pbtn pbtn-add" onclick="adjPrice(10)"><span class="pbtn-val">+10</span><span class="pbtn-lbl">$us</span></button>
               <button class="pbtn pbtn-add" onclick="adjPrice(50)"><span class="pbtn-val">+50</span><span class="pbtn-lbl">$us</span></button>
               <button class="pbtn pbtn-add" onclick="adjPrice(100)"><span class="pbtn-val">+100</span><span class="pbtn-lbl">$us</span></button>
             </div>
             <div class="pgrid-label lbl-sub">▼ RESTAR</div>
-            <div class="price-btn-grid">
+            <div class="price-btn-grid" id="pgrid-sub">
               <button class="pbtn pbtn-sub" onclick="adjPrice(-5)"><span class="pbtn-val">-5</span><span class="pbtn-lbl">$us</span></button>
               <button class="pbtn pbtn-sub" onclick="adjPrice(-10)"><span class="pbtn-val">-10</span><span class="pbtn-lbl">$us</span></button>
               <button class="pbtn pbtn-sub" onclick="adjPrice(-50)"><span class="pbtn-val">-50</span><span class="pbtn-lbl">$us</span></button>
@@ -392,7 +398,7 @@
           <div style="display:grid;grid-template-columns:3fr 3fr 4fr;gap:.6rem;flex-shrink:0;">
             <div style="text-align:center;font-size:clamp(1.2rem,2.5vw,2.4rem);font-weight:900;letter-spacing:4px;color:#fff;text-transform:uppercase;">LOTE</div>
             <div style="text-align:center;font-size:clamp(1.2rem,2.5vw,2.4rem);font-weight:900;letter-spacing:4px;color:#fff;text-transform:uppercase;">CANTIDAD</div>
-            <div style="text-align:center;font-size:clamp(1.2rem,2.5vw,2.4rem);font-weight:900;letter-spacing:4px;color:#fff;text-transform:uppercase;">PRECIO $us.</div>
+            <div style="text-align:center;font-size:clamp(1.2rem,2.5vw,2.4rem);font-weight:900;letter-spacing:4px;color:#fff;text-transform:uppercase;" id="pf-price-lbl">PRECIO $us.</div>
           </div>
           <!-- 3 Red boxes -->
           <div style="display:grid;grid-template-columns:3fr 3fr 4fr;gap:.6rem;flex:1;min-height:0;">
