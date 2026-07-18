@@ -14,6 +14,7 @@ function compLoadRematesList() {
       var hora = r.creado_en ? new Date(r.creado_en).toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit'}) : '';
       opt.textContent = (r.nombre || ('Remate '+(r.fecha||'')+' '+hora));
       sel.appendChild(opt);
+      admRematesMon[r.id] = r.moneda || ((r.nombre||'').indexOf('(Bs.)') >= 0 ? 'BOB' : 'USD');
     });
     var saved = localStorage.getItem('agacon_remateId');
     if (saved && data.find(function(r){return r.id===saved;})) { sel.value = saved; compLoadRemate(saved); }
@@ -24,6 +25,7 @@ var _compPoller = null;
 function compLoadRemate(remId) {
   if (!remId) return;
   compRemateId = remId;
+  if (admRematesMon[remId]) admMoneda = admRematesMon[remId];
   localStorage.setItem('agacon_remateId', remId);
   if (_compPoller) clearInterval(_compPoller);
   function fetchAndRender() {
@@ -112,13 +114,13 @@ function compRenderTable() {
     // Raza
     tr.appendChild(cell(l.raza||'—', fontSize+';color:#555'));
     // Precio unitario
-    tr.appendChild(cell('$us '+(l.precio||0), fontBig+';color:#1a2333'));
+    tr.appendChild(cell((admMoneda==='BOB'?'Bs. ':'$us ')+(l.precio||0), fontBig+';color:#1a2333'));
     // Total
-    tr.appendChild(cell('$us '+dispMonto.toLocaleString(), fontBig+';color:#4a4a4a'));
+    tr.appendChild(cell((admMoneda==='BOB'?'Bs. ':'$us ')+dispMonto.toLocaleString(), fontBig+';color:#4a4a4a'));
     // Comision 3%
-    tr.appendChild(cell('$us '+dispCom.toFixed(2), fontSize+';color:#555'));
+    tr.appendChild(cell((admMoneda==='BOB'?'Bs. ':'$us ')+dispCom.toFixed(2), fontSize+';color:#555'));
     // Liq. Pagable
-    tr.appendChild(cell('$us '+dispTotalCom.toFixed(2), fontBig+';color:#1a2333'));
+    tr.appendChild(cell((admMoneda==='BOB'?'Bs. ':'$us ')+dispTotalCom.toFixed(2), fontBig+';color:#1a2333'));
     // Comprador
     var tdBuyer=document.createElement('td');
     tdBuyer.style.cssText=fontSize+';color:'+(hasBuyer?'#1a2333':'#f39c12');
@@ -152,7 +154,7 @@ function compUpdateStats() {
   setText('cst-tot',compLotes.length);
   setText('cst-vend',saved.length);
   setText('cst-sinc',saved.filter(function(l){return !l.comprador;}).length);
-  setText('cst-monto','$'+monto.toLocaleString());
+  setText('cst-monto',admS()+monto.toLocaleString());
 }
 
 function compSetFilter(mode,btn) {
@@ -364,7 +366,7 @@ function compOpenModal(lotKey) {
   var lot=compLotes.find(function(l){return l._key===lotKey;});
   if(!lot) return;
   compCurrentLotKey=lotKey;
-  document.getElementById('m-comp-info').textContent='Lote '+lot.lote+' — '+lot.categoria+' | '+lot.cantidad+' cab. | Propietario: '+(lot.propietario||'—')+' | Precio: $'+(lot.precio||0);
+  document.getElementById('m-comp-info').textContent='Lote '+lot.lote+' — '+lot.categoria+' | '+lot.cantidad+' cab. | Propietario: '+(lot.propietario||'—')+' | Precio: '+admS()+(lot.precio||0);
   document.getElementById('mc-nombre').value=lot.comprador||'';
   document.getElementById('mc-ci').value=lot.compradorCI||'';
   document.getElementById('mc-tel').value=lot.compradorTel||'';
@@ -455,6 +457,11 @@ function compSaveComprador() {
 //  ADMIN MODULE
 // ════════════════════════════════════════
 var admLotes=[], admRemateId=null;
+var admRematesMon = {};   // id remate → 'USD' | 'BOB'
+var admMoneda = 'USD';    // moneda del remate seleccionado en administración
+function admS(){ return admMoneda === 'BOB' ? 'Bs.' : '$'; }
+// Celda de conversión a Bs.: solo aplica en remates en $us; en Bs. no se convierte nada
+function admBsCell(v, tc){ return admMoneda === 'BOB' ? '' : '<td>Bs.'+Math.round(v*tc).toLocaleString()+'</td>'; }
 
 var admRematesTC = {};
 // Guarda en la base el tipo de cambio editado del remate seleccionado

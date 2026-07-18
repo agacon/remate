@@ -10,6 +10,14 @@
   var remateId = P.get('remate') || '';
   var tc  = parseFloat(P.get('tc'))  || 6.96;
   var com = (parseFloat(P.get('com')) || 3) / 100;
+  var mon = (P.get('mon') === 'BOB') ? 'BOB' : 'USD';
+  var SYM = (mon === 'BOB') ? 'Bs.' : '$';
+  (function(){
+    var a = document.getElementById('lbl-monto');
+    if (a) a.textContent = 'Monto ' + (mon === 'BOB' ? 'Bs.' : '$US');
+    var b = document.getElementById('lbl-ingresos');
+    if (b) b.textContent = 'Ingresos por comisión del remate (' + (mon === 'BOB' ? 'Bs.' : '$us') + ')';
+  })();
 
   function fmt(n){ return (n||0).toLocaleString('es-BO'); }
   function setT(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; }
@@ -22,12 +30,12 @@
 
     setT('as-lotes', lotes.length);
     setT('as-cabezas', cab);
-    setT('as-monto', '$'+fmt(monto));
+    setT('as-monto', SYM+fmt(monto));
     setT('as-sincomp', sinComp);
 
     renderPie(lotes);
     var totalIngresos = renderBars(lotes); // total de comisiones que queda para el remate
-    setT('as-comision', '$'+totalIngresos.toFixed(0));
+    setT('as-comision', SYM+totalIngresos.toFixed(0));
   }
 
   // Detección de defensa: bandera o CI comprador = CI propietario (misma regla que el index)
@@ -70,7 +78,7 @@
     var total = items.reduce(function(a,c){ return a+c.val; },0);
     var max   = Math.max.apply(null, items.map(function(c){ return c.val; }));
 
-    if (!total) { barsEl.innerHTML=''; totEl.textContent='$0'; emptyEl.style.display='block'; return 0; }
+    if (!total) { barsEl.innerHTML=''; totEl.textContent=SYM+'0'; emptyEl.style.display='block'; return 0; }
     emptyEl.style.display='none';
 
     barsEl.innerHTML = items.map(function(c){
@@ -78,10 +86,10 @@
       return '<div class="bar-row">' +
              '<span class="bar-name">'+c.name+'</span>' +
              '<div class="bar-track"><div class="bar-fill" style="width:'+w.toFixed(1)+'%;background:'+c.color+'"></div></div>' +
-             '<span class="bar-val">$'+c.val.toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span>' +
+             '<span class="bar-val">'+SYM+c.val.toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span>' +
              '</div>';
     }).join('');
-    totEl.textContent = '$'+total.toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2});
+    totEl.textContent = SYM+total.toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2});
     return total;
   }
 
@@ -126,7 +134,7 @@
       legHtml += '<div class="leg-item">' +
                  '<span class="leg-swatch" style="background:' + color + '"></span>' +
                  '<span class="leg-name">' + c.name.toLowerCase() + '</span>' +
-                 '<span class="leg-val">' + pct.toFixed(1) + '% · ' + c.val + ' lote' + (c.val !== 1 ? 's' : '') + ' · $' + fmt(c.monto) + '</span>' +
+                 '<span class="leg-val">' + pct.toFixed(1) + '% · ' + c.val + ' lote' + (c.val !== 1 ? 's' : '') + ' · ' + SYM + fmt(c.monto) + '</span>' +
                  '</div>';
     });
     pie.style.background = 'conic-gradient(' + stops.join(',') + ')';
