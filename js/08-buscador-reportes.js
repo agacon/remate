@@ -548,7 +548,7 @@ async function admExportSingle() {
 
     function ecSectionHdr(rowN, title, bg, fg) {
       var r=wsEC.getRow(rowN); r.height=20;
-      wsEC.mergeCells(rowN,1,rowN,9);
+      wsEC.mergeCells(rowN,1,rowN,expEsBob()?8:9);
       var c=r.getCell(1); c.value=title;
       c.font={name:'Calibri',bold:true,size:11,color:{argb:'FF'+(fg||'1F2937')}};
       c.fill=hdrFill(bg||'1F4E79'); c.border=border();
@@ -566,6 +566,7 @@ async function admExportSingle() {
     function ecLoteRow(rowN, cells, bg) {
       var r=wsEC.getRow(rowN); r.height=15;
       cells.forEach(function(v,i){
+        if(expEsBob() && i===8) return;
         var c=r.getCell(i+1); c.value=v; c.font={name:'Calibri',size:10};
         c.border=border(); if(bg) c.fill=hdrFill(bg);
         if(i===4){c.numFmt='#,##0';c.alignment={horizontal:'center',vertical:'middle'};}
@@ -585,7 +586,7 @@ async function admExportSingle() {
       c5.alignment={horizontal:'center',vertical:'middle'};
       if(cant!=null) c5.value=cant;
       var c6=r.getCell(6); c6.fill=hdrFill(bg||TOTBG); c6.border=border();
-      [7,8,9].forEach(function(ci){
+      (expEsBob()?[7,8]:[7,8,9]).forEach(function(ci){
         var c=r.getCell(ci); c.fill=hdrFill(bg||TOTBG); c.border=border();
         c.font={name:'Calibri',bold:true,size:10}; c.numFmt='#,##0.00';
         c.alignment={horizontal:'right',vertical:'middle'};
@@ -608,7 +609,7 @@ async function admExportSingle() {
     }
     ecHdrLine(ecR, 'ESTADO DE CUENTA — '+personaNombre.toUpperCase()+(personaCI?' (CI: '+personaCI+')':''), 'DDEBE2', '1B4D2E'); ecR++;
     var rt=wsEC.getRow(ecR); rt.getCell(1).value='Remate N° '+remateNumeroSingle+' — Fecha: '+fecha;
-    rt.getCell(1).font={name:'Calibri',bold:true,size:11}; wsEC.mergeCells(ecR,1,ecR,9); ecR+=2;
+    rt.getCell(1).font={name:'Calibri',bold:true,size:11}; wsEC.mergeCells(ecR,1,ecR,expEsBob()?8:9); ecR+=2;
 
     // ── COMPRAS detalle ──
     if(lotesCompras.length){
@@ -655,7 +656,7 @@ async function admExportSingle() {
     rSaldo.getCell(1).font={name:'Calibri',bold:true,size:12};
     rSaldo.getCell(1).fill=hdrFill(saldoPos?'E2EFDA':'FCE4D6');
     rSaldo.getCell(1).border=border(); rSaldo.getCell(1).alignment={horizontal:'right',vertical:'middle'};
-    [8,9].forEach(function(ci){
+    (expEsBob()?[8]:[8,9]).forEach(function(ci){
       var c=rSaldo.getCell(ci); c.fill=hdrFill(saldoPos?'E2EFDA':'FCE4D6');
       c.border=border(); c.font={name:'Calibri',bold:true,size:13};
       c.numFmt='#,##0.00'; c.alignment={horizontal:'right',vertical:'middle'};
@@ -672,7 +673,7 @@ async function admExportSingle() {
       // completar a mano con los datos del cliente y enviar al contador.
       ecSectionHdr(ecR,'DATOS BANCARIOS DEL CLIENTE — completar para el pago','DDEBE2','1B4D2E'); ecR++;
       ['TITULAR:','BANCO:','NRO. DE CUENTA:'].forEach(function(lbl){
-        wsEC.mergeCells(ecR,1,ecR,9);
+        wsEC.mergeCells(ecR,1,ecR,expEsBob()?8:9);
         var rr=wsEC.getRow(ecR); rr.height=20;
         var c=rr.getCell(1);
         c.value=lbl+'  ';
@@ -691,7 +692,7 @@ async function admExportSingle() {
       ];
       bankLines.forEach(function(l){
         if(!l.t||!l.t.trim()||l.t.trim()==='CI.') return;
-        wsEC.mergeCells(ecR,1,ecR,9);
+        wsEC.mergeCells(ecR,1,ecR,expEsBob()?8:9);
         var c=wsEC.getRow(ecR).getCell(1);
         c.value=l.t; c.font={name:'Calibri',bold:l.bold,size:11,color:{argb:'FF'+l.color}};
         c.border=border(); c.alignment={horizontal:'left',vertical:'middle'};
