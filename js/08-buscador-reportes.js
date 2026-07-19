@@ -402,12 +402,14 @@ async function admExportSingle() {
         var c=r.getCell(i+1);
         if(v!==null && typeof v==='object' && v.formula) c.value=v; else c.value=v;
         c.font={name:'Calibri',size:10}; c.border=border();
-        if(i>=4) { c.numFmt='#,##0.00'; c.alignment={horizontal:'right',vertical:'middle'}; }
+        if(i===4) { c.numFmt='#,##0'; c.alignment={horizontal:'center',vertical:'middle'}; }
+        else if(i>=5) { c.numFmt=(expEsBob() && i<=6)?'#,##0':'#,##0.00'; c.alignment={horizontal:'right',vertical:'middle'}; }
         else { c.alignment={horizontal:i===1?'left':'center',vertical:'middle'}; }
       });
     }
 
     function writeTotRow(ws, rowN, nCols, startR, endR, tcVal) {
+      if(expEsBob()) nCols=Math.min(nCols,9);
       var r=ws.getRow(rowN); r.height=20;
       for(var i=1;i<=nCols;i++){
         var c=r.getCell(i); c.border=border();
@@ -416,7 +418,7 @@ async function admExportSingle() {
       }
       r.getCell(1).value='TOTALES'; r.getCell(1).alignment={horizontal:'left',vertical:'middle'};
       r.getCell(5).value={formula:'SUM(E'+startR+':E'+endR+')'}; r.getCell(5).numFmt='#,##0';
-      r.getCell(7).value={formula:'SUM(G'+startR+':G'+endR+')'}; r.getCell(7).numFmt='#,##0.00';
+      r.getCell(7).value={formula:'SUM(G'+startR+':G'+endR+')'}; r.getCell(7).numFmt=expEsBob()?'#,##0':'#,##0.00';
       r.getCell(8).value={formula:'SUM(H'+startR+':H'+endR+')'}; r.getCell(8).numFmt='#,##0.00';
       r.getCell(9).value={formula:'SUM(I'+startR+':I'+endR+')'}; r.getCell(9).numFmt='#,##0.00'; r.getCell(9).fill=hdrFill(YELLOW);
       if(tcVal && !expEsBob()){ r.getCell(10).value=tcVal; r.getCell(10).numFmt='0.00'; }
@@ -495,7 +497,7 @@ async function admExportSingle() {
         var r=wsD.getRow(row); r.height=17;
         [n, l.categoria||'', l.lote, l.cantidad, l.precio||0, monto, pct+'%', com, expEsBob()?'':com*tc].forEach(function(v,i){
           var c=r.getCell(i+1); c.value=v; c.font={name:'Calibri',size:10}; c.border=border();
-          if(i>=5){c.numFmt='#,##0.00';c.alignment={horizontal:'right',vertical:'middle'};}
+          if(i>=5){c.numFmt=(expEsBob() && i===5)?'#,##0':'#,##0.00';c.alignment={horizontal:'right',vertical:'middle'};}
           else{c.alignment={horizontal:i===1?'left':'center',vertical:'middle'};}
         });
         row++; n++;
@@ -511,7 +513,7 @@ async function admExportSingle() {
       wsD.mergeCells(row,1,row,3);
       rtD.getCell(1).value='TOTALES'; rtD.getCell(1).alignment={horizontal:'left',vertical:'middle'};
       rtD.getCell(4).value={formula:'SUM(D6:D'+endDef+')'}; rtD.getCell(4).numFmt='#,##0';
-      rtD.getCell(6).value={formula:'SUM(F6:F'+endDef+')'}; rtD.getCell(6).numFmt='#,##0.00';
+      rtD.getCell(6).value={formula:'SUM(F6:F'+endDef+')'}; rtD.getCell(6).numFmt=expEsBob()?'#,##0':'#,##0.00';
       rtD.getCell(8).value={formula:'SUM(H6:H'+endDef+')'}; rtD.getCell(8).numFmt='#,##0.00';
       if(!expEsBob()){ rtD.getCell(9).value={formula:'SUM(I6:I'+endDef+')'}; rtD.getCell(9).numFmt='#,##0.00'; } rtD.getCell(9).fill=hdrFill(YELLOW);
       row++;
@@ -555,6 +557,7 @@ async function admExportSingle() {
     function ecColHdr(rowN, cols) {
       var r=wsEC.getRow(rowN); r.height=16;
       cols.forEach(function(h,i){
+        if(h==='') return;
         var c=r.getCell(i+1); c.value=h;
         c.font={name:'Calibri',bold:true,size:9}; c.fill=hdrFill(HDRBG);
         c.border=border(); c.alignment={horizontal:i<=1?'left':'center',vertical:'middle',wrapText:true};
@@ -565,7 +568,8 @@ async function admExportSingle() {
       cells.forEach(function(v,i){
         var c=r.getCell(i+1); c.value=v; c.font={name:'Calibri',size:10};
         c.border=border(); if(bg) c.fill=hdrFill(bg);
-        if(i>=4){c.numFmt='#,##0.00';c.alignment={horizontal:'right',vertical:'middle'};}
+        if(i===4){c.numFmt='#,##0';c.alignment={horizontal:'center',vertical:'middle'};}
+        else if(i>=5){c.numFmt=(expEsBob() && i<=6)?'#,##0':'#,##0.00';c.alignment={horizontal:'right',vertical:'middle'};}
         else{c.alignment={horizontal:i<=1?'left':'center',vertical:'middle'};}
       });
     }
