@@ -61,6 +61,9 @@ function writeHeaders(ws, row, headers) {
   });
 }
 
+
+// ── Moneda del remate en exportación: si es Bs., no se aplican columnas de conversión ──
+function expEsBob(){ return (typeof admMoneda !== 'undefined' && admMoneda === 'BOB'); }
 function writeTitleBlock(ws, year, remateNum, fecha, seccion) {
   setCell(ws, 2, 0, 'REMATES/'+year, {bold:true, sz:11});
   setCell(ws, 3, 0, 'REMATE N° '+remateNum, {bold:true, sz:11});
@@ -79,8 +82,8 @@ function writeTotalRow(ws, row, startRow, endRow, label, tc, fillBG) {
   setCell(ws, row, 6, '=SUM(G'+(startRow+1)+':G'+endRow+')', {bold:true, fill:bg, align:'right', numFmt:NUM_FMT});
   setCell(ws, row, 7, '=SUM(H'+(startRow+1)+':H'+endRow+')', {bold:true, fill:bg, align:'right', numFmt:NUM_FMT});
   setCell(ws, row, 8, '=SUM(I'+(startRow+1)+':I'+endRow+')', {bold:true, fill:YELLOW, align:'right', numFmt:NUM_FMT});
-  setCell(ws, row, 9, tc, {bold:true, fill:bg, align:'center', numFmt:'0.00'});
-  setCell(ws, row, 10, '=SUM(K'+(startRow+1)+':K'+endRow+')', {bold:true, fill:bg, align:'right', numFmt:NUM_FMT});
+  setCell(ws, row, 9, expEsBob()?'':tc, {bold:true, fill:bg, align:'center', numFmt:'0.00'});
+  setCell(ws, row, 10, expEsBob()?'':'=SUM(K'+(startRow+1)+':K'+endRow+')', {bold:true, fill:bg, align:'right', numFmt:NUM_FMT});
 }
 
 function writeBankData(ws, row, bank) {
@@ -106,7 +109,7 @@ function buildCompradores(lotes, tc, comPct, fecha, remateNum, bank) {
   var COLS = [4,30,12,11,11,8.5,14.8,15,14.5,9.3,16];
   writeColWidths(ws, COLS);
   writeTitleBlock(ws, year, remateNum, fecha, 'COMPRADORES');
-  writeHeaders(ws, 6, ['N°','COMPRADOR','CATEGORIA','LOTE','CANTIDAD','P/U','MONTO','COMISION '+comPct+'%','TOTAL MONTO EN $US','T/C '+tc,'TOTAL MONTO EN Bs.']);
+  writeHeaders(ws, 6, ['N°','COMPRADOR','CATEGORIA','LOTE','CANTIDAD','P/U','MONTO','COMISION '+comPct+'%','TOTAL MONTO EN '+(expEsBob()?'Bs.':'$US'),(expEsBob()?'':'T/C '+tc),(expEsBob()?'':'TOTAL MONTO EN Bs.')]);
 
   var byComp = {};
   lotes.forEach(function(l){ var k=l.comprador||'SIN COMPRADOR'; if(!byComp[k]) byComp[k]=[]; byComp[k].push(l); });
@@ -129,8 +132,8 @@ function buildCompradores(lotes, tc, comPct, fecha, remateNum, bank) {
       setCell(ws, row, 6, '=E'+r1+'*F'+r1, {align:'right', numFmt:NUM_FMT});
       setCell(ws, row, 7, '=G'+r1+'*'+comPct+'%', {align:'right', numFmt:NUM_FMT});
       setCell(ws, row, 8, '=G'+r1+'+H'+r1, {bold:true, fill:YELLOW, align:'right', numFmt:NUM_FMT});
-      setCell(ws, row, 9, tc, {align:'center', numFmt:'0.00'});
-      setCell(ws, row, 10, '=I'+r1+'*J'+r1, {bold:true, align:'right', numFmt:NUM_FMT});
+      setCell(ws, row, 9, expEsBob()?'':tc, {align:'center', numFmt:'0.00'});
+      setCell(ws, row, 10, expEsBob()?'':'=I'+r1+'*J'+r1, {bold:true, align:'right', numFmt:NUM_FMT});
       row++; n++;
     });
     var endRow = row;
@@ -153,8 +156,8 @@ function buildCompradores(lotes, tc, comPct, fecha, remateNum, bank) {
   setCell(ws,row,6,'='+sumG,{bold:true,fill:GRAND_BG,align:'right',numFmt:NUM_FMT,sz:11});
   setCell(ws,row,7,'='+sumH,{bold:true,fill:GRAND_BG,align:'right',numFmt:NUM_FMT,sz:11});
   setCell(ws,row,8,'='+sumI,{bold:true,fill:YELLOW,align:'right',numFmt:NUM_FMT,sz:11});
-  setCell(ws,row,9,tc,{bold:true,fill:GRAND_BG,align:'center',numFmt:'0.00',sz:11});
-  setCell(ws,row,10,'='+sumK,{bold:true,fill:GRAND_BG,align:'right',numFmt:NUM_FMT,sz:11});
+  setCell(ws,row,9,expEsBob()?'':tc,{bold:true,fill:GRAND_BG,align:'center',numFmt:'0.00',sz:11});
+  setCell(ws,row,10,expEsBob()?'':'='+sumK,{bold:true,fill:GRAND_BG,align:'right',numFmt:NUM_FMT,sz:11});
   row++;
   writeBankData(ws, row, bank);
   ws['!freeze'] = {xSplit:0, ySplit:7};
@@ -166,7 +169,7 @@ function buildVendedores(lotes, tc, comPct, fecha, remateNum, bank) {
   var year = fecha.split('/')[2] || new Date().getFullYear();
   writeColWidths(ws, [4,30,12,11,11,8.5,14.8,15,14.5,9.3,16]);
   writeTitleBlock(ws, year, remateNum, fecha, 'VENDEDOR');
-  writeHeaders(ws, 6, ['N°','VENDEDORES','CATEGORIA','LOTE','CANTIDAD','P/U','MONTO','COMISION '+comPct+'%','TOTAL A PAGAR $us','T/C '+tc,'TOTAL A PAGAR Bs.']);
+  writeHeaders(ws, 6, ['N°','VENDEDORES','CATEGORIA','LOTE','CANTIDAD','P/U','MONTO','COMISION '+comPct+'%','TOTAL A PAGAR '+(expEsBob()?'Bs.':'$us'),(expEsBob()?'':'T/C '+tc),(expEsBob()?'':'TOTAL A PAGAR Bs.')]);
 
   var byVend = {};
   lotes.forEach(function(l){ var k=l.propietario||'SIN PROPIETARIO'; if(!byVend[k]) byVend[k]=[]; byVend[k].push(l); });
@@ -189,8 +192,8 @@ function buildVendedores(lotes, tc, comPct, fecha, remateNum, bank) {
       setCell(ws,row,6,'=E'+r1+'*F'+r1,{align:'right',numFmt:NUM_FMT});
       setCell(ws,row,7,'=G'+r1+'*'+comPct+'%',{align:'right',numFmt:NUM_FMT});
       setCell(ws,row,8,'=G'+r1+'-H'+r1,{bold:true,fill:YELLOW,align:'right',numFmt:NUM_FMT});
-      setCell(ws,row,9,tc,{align:'center',numFmt:'0.00'});
-      setCell(ws,row,10,'=I'+r1+'*J'+r1,{bold:true,align:'right',numFmt:NUM_FMT});
+      setCell(ws,row,9,expEsBob()?'':tc,{align:'center',numFmt:'0.00'});
+      setCell(ws,row,10,expEsBob()?'':'=I'+r1+'*J'+r1,{bold:true,align:'right',numFmt:NUM_FMT});
       row++; n++;
     });
     var endRow = row;
@@ -203,8 +206,8 @@ function buildVendedores(lotes, tc, comPct, fecha, remateNum, bank) {
     setCell(ws,row,6,'=SUM(G'+(startRow+1)+':G'+endRow+')',{bold:true,fill:TOTAL_BG,align:'right',numFmt:NUM_FMT});
     setCell(ws,row,7,'=SUM(H'+(startRow+1)+':H'+endRow+')',{bold:true,fill:TOTAL_BG,align:'right',numFmt:NUM_FMT});
     setCell(ws,row,8,'=SUM(I'+(startRow+1)+':I'+endRow+')',{bold:true,fill:YELLOW,align:'right',numFmt:NUM_FMT});
-    setCell(ws,row,9,tc,{bold:true,fill:TOTAL_BG,align:'center',numFmt:'0.00'});
-    setCell(ws,row,10,'=SUM(K'+(startRow+1)+':K'+endRow+')',{bold:true,fill:TOTAL_BG,align:'right',numFmt:NUM_FMT});
+    setCell(ws,row,9,expEsBob()?'':tc,{bold:true,fill:TOTAL_BG,align:'center',numFmt:'0.00'});
+    setCell(ws,row,10,expEsBob()?'':'=SUM(K'+(startRow+1)+':K'+endRow+')',{bold:true,fill:TOTAL_BG,align:'right',numFmt:NUM_FMT});
     row++;
   });
 
@@ -221,8 +224,8 @@ function buildVendedores(lotes, tc, comPct, fecha, remateNum, bank) {
   setCell(ws,row,6,'='+sumG,{bold:true,fill:GRAND_BG,align:'right',numFmt:NUM_FMT,sz:11});
   setCell(ws,row,7,'='+sumH,{bold:true,fill:GRAND_BG,align:'right',numFmt:NUM_FMT,sz:11});
   setCell(ws,row,8,'='+sumI,{bold:true,fill:YELLOW,align:'right',numFmt:NUM_FMT,sz:11});
-  setCell(ws,row,9,tc,{bold:true,fill:GRAND_BG,align:'center',numFmt:'0.00',sz:11});
-  setCell(ws,row,10,'='+sumK,{bold:true,fill:GRAND_BG,align:'right',numFmt:NUM_FMT,sz:11});
+  setCell(ws,row,9,expEsBob()?'':tc,{bold:true,fill:GRAND_BG,align:'center',numFmt:'0.00',sz:11});
+  setCell(ws,row,10,expEsBob()?'':'='+sumK,{bold:true,fill:GRAND_BG,align:'right',numFmt:NUM_FMT,sz:11});
   row++;
   writeBankData(ws, row, bank);
   return ws;
@@ -233,7 +236,7 @@ function buildDefensas(lotes, tc, fecha, remateNum) {
   var year = fecha.split('/')[2] || new Date().getFullYear();
   writeColWidths(ws, [4,30,12,11,11,8.5,14.8,15,14.5,9.3,16]);
   writeTitleBlock(ws, year, remateNum, fecha, 'DEFENSAS');
-  writeHeaders(ws, 6, ['N°','DEFENSAS','CATEGORIA','LOTE','CANTIDAD','P/U','MONTO','COMISION 0.5% - 1%','TOTAL A PAGAR $','T/C '+tc,'TOTAL A PAGAR Bs.']);
+  writeHeaders(ws, 6, ['N°','DEFENSAS','CATEGORIA','LOTE','CANTIDAD','P/U','MONTO','COMISION 0.5% - 1%','TOTAL A PAGAR '+(expEsBob()?'Bs.':'$'),(expEsBob()?'':'T/C '+tc),(expEsBob()?'':'TOTAL A PAGAR Bs.')]);
 
   var sinComp = lotes.filter(function(l){return !l.comprador;});
   var byDef = {};
@@ -257,8 +260,8 @@ function buildDefensas(lotes, tc, fecha, remateNum) {
       setCell(ws,row,6,'=E'+r1+'*F'+r1,{align:'right',numFmt:NUM_FMT});
       setCell(ws,row,7,'=G'+r1+'*'+((l.defensaCom!=null?l.defensaCom:0.5))+'%',{align:'right',numFmt:NUM_FMT});
       setCell(ws,row,8,'=H'+r1,{bold:true,fill:YELLOW,align:'right',numFmt:NUM_FMT});
-      setCell(ws,row,9,tc,{align:'center',numFmt:'0.00'});
-      setCell(ws,row,10,'=I'+r1+'*J'+r1,{bold:true,align:'right',numFmt:NUM_FMT});
+      setCell(ws,row,9,expEsBob()?'':tc,{align:'center',numFmt:'0.00'});
+      setCell(ws,row,10,expEsBob()?'':'=I'+r1+'*J'+r1,{bold:true,align:'right',numFmt:NUM_FMT});
       row++; globalN++;
     });
     var endRow = row;
@@ -270,8 +273,8 @@ function buildDefensas(lotes, tc, fecha, remateNum) {
     setCell(ws,row,6,'=SUM(G'+(startRow+1)+':G'+endRow+')',{bold:true,fill:TOTAL_BG,align:'right',numFmt:NUM_FMT});
     setCell(ws,row,7,'=SUM(H'+(startRow+1)+':H'+endRow+')',{bold:true,fill:TOTAL_BG,align:'right',numFmt:NUM_FMT});
     setCell(ws,row,8,'=SUM(I'+(startRow+1)+':I'+endRow+')',{bold:true,fill:YELLOW,align:'right',numFmt:NUM_FMT});
-    setCell(ws,row,9,tc,{bold:true,fill:TOTAL_BG,align:'center',numFmt:'0.00'});
-    setCell(ws,row,10,'=SUM(K'+(startRow+1)+':K'+endRow+')',{bold:true,fill:TOTAL_BG,align:'right',numFmt:NUM_FMT});
+    setCell(ws,row,9,expEsBob()?'':tc,{bold:true,fill:TOTAL_BG,align:'center',numFmt:'0.00'});
+    setCell(ws,row,10,expEsBob()?'':'=SUM(K'+(startRow+1)+':K'+endRow+')',{bold:true,fill:TOTAL_BG,align:'right',numFmt:NUM_FMT});
     row++;
   });
 
@@ -289,8 +292,8 @@ function buildDefensas(lotes, tc, fecha, remateNum) {
     setCell(ws,row,6,'='+sumG,{bold:true,fill:GRAND_BG,align:'right',numFmt:NUM_FMT,sz:11});
     setCell(ws,row,7,'='+sumH,{bold:true,fill:GRAND_BG,align:'right',numFmt:NUM_FMT,sz:11});
     setCell(ws,row,8,'='+sumI,{bold:true,fill:YELLOW,align:'right',numFmt:NUM_FMT,sz:11});
-    setCell(ws,row,9,tc,{bold:true,fill:GRAND_BG,align:'center',numFmt:'0.00',sz:11});
-    setCell(ws,row,10,'='+sumK,{bold:true,fill:GRAND_BG,align:'right',numFmt:NUM_FMT,sz:11});
+    setCell(ws,row,9,expEsBob()?'':tc,{bold:true,fill:GRAND_BG,align:'center',numFmt:'0.00',sz:11});
+    setCell(ws,row,10,expEsBob()?'':'='+sumK,{bold:true,fill:GRAND_BG,align:'right',numFmt:NUM_FMT,sz:11});
   }
   return ws;
 }
@@ -316,15 +319,15 @@ function buildResumen(lotes, tc, comPct, fecha, remateNum) {
   var row = 5;
   function secHdr(t) {
     setCell(ws,row,0,t,{bold:true,sz:11,fill:GREEN_HDR,fontColor:'FFFFFF'});
-    setCell(ws,row,1,'TOTAL $us',{bold:true,sz:10,fill:GREEN_HDR,fontColor:'FFFFFF',align:'right'});
-    setCell(ws,row,2,'TOTAL Bs.',{bold:true,sz:10,fill:GREEN_HDR,fontColor:'FFFFFF',align:'right'});
+    setCell(ws,row,1,'TOTAL '+(expEsBob()?'Bs.':'$us'),{bold:true,sz:10,fill:GREEN_HDR,fontColor:'FFFFFF',align:'right'});
+    setCell(ws,row,2,(expEsBob()?'':'TOTAL Bs.'),{bold:true,sz:10,fill:GREEN_HDR,fontColor:'FFFFFF',align:'right'});
     row++;
   }
   function item(label, usd, bold) {
     var bg = bold ? YELLOW : null;
     setCell(ws,row,0,label,{bold:!!bold,fill:bg});
     setCell(ws,row,1,usd,{bold:!!bold,fill:bg,align:'right',numFmt:NUM_FMT});
-    setCell(ws,row,2,usd*tc,{bold:!!bold,fill:bg,align:'right',numFmt:NUM_FMT});
+    setCell(ws,row,2,expEsBob()?'':usd*tc,{bold:!!bold,fill:bg,align:'right',numFmt:NUM_FMT});
     row++;
   }
 
@@ -336,11 +339,11 @@ function buildResumen(lotes, tc, comPct, fecha, remateNum) {
   item('TOTAL INGRESOS', comTotal, true);
   row++;
   secHdr('ESTADISTICAS');
-  item('Monto total operado $us', monto, true);
+  item('Monto total operado '+(expEsBob()?'Bs.':'$us'), monto, true);
   item('Total lotes vendidos', lotes.length);
   item('Total cabezas', cab);
   item('Sin comprador (defensas)', sinComp.length);
-  item('Tipo de cambio Bs./$us', tc);
+  if (!expEsBob()) item('Tipo de cambio Bs./$us', tc);
 
   return ws;
 }
@@ -362,8 +365,10 @@ function admImprimirExcel(tipo) {
   var selEl = document.getElementById('adm-remate-sel');
   var selTxt= selEl.options[selEl.selectedIndex] ? selEl.options[selEl.selectedIndex].text : 'Remate';
   var fecha = admFechaRemate();
-  function money(n){ return '$'+(n||0).toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function money(n){ return (expEsBob()?'Bs.':'$')+(n||0).toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2}); }
   function bs(n){ return 'Bs.'+(n||0).toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function bsCell(n){ return expEsBob() ? '' : '<td class="r">'+bs(n)+'</td>'; }
+  function bsHdr(arr){ return expEsBob() ? arr.slice(0,-1) : arr; }
   function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 
   var defensas = admLotes.filter(function(l){return lotEsDefensa(l) || !l.comprador;});
@@ -408,14 +413,14 @@ function admImprimirExcel(tipo) {
       var n=1, sM=0,sC=0,sT=0;
       byComp[k].forEach(function(l){
         var m=(l.precio||0)*(l.cantidad||0), c=m*com, t=m+c; sM+=m;sC+=c;sT+=t;
-        rowsC+='<tr><td>'+n+'</td><td>'+esc(k)+'</td><td>'+esc(l.categoria)+'</td><td>'+l.lote+'</td><td class="r">'+l.cantidad+'</td><td class="r">'+money(l.precio)+'</td><td class="r">'+money(m)+'</td><td class="r">'+money(c)+'</td><td class="r">'+money(t)+'</td><td class="r">'+bs(t*tc)+'</td></tr>';
+        rowsC+='<tr><td>'+n+'</td><td>'+esc(k)+'</td><td>'+esc(l.categoria)+'</td><td>'+l.lote+'</td><td class="r">'+l.cantidad+'</td><td class="r">'+money(l.precio)+'</td><td class="r">'+money(m)+'</td><td class="r">'+money(c)+'</td><td class="r">'+money(t)+'</td>'+bsCell(t*tc)+'</tr>';
         n++;
       });
       gM+=sM;gC+=sC;gT+=sT;
-      rowsC+='<tr class="sub"><td colspan="6">TOTAL — '+esc(k)+'</td><td class="r">'+money(sM)+'</td><td class="r">'+money(sC)+'</td><td class="r">'+money(sT)+'</td><td class="r">'+bs(sT*tc)+'</td></tr>';
+      rowsC+='<tr class="sub"><td colspan="6">TOTAL — '+esc(k)+'</td><td class="r">'+money(sM)+'</td><td class="r">'+money(sC)+'</td><td class="r">'+money(sT)+'</td>'+bsCell(sT*tc)+'</tr>';
     });
-    rowsC+='<tr class="tot"><td colspan="6">TOTAL GENERAL</td><td class="r">'+money(gM)+'</td><td class="r">'+money(gC)+'</td><td class="r">'+money(gT)+'</td><td class="r">'+bs(gT*tc)+'</td></tr>';
-    hojas += sheet('COMPRADORES — comisión '+comPct+'%', Object.keys(byComp).length?tbl(['N°','Comprador','Categoría','Lote','Cant.','P/U','Monto','Com '+comPct+'%','Total $us','Total Bs.'],rowsC):'<p class="empty">Sin compradores.</p>');
+    rowsC+='<tr class="tot"><td colspan="6">TOTAL GENERAL</td><td class="r">'+money(gM)+'</td><td class="r">'+money(gC)+'</td><td class="r">'+money(gT)+'</td>'+bsCell(gT*tc)+'</tr>';
+    hojas += sheet('COMPRADORES — comisión '+comPct+'%', Object.keys(byComp).length?tbl(bsHdr(['N°','Comprador','Categoría','Lote','Cant.','P/U','Monto','Com '+comPct+'%','Total '+(expEsBob()?'Bs.':'$us'),'Total Bs.']),rowsC):'<p class="empty">Sin compradores.</p>');
 
     // ── PLATAFORMA ──
     hojas += sheet('COMPRAS MEDIANTE OTRA PLATAFORMA — 3% / 2% / 1%', hojaPlataforma([3,2,1]));
@@ -428,14 +433,14 @@ function admImprimirExcel(tipo) {
       var n=1,sM=0,sC=0,sT=0;
       byVend[k].forEach(function(l){
         var m=(l.precio||0)*(l.cantidad||0), c=m*com, t=m-c; sM+=m;sC+=c;sT+=t;
-        rowsV+='<tr><td>'+n+'</td><td>'+esc(k)+'</td><td>'+esc(l.categoria)+'</td><td>'+l.lote+'</td><td class="r">'+l.cantidad+'</td><td class="r">'+money(l.precio)+'</td><td class="r">'+money(m)+'</td><td class="r">'+money(c)+'</td><td class="r">'+money(t)+'</td><td class="r">'+bs(t*tc)+'</td></tr>';
+        rowsV+='<tr><td>'+n+'</td><td>'+esc(k)+'</td><td>'+esc(l.categoria)+'</td><td>'+l.lote+'</td><td class="r">'+l.cantidad+'</td><td class="r">'+money(l.precio)+'</td><td class="r">'+money(m)+'</td><td class="r">'+money(c)+'</td><td class="r">'+money(t)+'</td>'+bsCell(t*tc)+'</tr>';
         n++;
       });
       gvM+=sM;gvC+=sC;gvT+=sT;
-      rowsV+='<tr class="sub"><td colspan="6">TOTAL — '+esc(k)+'</td><td class="r">'+money(sM)+'</td><td class="r">'+money(sC)+'</td><td class="r">'+money(sT)+'</td><td class="r">'+bs(sT*tc)+'</td></tr>';
+      rowsV+='<tr class="sub"><td colspan="6">TOTAL — '+esc(k)+'</td><td class="r">'+money(sM)+'</td><td class="r">'+money(sC)+'</td><td class="r">'+money(sT)+'</td>'+bsCell(sT*tc)+'</tr>';
     });
-    rowsV+='<tr class="tot"><td colspan="6">TOTAL GENERAL</td><td class="r">'+money(gvM)+'</td><td class="r">'+money(gvC)+'</td><td class="r">'+money(gvT)+'</td><td class="r">'+bs(gvT*tc)+'</td></tr>';
-    hojas += sheet('VENDEDORES — comisión '+comPct+'% (liq. pagable)', Object.keys(byVend).length?tbl(['N°','Vendedor','Categoría','Lote','Cant.','P/U','Monto','Com '+comPct+'%','Liq. Pagable','Total Bs.'],rowsV):'<p class="empty">Sin vendedores.</p>');
+    rowsV+='<tr class="tot"><td colspan="6">TOTAL GENERAL</td><td class="r">'+money(gvM)+'</td><td class="r">'+money(gvC)+'</td><td class="r">'+money(gvT)+'</td>'+bsCell(gvT*tc)+'</tr>';
+    hojas += sheet('VENDEDORES — comisión '+comPct+'% (liq. pagable)', Object.keys(byVend).length?tbl(bsHdr(['N°','Vendedor','Categoría','Lote','Cant.','P/U','Monto','Com '+comPct+'%','Liq. Pagable','Total Bs.']),rowsV):'<p class="empty">Sin vendedores.</p>');
 
     // ── DEFENSAS (socios 0.5% / no socios 1%) ──
     function bloqueDef(lots,pct,titulo){
@@ -443,16 +448,16 @@ function admImprimirExcel(tipo) {
       var rows='',n=1,st=0;
       lots.forEach(function(l){
         var m=(l.precio||0)*(l.cantidad||0), c=m*pct/100; st+=c;
-        rows+='<tr><td>'+n+'</td><td>'+esc(l.propietario||'—')+'</td><td>'+esc(l.categoria)+'</td><td>'+l.lote+'</td><td class="r">'+l.cantidad+'</td><td class="r">'+money(l.precio)+'</td><td class="r">'+money(m)+'</td><td class="r">'+money(c)+'</td><td class="r">'+bs(c*tc)+'</td></tr>';
+        rows+='<tr><td>'+n+'</td><td>'+esc(l.propietario||'—')+'</td><td>'+esc(l.categoria)+'</td><td>'+l.lote+'</td><td class="r">'+l.cantidad+'</td><td class="r">'+money(l.precio)+'</td><td class="r">'+money(m)+'</td><td class="r">'+money(c)+'</td>'+bsCell(c*tc)+'</tr>';
         n++;
       });
-      rows='<tr class="secc"><td colspan="9">'+titulo+'</td></tr>'+rows+'<tr class="sub"><td colspan="7">SUBTOTAL '+titulo+'</td><td class="r">'+money(st)+'</td><td class="r">'+bs(st*tc)+'</td></tr>';
+      rows='<tr class="secc"><td colspan="9">'+titulo+'</td></tr>'+rows+'<tr class="sub"><td colspan="7">SUBTOTAL '+titulo+'</td><td class="r">'+money(st)+'</td>'+bsCell(st*tc)+'</tr>';
       return rows;
     }
     var socios=defensas.filter(function(l){return (l.defensaCom!=null?l.defensaCom:0.5)<=0.5;});
     var noSoc =defensas.filter(function(l){return (l.defensaCom!=null?l.defensaCom:0.5)>0.5;});
     var rowsD=bloqueDef(socios,0.5,'DEFENSAS SOCIOS (0.5%)')+bloqueDef(noSoc,1,'DEFENSAS NO SOCIOS (1%)');
-    hojas += sheet('DEFENSAS', rowsD?tbl(['N°','Propietario','Categoría','Lote','Cant.','P/U','Monto','Comisión','Com Bs.'],rowsD):'<p class="empty">Sin defensas.</p>');
+    hojas += sheet('DEFENSAS', rowsD?tbl(bsHdr(['N°','Propietario','Categoría','Lote','Cant.','P/U','Monto','Comisión','Com Bs.']),rowsD):'<p class="empty">Sin defensas.</p>');
 
     // ── RESUMEN ──
     var mNoPlat=lotsComp.reduce(function(a,l){return a+(l.precio||0)*(l.cantidad||0);},0);
@@ -463,9 +468,9 @@ function admImprimirExcel(tipo) {
     var cVend=mVend*com,cComp=mNoPlat*com,cPlat=mPlat*0.01,cDefS=mDefS*0.005,cDefN=mDefN*0.01;
     var totI=cVend+cComp+cPlat+cDefS+cDefN;
     var monto=admLotes.reduce(function(a,l){return a+(l.precio||0)*(l.cantidad||0);},0);
-    function fr(l,v,b){return '<tr'+(b?' class="tot"':'')+'><td>'+l+'</td><td class="r">'+money(v)+'</td><td class="r">'+bs(v*tc)+'</td></tr>';}
+    function fr(l,v,b){return '<tr'+(b?' class="tot"':'')+'><td>'+l+'</td><td class="r">'+money(v)+'</td>'+bsCell(v*tc)+'</tr>';}
     var rowsR=fr('Comisión vendedores '+comPct+'%',cVend)+fr('Comisión compradores '+comPct+'%',cComp)+fr('Comisión compradores plataforma 1% (remate)',cPlat)+fr('Defensa socios 0.5%',cDefS)+fr('Defensa no socios 1%',cDefN)+fr('TOTAL INGRESOS',totI,true)+fr('(2% pagado a la plataforma — no es ingreso)',mPlat*0.02)+fr('Monto total operado',monto,true);
-    hojas += sheet('RESUMEN — detalle de ingresos', tbl(['Concepto','$us','Bs.'],rowsR));
+    hojas += sheet('RESUMEN — detalle de ingresos', tbl(bsHdr(['Concepto',(expEsBob()?'Bs.':'$us'),'Bs.']),rowsR));
   }
 
   var w=window.open('','_blank');
@@ -487,7 +492,7 @@ function admImprimirExcel(tipo) {
     '.empty{font-size:12px;color:#555}'+
     '@page{margin:1cm;size:landscape}'+
     '</style></head><body>'+
-    '<h1>AGACON</h1><div class="meta">'+esc(selTxt)+' &nbsp;|&nbsp; Impreso: '+fecha+' &nbsp;|&nbsp; T/C: '+tc+' &nbsp;|&nbsp; Comisión: '+comPct+'%</div>'+
+    '<h1>AGACON</h1><div class="meta">'+esc(selTxt)+' &nbsp;|&nbsp; Impreso: '+fecha+' '+(expEsBob()?'':'&nbsp;|&nbsp; T/C: '+tc)+' &nbsp;|&nbsp; Comisión: '+comPct+'%</div>'+
     hojas+'</body></html>');
   w.document.close(); w.focus();
   setTimeout(function(){ try{ w.print(); }catch(e){} }, 400);
@@ -821,7 +826,7 @@ async function admExportExcel() {
 
     // COMPRADORES sheet
     buildSheet(wb, 'COMPRADORES', byComp, false, 'TOTALES',
-      ['N°','COMPRADOR','CATEGORIA','LOTE','CANTIDAD','P/U','MONTO','COMISION '+comPct+'%','TOTAL MONTO EN $US','T/C '+tc,'TOTAL MONTO EN Bs.']
+      ['N°','COMPRADOR','CATEGORIA','LOTE','CANTIDAD','P/U','MONTO','COMISION '+comPct+'%','TOTAL MONTO EN '+(expEsBob()?'Bs.':'$US'),(expEsBob()?'':'T/C '+tc),(expEsBob()?'':'TOTAL MONTO EN Bs.')]
     );
 
     // PLATAFORMA sheet — compras mediante otra plataforma (3% total / 2% plataforma / 1% remate)
@@ -866,7 +871,7 @@ async function admExportExcel() {
 
     // VENDEDORES sheet
     buildSheet(wb, 'VENDEDORES', byVend, true, 'TOTAL',
-      ['N°','VENDEDORES','CATEGORIA','LOTE','CANTIDAD','P/U','MONTO','COMISION '+comPct+'%','TOTAL A PAGAR $us','T/C '+tc,'TOTAL A PAGAR Bs.']
+      ['N°','VENDEDORES','CATEGORIA','LOTE','CANTIDAD','P/U','MONTO','COMISION '+comPct+'%','TOTAL A PAGAR '+(expEsBob()?'Bs.':'$us'),(expEsBob()?'':'T/C '+tc),(expEsBob()?'':'TOTAL A PAGAR Bs.')]
     );
 
     // DEFENSAS sheet — separar socio (0.5%) y no socio (1%) — defensa por bandera o por CI
@@ -902,7 +907,7 @@ async function admExportExcel() {
     var wsDef = wb.addWorksheet('DEFENSAS');
     setWidths(wsDef);
     writeTitle(wsDef, 'DEFENSAS');
-    writeHeaders(wsDef, ['N°','DEFENSAS','CATEGORIA','LOTE','CANTIDAD','P/U','MONTO','COMISION 0.5% - 1%','TOTAL A PAGAR $','T/C '+tc,'TOTAL A PAGAR Bs.']);
+    writeHeaders(wsDef, ['N°','DEFENSAS','CATEGORIA','LOTE','CANTIDAD','P/U','MONTO','COMISION 0.5% - 1%','TOTAL A PAGAR '+(expEsBob()?'Bs.':'$'),(expEsBob()?'':'T/C '+tc),(expEsBob()?'':'TOTAL A PAGAR Bs.')]);
     wsDef.views = [{state:'frozen',ySplit:7}];
     var rowD=8, totD=[], gnD=1;
     function defSeccion(titulo, grupos){

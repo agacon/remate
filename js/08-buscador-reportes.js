@@ -382,10 +382,10 @@ async function admExportSingle() {
       ws.getRow(4).height = 6;
       // Headers row 5
       var cols = seccion==='COMPRAS'
-        ? ['N°','PROPIETARIO','CATEGORÍA','LOTE','CANT.','P/U','MONTO','COM '+comPct+'%','LIQ. A PAGAR $us','T/C','LIQ. A PAGAR Bs.']
+        ? ['N°','PROPIETARIO','CATEGORÍA','LOTE','CANT.','P/U','MONTO','COM '+comPct+'%','LIQ. A PAGAR '+(expEsBob()?'Bs.':'$us'),(expEsBob()?'':'T/C'),(expEsBob()?'':'LIQ. A PAGAR Bs.')]
         : seccion==='VENTAS'
-        ? ['N°','COMPRADOR','CATEGORÍA','LOTE','CANT.','P/U','MONTO','COM '+comPct+'%','LIQ. A COBRAR $us','T/C','LIQ. A COBRAR Bs.']
-        : ['N°','CATEGORÍA','LOTE','CANT.','P/U','MONTO','COM %','TOTAL COM. $us','TOTAL COM. Bs.','',''];
+        ? ['N°','COMPRADOR','CATEGORÍA','LOTE','CANT.','P/U','MONTO','COM '+comPct+'%','LIQ. A COBRAR '+(expEsBob()?'Bs.':'$us'),(expEsBob()?'':'T/C'),(expEsBob()?'':'LIQ. A COBRAR Bs.')]
+        : ['N°','CATEGORÍA','LOTE','CANT.','P/U','MONTO','COM %','TOTAL COM. '+(expEsBob()?'Bs.':'$us'),(expEsBob()?'':'TOTAL COM. Bs.'),'',''];
       var hr=ws.getRow(5); hr.height=30;
       cols.forEach(function(h,i){
         if(h==='') return; // no pintar columnas vacías (DEFENSAS usa solo 9)
@@ -419,8 +419,8 @@ async function admExportSingle() {
       r.getCell(7).value={formula:'SUM(G'+startR+':G'+endR+')'}; r.getCell(7).numFmt='#,##0.00';
       r.getCell(8).value={formula:'SUM(H'+startR+':H'+endR+')'}; r.getCell(8).numFmt='#,##0.00';
       r.getCell(9).value={formula:'SUM(I'+startR+':I'+endR+')'}; r.getCell(9).numFmt='#,##0.00'; r.getCell(9).fill=hdrFill(YELLOW);
-      if(tcVal){ r.getCell(10).value=tcVal; r.getCell(10).numFmt='0.00'; }
-      r.getCell(11).value={formula:'SUM(K'+startR+':K'+endR+')'}; r.getCell(11).numFmt='#,##0.00';
+      if(tcVal && !expEsBob()){ r.getCell(10).value=tcVal; r.getCell(10).numFmt='0.00'; }
+      if(!expEsBob()){ r.getCell(11).value={formula:'SUM(K'+startR+':K'+endR+')'}; r.getCell(11).numFmt='#,##0.00'; }
     }
 
     // ── HOJA COMPRAS ──
@@ -460,7 +460,7 @@ async function admExportSingle() {
       lotesCompras.forEach(function(l){
         var monto=(l.precio||0)*(l.cantidad||0), com=monto*comPct/100, liq=monto+com;
         totalCompra+=liq;
-        writeDataRow(wsC, row, [n, l.propietario||'—', l.categoria||'', l.lote, l.cantidad, l.precio||0, monto, com, liq, tc, liq*tc]);
+        writeDataRow(wsC, row, [n, l.propietario||'—', l.categoria||'', l.lote, l.cantidad, l.precio||0, monto, com, liq, expEsBob()?'':tc, expEsBob()?'':liq*tc]);
         row++; n++;
       });
       writeTotRow(wsC, row, 11, start, row-1, tc);
@@ -476,7 +476,7 @@ async function admExportSingle() {
       lotesVentas.forEach(function(l){
         var monto=(l.precio||0)*(l.cantidad||0), com=monto*comPct/100, liq=monto-com;
         totalVenta+=liq;
-        writeDataRow(wsV, row, [n, l.comprador||'SIN COMPRADOR', l.categoria||'', l.lote, l.cantidad, l.precio||0, monto, com, liq, tc, liq*tc]);
+        writeDataRow(wsV, row, [n, l.comprador||'SIN COMPRADOR', l.categoria||'', l.lote, l.cantidad, l.precio||0, monto, com, liq, expEsBob()?'':tc, expEsBob()?'':liq*tc]);
         row++; n++;
       });
       writeTotRow(wsV, row, 11, start, row-1, tc);
@@ -493,7 +493,7 @@ async function admExportSingle() {
         var monto=(l.precio||0)*(l.cantidad||0), pct=l.defensaCom||0.5, com=monto*pct/100;
         totalDefCom+=com;
         var r=wsD.getRow(row); r.height=17;
-        [n, l.categoria||'', l.lote, l.cantidad, l.precio||0, monto, pct+'%', com, com*tc].forEach(function(v,i){
+        [n, l.categoria||'', l.lote, l.cantidad, l.precio||0, monto, pct+'%', com, expEsBob()?'':com*tc].forEach(function(v,i){
           var c=r.getCell(i+1); c.value=v; c.font={name:'Calibri',size:10}; c.border=border();
           if(i>=5){c.numFmt='#,##0.00';c.alignment={horizontal:'right',vertical:'middle'};}
           else{c.alignment={horizontal:i===1?'left':'center',vertical:'middle'};}
@@ -513,7 +513,7 @@ async function admExportSingle() {
       rtD.getCell(4).value={formula:'SUM(D6:D'+endDef+')'}; rtD.getCell(4).numFmt='#,##0';
       rtD.getCell(6).value={formula:'SUM(F6:F'+endDef+')'}; rtD.getCell(6).numFmt='#,##0.00';
       rtD.getCell(8).value={formula:'SUM(H6:H'+endDef+')'}; rtD.getCell(8).numFmt='#,##0.00';
-      rtD.getCell(9).value={formula:'SUM(I6:I'+endDef+')'}; rtD.getCell(9).numFmt='#,##0.00'; rtD.getCell(9).fill=hdrFill(YELLOW);
+      if(!expEsBob()){ rtD.getCell(9).value={formula:'SUM(I6:I'+endDef+')'}; rtD.getCell(9).numFmt='#,##0.00'; } rtD.getCell(9).fill=hdrFill(YELLOW);
       row++;
       writeBankToSheet(wsD, row);
     }
@@ -531,7 +531,7 @@ async function admExportSingle() {
       r.getCell(1).value=label; r.getCell(1).alignment={horizontal:'left',vertical:'middle'};
       if(usd!==undefined){
         r.getCell(2).value=Math.round(usd*100)/100; r.getCell(2).numFmt='#,##0.00'; r.getCell(2).alignment={horizontal:'right',vertical:'middle'};
-        r.getCell(3).value=Math.round(usd*tc*100)/100; r.getCell(3).numFmt='#,##0.00'; r.getCell(3).alignment={horizontal:'right',vertical:'middle'};
+        if(!expEsBob()){ r.getCell(3).value=Math.round(usd*tc*100)/100; r.getCell(3).numFmt='#,##0.00'; r.getCell(3).alignment={horizontal:'right',vertical:'middle'}; }
       }
     }
     function ecHdrLine(rowN, title, bg, fg) {
@@ -587,7 +587,7 @@ async function admExportSingle() {
         c.alignment={horizontal:'right',vertical:'middle'};
       });
       r.getCell(8).value=Math.round(usd*100)/100;
-      r.getCell(9).value=Math.round(usd*tc*100)/100;
+      if(!expEsBob()) r.getCell(9).value=Math.round(usd*tc*100)/100;
     }
 
     // Título persona
@@ -609,10 +609,10 @@ async function admExportSingle() {
     // ── COMPRAS detalle ──
     if(lotesCompras.length){
       ecSectionHdr(ecR,'🛒  COMPRAS — lo que debe pagar','DEEBF7','1F4E79'); ecR++;
-      ecColHdr(ecR,['N°','PROPIETARIO','CATEGORÍA','LOTE','CANT.','P/U $us','MONTO $us','LIQ. PAGAR $us','LIQ. PAGAR Bs.']); ecR++;
+      ecColHdr(ecR,['N°','PROPIETARIO','CATEGORÍA','LOTE','CANT.','P/U '+ecSym(),'MONTO '+ecSym(),'LIQ. PAGAR '+ecSym(),(expEsBob()?'':'LIQ. PAGAR Bs.')]); ecR++;
       lotesCompras.forEach(function(l,i){
         var m=(l.precio||0)*(l.cantidad||0),c=m*comPct/100,liq=m+c;
-        ecLoteRow(ecR,[i+1,l.propietario||'—',l.categoria||'',l.lote,l.cantidad,l.precio||0,m,liq,liq*tc],'FFFFFF');
+        ecLoteRow(ecR,[i+1,l.propietario||'—',l.categoria||'',l.lote,l.cantidad,l.precio||0,m,liq,expEsBob()?'':liq*tc],'FFFFFF');
         ecR++;
       });
       ecSubtotalRow(ecR,'SUBTOTAL COMPRAS (a pagar)',totalCompra,'BDD7EE',lotesCompras.reduce(function(s,l){return s+(+l.cantidad||0);},0)); ecR+=2;
@@ -621,10 +621,10 @@ async function admExportSingle() {
     // ── VENTAS detalle ──
     if(lotesVentas.length){
       ecSectionHdr(ecR,'🏷  VENTAS — lo que debe cobrar','E2EFDA','375623'); ecR++;
-      ecColHdr(ecR,['N°','COMPRADOR','CATEGORÍA','LOTE','CANT.','P/U $us','MONTO $us','LIQ. COBRAR $us','LIQ. COBRAR Bs.']); ecR++;
+      ecColHdr(ecR,['N°','COMPRADOR','CATEGORÍA','LOTE','CANT.','P/U '+ecSym(),'MONTO '+ecSym(),'LIQ. COBRAR '+ecSym(),(expEsBob()?'':'LIQ. COBRAR Bs.')]); ecR++;
       lotesVentas.forEach(function(l,i){
         var m=(l.precio||0)*(l.cantidad||0),c=m*comPct/100,liq=m-c;
-        ecLoteRow(ecR,[i+1,l.comprador||'SIN COMPRADOR',l.categoria||'',l.lote,l.cantidad,l.precio||0,m,liq,liq*tc],'FFFFFF');
+        ecLoteRow(ecR,[i+1,l.comprador||'SIN COMPRADOR',l.categoria||'',l.lote,l.cantidad,l.precio||0,m,liq,expEsBob()?'':liq*tc],'FFFFFF');
         ecR++;
       });
       ecSubtotalRow(ecR,'SUBTOTAL VENTAS (a cobrar)',totalVenta,'E2EFDA',lotesVentas.reduce(function(s,l){return s+(+l.cantidad||0);},0)); ecR+=2;
@@ -633,10 +633,10 @@ async function admExportSingle() {
     // ── DEFENSAS detalle ──
     if(lotesDefensas.length){
       ecSectionHdr(ecR,'🛡  DEFENSAS — propios animales (solo comisión)','FCE9DC','9A4B0F'); ecR++;
-      ecColHdr(ecR,['N°','CATEGORÍA','RAZA','LOTE','CANT.','P/U $us','MONTO $us','COM. $us','COM. Bs.']); ecR++;
+      ecColHdr(ecR,['N°','CATEGORÍA','RAZA','LOTE','CANT.','P/U '+ecSym(),'MONTO '+ecSym(),'COM. '+ecSym(),(expEsBob()?'':'COM. Bs.')]); ecR++;
       lotesDefensas.forEach(function(l,i){
         var m=(l.precio||0)*(l.cantidad||0),pct=l.defensaCom||0.5,com=m*pct/100;
-        ecLoteRow(ecR,[i+1,l.categoria||'—',l.raza||'—',l.lote,l.cantidad,l.precio||0,m,com,com*tc],'FFFFFF');
+        ecLoteRow(ecR,[i+1,l.categoria||'—',l.raza||'—',l.lote,l.cantidad,l.precio||0,m,com,expEsBob()?'':com*tc],'FFFFFF');
         ecR++;
       });
       ecSubtotalRow(ecR,'SUBTOTAL DEFENSA (comisión a pagar)',totalDefCom,'FCE4D6',lotesDefensas.reduce(function(s,l){return s+(+l.cantidad||0);},0)); ecR+=2;
@@ -657,9 +657,9 @@ async function admExportSingle() {
       c.numFmt='#,##0.00'; c.alignment={horizontal:'right',vertical:'middle'};
     });
     rSaldo.getCell(8).value=Math.round(Math.abs(saldo)*100)/100;
-    rSaldo.getCell(9).value=Math.round(Math.abs(saldo)*tc*100)/100;
-    // Resaltar en AMARILLO el resultado en Bs. (el monto que se paga/cobra)
-    rSaldo.getCell(9).fill=hdrFill('FFE699');
+    if(!expEsBob()) rSaldo.getCell(9).value=Math.round(Math.abs(saldo)*tc*100)/100;
+    // Resaltar en AMARILLO el monto que se paga/cobra (Bs. convertidos, o col. 8 si el remate es en Bs.)
+    rSaldo.getCell(expEsBob()?8:9).fill=hdrFill('FFE699');
     ecR+=2;
 
     // ── DATOS BANCARIOS ──
@@ -708,6 +708,8 @@ async function admExportSingle() {
     toast('Error: '+err.message, true);
   }
 }
+
+function ecSym(){ return expEsBob() ? 'Bs.' : '$us'; }
 
 function admExportCSV(tipo) {
   var tc=parseFloat(document.getElementById('adm-tc').value)||6.96;
