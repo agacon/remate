@@ -359,118 +359,111 @@ function admFechaRemate(){
 
 // Imprime el contenido de los Excel (todas sus hojas, cada una en su página).
 // tipo: 'completo' (Compradores, Plataforma, Vendedores, Defensas, Resumen) | 'plataforma' (3%/2%/1%)
-function admImprimirExcel(tipo) {
-  if(!admLotes.length){ toast('No hay datos para imprimir', true); return; }
+/* ============================================================
+   REPORTES — datos estructurados compartidos por
+   Imprimir (HTML) y PDF descargable (jsPDF)
+   Cada fila: {k:'n'|'sub'|'tot'|'secc', c:[{t,r,span}]}
+   ============================================================ */
+function admReporteDatos(tipo){
+  if(!admLotes.length) return null;
   var tc  = parseFloat(document.getElementById('adm-tc').value)||6.96;
   var com = (parseFloat(document.getElementById('adm-com').value)||3)/100;
   var comPct=(com*100);
   var selEl = document.getElementById('adm-remate-sel');
   var selTxt= selEl.options[selEl.selectedIndex] ? selEl.options[selEl.selectedIndex].text : 'Remate';
   var fecha = admFechaRemate();
-  function money(n){ return (expEsBob()?'Bs.':'$')+(n||0).toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-  function moneyE(n){ return expEsBob() ? 'Bs.'+Math.round(n||0).toLocaleString('es-BO') : money(n); }
+  var esBob = expEsBob();
+  function money(n){ return (esBob?'Bs.':'$')+(n||0).toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function moneyE(n){ return esBob ? 'Bs.'+Math.round(n||0).toLocaleString('es-BO') : money(n); }
   function bs(n){ return 'Bs.'+(n||0).toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-  function bsCell(n){ return expEsBob() ? '' : '<td class="r">'+bs(n)+'</td>'; }
-  function bsHdr(arr){ return expEsBob() ? arr.slice(0,-1) : arr; }
-  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+  function C(t,r,span){ return {t:String(t==null?'':t), r:!!r, span:span||1}; }
+  function bsC(arr,n){ if(!esBob) arr.push(C(bs(n),true)); return arr; }
+  function bsHdr(arr){ return esBob ? arr.slice(0,-1) : arr; }
 
   var defensas = admLotes.filter(function(l){return lotEsDefensa(l) || !l.comprador;});
   var normales = admLotes.filter(function(l){return !lotEsDefensa(l) && l.comprador;});
   var lotsPlat = normales.filter(function(l){return l.otraPlataforma;});
   var lotsComp = normales.filter(function(l){return !l.otraPlataforma;});
 
-  // Encabezado grande — mismo formato que el PDF por persona
-  var cab =
-    '<div class="hdr"><div><h1>AGACON</h1><div class="sub">ASOCIACI&Oacute;N DE GANADEROS<br>DE CONCEPCI&Oacute;N</div></div>'+
-    '<img src="'+AGACON_LOGO_REPORTE+'" alt="AGACON"></div>'+
-    '<div class="info"><table>'+
-      '<tr><td class="lbl">REMATE:</td><td>'+esc(selTxt)+(expEsBob()?' (Bs.)':' ($us)')+'</td></tr>'+
-      '<tr><td class="lbl">FECHA:</td><td>'+esc(fecha)+'</td></tr>'+
-      '<tr><td class="lbl">COMISI&Oacute;N:</td><td>'+comPct+'%</td></tr>'+
-      (expEsBob()?'':'<tr><td class="lbl">T/C:</td><td>Bs. '+tc+' / $us</td></tr>')+
-    '</table></div>';
-  function sheet(titulo, tablaHTML){
-    return '<div class="sheet">'+cab+'<h2>'+esc(titulo)+'</h2>'+tablaHTML+'</div>';
-  }
-  function tbl(heads, bodyRows){
-    return '<table><thead><tr>'+heads.map(function(h){return '<th>'+h+'</th>';}).join('')+'</tr></thead><tbody>'+bodyRows+'</tbody></table>';
-  }
+  var secciones = [];
 
-  var hojas='';
-
-  // ── Hoja PLATAFORMA (compartida por ambos tipos, con las 3 comisiones) ──
-  function hojaPlataforma(pcts){
-    if(!lotsPlat.length) return '<p class="empty">No hay compras mediante otra plataforma.</p>';
-    var rows='', n=1, tM=0, tots={};
+  function secPlataforma(pcts){
+    var head=['N°','Comprador','Categoría','Lote','Cant.','P/U','Monto'].concat(pcts.map(function(p){return 'Com '+p+'%';}));
+    var rows=[], n=1, tM=0, tots={};
     pcts.forEach(function(p){tots[p]=0;});
     lotsPlat.forEach(function(l){
       var m=(l.precio||0)*(l.cantidad||0); tM+=m;
-      var celdas='';
-      pcts.forEach(function(p){ var c=m*p/100; tots[p]+=c; celdas+='<td class="r">'+money(c)+'</td>'; });
-      rows+='<tr><td>'+n+'</td><td>'+esc(l.comprador)+(l.compradorCI?' <small>(CI: '+esc(l.compradorCI)+')</small>':'')+'</td><td>'+esc(l.categoria)+'</td><td>'+l.lote+'</td><td class="r">'+l.cantidad+'</td><td class="r">'+moneyE(l.precio)+'</td><td class="r">'+moneyE(m)+'</td>'+celdas+'</tr>';
-      n++;
+      var c=[C(n),C((l.comprador||'')+(l.compradorCI?' (CI: '+l.compradorCI+')':'')),C(l.categoria),C(l.lote),C(l.cantidad,true),C(moneyE(l.precio),true),C(moneyE(m),true)];
+      pcts.forEach(function(p){ var cm=m*p/100; tots[p]+=cm; c.push(C(money(cm),true)); });
+      rows.push({k:'n',c:c}); n++;
     });
-    var totCeldas=''; pcts.forEach(function(p){ totCeldas+='<td class="r">'+money(tots[p])+'</td>'; });
-    rows+='<tr class="tot"><td colspan="6">TOTALES</td><td class="r">'+money(tM)+'</td>'+totCeldas+'</tr>';
-    return tbl(['N°','Comprador','Categoría','Lote','Cant.','P/U','Monto'].concat(pcts.map(function(p){return 'Com '+p+'%';})), rows);
+    if(rows.length){
+      var tcels=[C('TOTALES',false,6),C(money(tM),true)];
+      pcts.forEach(function(p){ tcels.push(C(money(tots[p]),true)); });
+      rows.push({k:'tot',c:tcels});
+    }
+    return {titulo:'COMPRAS MEDIANTE OTRA PLATAFORMA — 3% total / 2% plataforma / 1% remate', head:head, rows:rows, empty:'No hay compras mediante otra plataforma.'};
   }
 
   if (tipo==='plataforma') {
-    hojas += sheet('COMPRAS MEDIANTE OTRA PLATAFORMA — 3% total / 2% plataforma / 1% remate', hojaPlataforma([3,2,1]));
+    secciones.push(secPlataforma([3,2,1]));
   } else {
-    // ── COMPRADORES (3%, sin plataforma) ──
+    // ── COMPRADORES ──
     var byComp={};
     lotsComp.forEach(function(l){ var k=(l.comprador||'SIN COMPRADOR').trim()+(l.compradorCI?' — CI: '+l.compradorCI:''); (byComp[k]=byComp[k]||[]).push(l); });
-    var rowsC='', gM=0,gC=0,gT=0;
+    var rowsC=[], gM=0,gC=0,gT=0;
     Object.keys(byComp).forEach(function(k){
       var n=1, sM=0,sC=0,sT=0;
       byComp[k].forEach(function(l){
-        var m=(l.precio||0)*(l.cantidad||0), c=m*com, t=m+c; sM+=m;sC+=c;sT+=t;
-        rowsC+='<tr><td>'+n+'</td><td>'+esc(k)+'</td><td>'+esc(l.categoria)+'</td><td>'+l.lote+'</td><td class="r">'+l.cantidad+'</td><td class="r">'+moneyE(l.precio)+'</td><td class="r">'+moneyE(m)+'</td><td class="r">'+money(c)+'</td><td class="r">'+money(t)+'</td>'+bsCell(t*tc)+'</tr>';
+        var m=(l.precio||0)*(l.cantidad||0), cc=m*com, t=m+cc; sM+=m;sC+=cc;sT+=t;
+        rowsC.push({k:'n',c:bsC([C(n),C(k),C(l.categoria),C(l.lote),C(l.cantidad,true),C(moneyE(l.precio),true),C(moneyE(m),true),C(money(cc),true),C(money(t),true)],t*tc)});
         n++;
       });
       gM+=sM;gC+=sC;gT+=sT;
-      rowsC+='<tr class="sub"><td colspan="6">TOTAL — '+esc(k)+'</td><td class="r">'+moneyE(sM)+'</td><td class="r">'+money(sC)+'</td><td class="r">'+money(sT)+'</td>'+bsCell(sT*tc)+'</tr>';
+      rowsC.push({k:'sub',c:bsC([C('TOTAL — '+k,false,6),C(moneyE(sM),true),C(money(sC),true),C(money(sT),true)],sT*tc)});
     });
-    rowsC+='<tr class="tot"><td colspan="6">TOTAL GENERAL</td><td class="r">'+moneyE(gM)+'</td><td class="r">'+money(gC)+'</td><td class="r">'+money(gT)+'</td>'+bsCell(gT*tc)+'</tr>';
-    hojas += sheet('COMPRADORES — comisión '+comPct+'%', Object.keys(byComp).length?tbl(bsHdr(['N°','Comprador','Categoría','Lote','Cant.','P/U','Monto','Com '+comPct+'%','Total '+(expEsBob()?'Bs.':'$us'),'Total Bs.']),rowsC):'<p class="empty">Sin compradores.</p>');
+    if(rowsC.length) rowsC.push({k:'tot',c:bsC([C('TOTAL GENERAL',false,6),C(moneyE(gM),true),C(money(gC),true),C(money(gT),true)],gT*tc)});
+    secciones.push({titulo:'COMPRADORES — comisión '+comPct+'%', head:bsHdr(['N°','Comprador','Categoría','Lote','Cant.','P/U','Monto','Com '+comPct+'%','Total '+(esBob?'Bs.':'$us'),'Total Bs.']), rows:rowsC, empty:'Sin compradores.'});
 
     // ── PLATAFORMA ──
-    hojas += sheet('COMPRAS MEDIANTE OTRA PLATAFORMA — 3% / 2% / 1%', hojaPlataforma([3,2,1]));
+    secciones.push(secPlataforma([3,2,1]));
 
-    // ── VENDEDORES (3%) ──
+    // ── VENDEDORES ──
     var byVend={};
     normales.forEach(function(l){ var k=l.propietario||'SIN PROPIETARIO'; (byVend[k]=byVend[k]||[]).push(l); });
-    var rowsV='', gvM=0,gvC=0,gvT=0;
+    var rowsV=[], gvM=0,gvC=0,gvT=0;
     Object.keys(byVend).forEach(function(k){
       var n=1,sM=0,sC=0,sT=0;
       byVend[k].forEach(function(l){
-        var m=(l.precio||0)*(l.cantidad||0), c=m*com, t=m-c; sM+=m;sC+=c;sT+=t;
-        rowsV+='<tr><td>'+n+'</td><td>'+esc(k)+'</td><td>'+esc(l.categoria)+'</td><td>'+l.lote+'</td><td class="r">'+l.cantidad+'</td><td class="r">'+moneyE(l.precio)+'</td><td class="r">'+moneyE(m)+'</td><td class="r">'+money(c)+'</td><td class="r">'+money(t)+'</td>'+bsCell(t*tc)+'</tr>';
+        var m=(l.precio||0)*(l.cantidad||0), cc=m*com, t=m-cc; sM+=m;sC+=cc;sT+=t;
+        rowsV.push({k:'n',c:bsC([C(n),C(k),C(l.categoria),C(l.lote),C(l.cantidad,true),C(moneyE(l.precio),true),C(moneyE(m),true),C(money(cc),true),C(money(t),true)],t*tc)});
         n++;
       });
       gvM+=sM;gvC+=sC;gvT+=sT;
-      rowsV+='<tr class="sub"><td colspan="6">TOTAL — '+esc(k)+'</td><td class="r">'+moneyE(sM)+'</td><td class="r">'+money(sC)+'</td><td class="r">'+money(sT)+'</td>'+bsCell(sT*tc)+'</tr>';
+      rowsV.push({k:'sub',c:bsC([C('TOTAL — '+k,false,6),C(moneyE(sM),true),C(money(sC),true),C(money(sT),true)],sT*tc)});
     });
-    rowsV+='<tr class="tot"><td colspan="6">TOTAL GENERAL</td><td class="r">'+moneyE(gvM)+'</td><td class="r">'+money(gvC)+'</td><td class="r">'+money(gvT)+'</td>'+bsCell(gvT*tc)+'</tr>';
-    hojas += sheet('VENDEDORES — comisión '+comPct+'% (liq. pagable)', Object.keys(byVend).length?tbl(bsHdr(['N°','Vendedor','Categoría','Lote','Cant.','P/U','Monto','Com '+comPct+'%','Liq. Pagable','Total Bs.']),rowsV):'<p class="empty">Sin vendedores.</p>');
+    if(rowsV.length) rowsV.push({k:'tot',c:bsC([C('TOTAL GENERAL',false,6),C(moneyE(gvM),true),C(money(gvC),true),C(money(gvT),true)],gvT*tc)});
+    secciones.push({titulo:'VENDEDORES — comisión '+comPct+'% (liq. pagable)', head:bsHdr(['N°','Vendedor','Categoría','Lote','Cant.','P/U','Monto','Com '+comPct+'%','Liq. Pagable','Total Bs.']), rows:rowsV, empty:'Sin vendedores.'});
 
-    // ── DEFENSAS (socios 0.5% / no socios 1%) ──
-    function bloqueDef(lots,pct,titulo){
-      if(!lots.length) return '';
-      var rows='',n=1,st=0;
-      lots.forEach(function(l){
-        var m=(l.precio||0)*(l.cantidad||0), c=m*pct/100; st+=c;
-        rows+='<tr><td>'+n+'</td><td>'+esc(l.propietario||'—')+'</td><td>'+esc(l.categoria)+'</td><td>'+l.lote+'</td><td class="r">'+l.cantidad+'</td><td class="r">'+moneyE(l.precio)+'</td><td class="r">'+moneyE(m)+'</td><td class="r">'+money(c)+'</td>'+bsCell(c*tc)+'</tr>';
-        n++;
-      });
-      rows='<tr class="secc"><td colspan="9">'+titulo+'</td></tr>'+rows+'<tr class="sub"><td colspan="7">SUBTOTAL '+titulo+'</td><td class="r">'+money(st)+'</td>'+bsCell(st*tc)+'</tr>';
-      return rows;
-    }
+    // ── DEFENSAS ──
+    var headD=bsHdr(['N°','Propietario','Categoría','Lote','Cant.','P/U','Monto','Comisión','Com Bs.']);
     var socios=defensas.filter(function(l){return (l.defensaCom!=null?l.defensaCom:0.5)<=0.5;});
     var noSoc =defensas.filter(function(l){return (l.defensaCom!=null?l.defensaCom:0.5)>0.5;});
-    var rowsD=bloqueDef(socios,0.5,'DEFENSAS SOCIOS (0.5%)')+bloqueDef(noSoc,1,'DEFENSAS NO SOCIOS (1%)');
-    hojas += sheet('DEFENSAS', rowsD?tbl(bsHdr(['N°','Propietario','Categoría','Lote','Cant.','P/U','Monto','Comisión','Com Bs.']),rowsD):'<p class="empty">Sin defensas.</p>');
+    var rowsD=[];
+    function bloqueDef(lots,pct,titulo){
+      if(!lots.length) return;
+      rowsD.push({k:'secc',c:[C(titulo,false,headD.length)]});
+      var n=1,st=0;
+      lots.forEach(function(l){
+        var m=(l.precio||0)*(l.cantidad||0), cc=m*pct/100; st+=cc;
+        rowsD.push({k:'n',c:bsC([C(n),C(l.propietario||'—'),C(l.categoria),C(l.lote),C(l.cantidad,true),C(moneyE(l.precio),true),C(moneyE(m),true),C(money(cc),true)],cc*tc)});
+        n++;
+      });
+      rowsD.push({k:'sub',c:bsC([C('SUBTOTAL '+titulo,false,7),C(money(st),true)],st*tc)});
+    }
+    bloqueDef(socios,0.5,'DEFENSAS SOCIOS (0.5%)');
+    bloqueDef(noSoc,1,'DEFENSAS NO SOCIOS (1%)');
+    secciones.push({titulo:'DEFENSAS', head:headD, rows:rowsD, empty:'Sin defensas.'});
 
     // ── RESUMEN ──
     var mNoPlat=lotsComp.reduce(function(a,l){return a+(l.precio||0)*(l.cantidad||0);},0);
@@ -481,14 +474,58 @@ function admImprimirExcel(tipo) {
     var cVend=mVend*com,cComp=mNoPlat*com,cPlat=mPlat*0.01,cDefS=mDefS*0.005,cDefN=mDefN*0.01;
     var totI=cVend+cComp+cPlat+cDefS+cDefN;
     var monto=admLotes.reduce(function(a,l){return a+(l.precio||0)*(l.cantidad||0);},0);
-    function fr(l,v,b){return '<tr'+(b?' class="tot"':'')+'><td>'+l+'</td><td class="r">'+money(v)+'</td>'+bsCell(v*tc)+'</tr>';}
-    var rowsR=fr('Comisión vendedores '+comPct+'%',cVend)+fr('Comisión compradores '+comPct+'%',cComp)+fr('Comisión compradores plataforma 1% (remate)',cPlat)+fr('Defensa socios 0.5%',cDefS)+fr('Defensa no socios 1%',cDefN)+fr('TOTAL INGRESOS',totI,true)+fr('(2% pagado a la plataforma — no es ingreso)',mPlat*0.02)+fr('Monto total operado',monto,true);
-    hojas += sheet('RESUMEN — detalle de ingresos', tbl(bsHdr(['Concepto',(expEsBob()?'Bs.':'$us'),'Bs.']),rowsR));
+    var rowsR=[];
+    function fr(l,v,b){ rowsR.push({k:b?'tot':'n',c:bsC([C(l),C(money(v),true)],v*tc)}); }
+    fr('Comisión vendedores '+comPct+'%',cVend);
+    fr('Comisión compradores '+comPct+'%',cComp);
+    fr('Comisión compradores plataforma 1% (remate)',cPlat);
+    fr('Defensa socios 0.5%',cDefS);
+    fr('Defensa no socios 1%',cDefN);
+    fr('TOTAL INGRESOS',totI,true);
+    fr('(2% pagado a la plataforma — no es ingreso)',mPlat*0.02);
+    fr('Monto total operado',monto,true);
+    secciones.push({titulo:'RESUMEN — detalle de ingresos', head:bsHdr(['Concepto',(esBob?'Bs.':'$us'),'Bs.']), rows:rowsR, empty:''});
   }
+
+  return {selTxt:selTxt, fecha:fecha, comPct:comPct, tc:tc, esBob:esBob, secciones:secciones};
+}
+
+/* ── IMPRIMIR (ventana del navegador, formato verde con logo) ── */
+function admImprimirExcel(tipo) {
+  var d = admReporteDatos(tipo);
+  if(!d){ toast('No hay datos para imprimir', true); return; }
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+
+  var cab =
+    '<div class="hdr"><div><h1>AGACON</h1><div class="sub">ASOCIACI&Oacute;N DE GANADEROS<br>DE CONCEPCI&Oacute;N</div></div>'+
+    '<img src="'+AGACON_LOGO_REPORTE+'" alt="AGACON"></div>'+
+    '<div class="info"><table>'+
+      '<tr><td class="lbl">REMATE:</td><td>'+esc(d.selTxt)+(d.esBob?' (Bs.)':' ($us)')+'</td></tr>'+
+      '<tr><td class="lbl">FECHA:</td><td>'+esc(d.fecha)+'</td></tr>'+
+      '<tr><td class="lbl">COMISI&Oacute;N:</td><td>'+d.comPct+'%</td></tr>'+
+      (d.esBob?'':'<tr><td class="lbl">T/C:</td><td>Bs. '+d.tc+' / $us</td></tr>')+
+    '</table></div>';
+
+  var hojas='';
+  d.secciones.forEach(function(sec){
+    var cuerpo;
+    if(!sec.rows.length){
+      cuerpo='<p class="empty">'+esc(sec.empty)+'</p>';
+    } else {
+      var trs='';
+      sec.rows.forEach(function(row){
+        trs+='<tr'+(row.k!=='n'?' class="'+row.k+'"':'')+'>'+row.c.map(function(cel){
+          return '<td'+(cel.span>1?' colspan="'+cel.span+'"':'')+(cel.r?' class="r"':'')+'>'+esc(cel.t)+'</td>';
+        }).join('')+'</tr>';
+      });
+      cuerpo='<table><thead><tr>'+sec.head.map(function(h){return '<th>'+esc(h)+'</th>';}).join('')+'</tr></thead><tbody>'+trs+'</tbody></table>';
+    }
+    hojas+='<div class="sheet">'+cab+'<h2>'+esc(sec.titulo)+'</h2>'+cuerpo+'</div>';
+  });
 
   var w=window.open('','_blank');
   if(!w){ toast('Permití las ventanas emergentes para poder imprimir', true); return; }
-  w.document.write('<!doctype html><html lang="es"><head><meta charset="utf-8"><title>AGACON_REPORTE_'+esc(selTxt).replace(/[^A-Za-z0-9]/g,'_')+'</title><style>'+
+  w.document.write('<!doctype html><html lang="es"><head><meta charset="utf-8"><title>AGACON_REPORTE_'+esc(d.selTxt).replace(/[^A-Za-z0-9]/g,'_')+'</title><style>'+
     '@page{size:letter landscape;margin:12mm}'+
     '*{box-sizing:border-box;margin:0;padding:0}'+
     'body{font-family:Arial,Helvetica,sans-serif;color:#1f2937;font-size:11px}'+
@@ -514,10 +551,116 @@ function admImprimirExcel(tipo) {
     'tr.tot td.r{background:#FFE699;color:#14532d;font-size:11px;border-color:#e3c96a}'+
     'tr.secc td{background:#166534;color:#fff;font-weight:bold;letter-spacing:1px;border-color:#14532d}'+
     '.empty{font-size:12px;color:#555;margin:6px 0}'+
-    '</style></head><body>'+
-    hojas+'</body></html>');
-  w.document.close(); w.focus();
-  setTimeout(function(){ try{ w.print(); }catch(e){} }, 400);
+    '</style></head><body>'+hojas+'</body></html>');
+  w.document.close();
+  w.focus();
+  setTimeout(function(){ w.print(); }, 350);
+}
+
+/* ── PDF DESCARGABLE (jsPDF + autotable) ── */
+function admExportarPDFReporte(tipo){
+  if(typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF){ toast('No se pudo cargar la librería de PDF. Verificá la conexión a internet.', true); return; }
+  var d = admReporteDatos(tipo);
+  if(!d){ toast('No hay datos para exportar', true); return; }
+
+  var doc = new window.jspdf.jsPDF({orientation:'landscape', unit:'mm', format:'letter'});
+  var M = 12;                             // margen 12mm
+  var PW = doc.internal.pageSize.getWidth();
+  var VERDE=[22,101,52], VERDE_OSC=[20,83,45], GRIS_BORDE=[209,213,219], VERDE_CLARO=[232,240,234], AMARILLO=[255,230,153], TEXTO=[31,41,55];
+
+  var logoProps=null, logoW=16, logoH=16;
+  try{
+    logoProps = doc.getImageProperties(AGACON_LOGO_REPORTE);
+    logoH = 16; logoW = logoH * (logoProps.width/logoProps.height);
+  }catch(e){ logoProps=null; }
+
+  function dibujarCab(secTitulo){
+    // barra verde superior
+    doc.setFillColor(VERDE[0],VERDE[1],VERDE[2]);
+    doc.rect(M, M, PW-2*M, 2.2, 'F');
+    // título
+    doc.setTextColor(VERDE[0],VERDE[1],VERDE[2]);
+    doc.setFont('helvetica','bold'); doc.setFontSize(17);
+    doc.text('AGACON', M, M+9.5);
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5);
+    doc.setTextColor(55,65,81);
+    doc.text('ASOCIACIÓN DE GANADEROS', M, M+13.5);
+    doc.text('DE CONCEPCIÓN', M, M+16.8);
+    // logo a la derecha
+    if(logoProps){ try{ doc.addImage(AGACON_LOGO_REPORTE,'PNG', PW-M-logoW, M+3, logoW, logoH); }catch(e){} }
+    // línea divisoria
+    doc.setDrawColor(GRIS_BORDE[0],GRIS_BORDE[1],GRIS_BORDE[2]);
+    doc.setLineWidth(0.5);
+    doc.line(M, M+20.5, PW-M, M+20.5);
+    // datos del remate
+    var y=M+25.5;
+    doc.setFontSize(8.5);
+    function dato(lbl,val){
+      doc.setFont('helvetica','bold'); doc.setTextColor(VERDE[0],VERDE[1],VERDE[2]);
+      doc.text(lbl, M, y);
+      doc.setFont('helvetica','normal'); doc.setTextColor(TEXTO[0],TEXTO[1],TEXTO[2]);
+      doc.text(String(val), M+24, y);
+      y+=4.2;
+    }
+    dato('REMATE:', d.selTxt+(d.esBob?' (Bs.)':' ($us)'));
+    dato('FECHA:', d.fecha);
+    dato('COMISIÓN:', d.comPct+'%');
+    if(!d.esBob) dato('T/C:', 'Bs. '+d.tc+' / $us');
+    // título de sección
+    doc.setFont('helvetica','bold'); doc.setFontSize(10);
+    doc.setTextColor(VERDE[0],VERDE[1],VERDE[2]);
+    doc.text(secTitulo, M, y+2.5);
+    return y+5.5; // startY para la tabla
+  }
+
+  d.secciones.forEach(function(sec, i){
+    if(i>0) doc.addPage();
+    var startY = dibujarCab(sec.titulo);
+    if(!sec.rows.length){
+      doc.setFont('helvetica','normal'); doc.setFontSize(9);
+      doc.setTextColor(90,90,90);
+      doc.text(sec.empty||'Sin datos.', M, startY+4);
+      return;
+    }
+    var body = sec.rows.map(function(row){
+      var arr = row.c.map(function(cel){
+        return {content:cel.t, colSpan:cel.span>1?cel.span:undefined, styles:{halign:cel.r?'right':'left'}};
+      });
+      arr._k = row.k;
+      return arr;
+    });
+    doc.autoTable({
+      head:[sec.head],
+      body:body,
+      startY:startY,
+      margin:{left:M, right:M, top:M+4, bottom:M},
+      showHead:'everyPage',
+      styles:{font:'helvetica', fontSize:7.5, cellPadding:1.5, lineColor:GRIS_BORDE, lineWidth:0.15, textColor:TEXTO, overflow:'linebreak'},
+      headStyles:{fillColor:VERDE, textColor:[255,255,255], fontSize:7, fontStyle:'bold', lineColor:VERDE_OSC},
+      didParseCell:function(data){
+        if(data.section!=='body') return;
+        var k = data.row.raw._k;
+        if(k==='sub'){
+          data.cell.styles.fillColor=VERDE_CLARO; data.cell.styles.fontStyle='bold'; data.cell.styles.lineColor=[198,216,203];
+        } else if(k==='tot'){
+          data.cell.styles.fontStyle='bold';
+          if(data.column.index===0){
+            data.cell.styles.fillColor=VERDE; data.cell.styles.textColor=[255,255,255]; data.cell.styles.lineColor=VERDE_OSC;
+          } else if(data.cell.styles.halign==='right'){
+            data.cell.styles.fillColor=AMARILLO; data.cell.styles.textColor=VERDE_OSC; data.cell.styles.lineColor=[227,201,106];
+          } else {
+            data.cell.styles.fillColor=VERDE_CLARO; data.cell.styles.lineColor=[198,216,203];
+          }
+        } else if(k==='secc'){
+          data.cell.styles.fillColor=VERDE; data.cell.styles.textColor=[255,255,255]; data.cell.styles.fontStyle='bold'; data.cell.styles.lineColor=VERDE_OSC;
+        }
+      }
+    });
+  });
+
+  var nombre='AGACON_REPORTE_'+(tipo==='plataforma'?'PLATAFORMA_':'COMPLETO_')+String(d.selTxt).replace(/[^A-Za-z0-9]/g,'_')+'_'+String(d.fecha).replace(/[/]/g,'-')+'.pdf';
+  doc.save(nombre);
+  toast('PDF descargado: '+nombre);
 }
 
 function admImprimir() {
@@ -1219,13 +1362,17 @@ async function admExportParticipantes() {
    ============================================================ */
 function admExportTipoChanged(){
   var sel = document.getElementById('adm-export-tipo');
-  var btnPdf = document.getElementById('adm-export-btn-pdf');
-  if(!sel || !btnPdf) return;
+  if(!sel) return;
   var esParticipantes = sel.value === 'participantes';
-  btnPdf.disabled = esParticipantes;
-  btnPdf.style.opacity = esParticipantes ? '.35' : '1';
-  btnPdf.style.cursor = esParticipantes ? 'not-allowed' : 'pointer';
-  btnPdf.title = esParticipantes ? 'Participantes solo está disponible en Excel' : 'Ver / imprimir en PDF';
+  ['adm-export-btn-pdf','adm-export-btn-print'].forEach(function(id){
+    var b = document.getElementById(id);
+    if(!b) return;
+    b.disabled = esParticipantes;
+    b.style.opacity = esParticipantes ? '.35' : '1';
+    b.style.cursor = esParticipantes ? 'not-allowed' : 'pointer';
+    b.title = esParticipantes ? 'Participantes solo está disponible en Excel'
+      : (id==='adm-export-btn-pdf' ? 'Descargar archivo PDF' : 'Imprimir (diálogo del navegador)');
+  });
 }
 
 function admExportar(formato){
@@ -1237,6 +1384,9 @@ function admExportar(formato){
     if(tipo === 'participantes') return admExportParticipantes();
   } else if(formato === 'pdf'){
     if(tipo === 'participantes'){ toast('Participantes solo está disponible en Excel', true); return; }
-    return admImprimirExcel(tipo); // 'completo' | 'plataforma'
+    return admExportarPDFReporte(tipo);   // descarga archivo .pdf
+  } else if(formato === 'imprimir'){
+    if(tipo === 'participantes'){ toast('Participantes solo está disponible en Excel', true); return; }
+    return admImprimirExcel(tipo);        // diálogo de impresión del navegador
   }
 }
