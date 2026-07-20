@@ -388,7 +388,7 @@ async function admExportSingle(formato) {
       }
       ws.getRow(1).getCell(1).value = 'AGACON — REMATE N° '+remateNumeroSingle+' — FECHA: '+fecha;
       ws.getRow(1).getCell(1).font = {name:'Calibri',bold:true,size:12};
-      ws.getRow(2).getCell(1).value = 'PERSONA: '+personaNombre.toUpperCase()+(personaCI?' — CI: '+personaCI:'');
+      ws.getRow(2).getCell(1).value = 'PARTICIPANTE: '+personaNombre.toUpperCase()+(personaCI?' — CI: '+personaCI:'');
       ws.getRow(2).getCell(1).font = {name:'Calibri',bold:true,size:12,color:{argb:'FF1F4E79'}};
       ws.getRow(3).getCell(1).value = seccion;
       ws.getRow(3).getCell(1).font = {name:'Calibri',bold:true,size:11};
@@ -751,7 +751,7 @@ function admRenderPersonaPDF(d) {
     '<div class="info"><table>'+
       '<tr><td class="lbl">REMATE N&deg;:</td><td>'+esc(d.remateNumero)+(esBob?' (Bs.)':' ($us)')+'</td></tr>'+
       '<tr><td class="lbl">FECHA:</td><td>'+esc(d.fecha)+'</td></tr>'+
-      '<tr><td class="lbl">PERSONA:</td><td>'+esc((d.personaNombre||'').toUpperCase())+'</td></tr>'+
+      '<tr><td class="lbl">PARTICIPANTE:</td><td>'+esc((d.personaNombre||'').toUpperCase())+'</td></tr>'+
       (d.personaCI?'<tr><td class="lbl">CI:</td><td>'+esc(d.personaCI)+'</td></tr>':'')+
       (esBob?'':'<tr><td class="lbl">T/C:</td><td>Bs. '+d.tc+' / $us</td></tr>')+
     '</table><div class="sello">SELLO</div></div>';

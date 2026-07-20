@@ -379,8 +379,13 @@ function admImprimirExcel(tipo) {
   var lotsPlat = normales.filter(function(l){return l.otraPlataforma;});
   var lotsComp = normales.filter(function(l){return !l.otraPlataforma;});
 
+  var infoLinea = 'REMATE: '+esc(selTxt)+' &nbsp;&middot;&nbsp; FECHA: '+esc(fecha)+' &nbsp;&middot;&nbsp; COMISI&Oacute;N: '+comPct+'%'+
+    (expEsBob() ? ' &nbsp;&middot;&nbsp; MONEDA: Bs.' : ' &nbsp;&middot;&nbsp; T/C: Bs. '+tc+' / $us');
+  var cab = '<div class="cab"><div><h1>AGACON</h1><div class="sub">ASOCIACI&Oacute;N DE GANADEROS DE CONCEPCI&Oacute;N</div></div>'+
+    '<img src="'+AGACON_LOGO_REPORTE+'" alt="AGACON"></div>'+
+    '<div class="infoline">'+infoLinea+'</div>';
   function sheet(titulo, tablaHTML){
-    return '<div class="sheet"><h2>'+esc(titulo)+'</h2>'+tablaHTML+'</div>';
+    return '<div class="sheet">'+cab+'<h2>'+esc(titulo)+'</h2>'+tablaHTML+'</div>';
   }
   function tbl(heads, bodyRows){
     return '<table><thead><tr>'+heads.map(function(h){return '<th>'+h+'</th>';}).join('')+'</tr></thead><tbody>'+bodyRows+'</tbody></table>';
@@ -478,24 +483,28 @@ function admImprimirExcel(tipo) {
 
   var w=window.open('','_blank');
   if(!w){ toast('Permití las ventanas emergentes para poder imprimir', true); return; }
-  w.document.write('<!doctype html><html lang="es"><head><meta charset="utf-8"><title>'+esc(selTxt)+'</title><style>'+
-    'body{font-family:Arial,Helvetica,sans-serif;margin:20px;color:#000}'+
-    'h1{margin:0;font-size:19px;letter-spacing:2px}'+
-    '.meta{font-size:11px;color:#444;margin:4px 0 10px}'+
-    '.sheet{page-break-after:always}'+
+  w.document.write('<!doctype html><html lang="es"><head><meta charset="utf-8"><title>AGACON_REPORTE_'+esc(selTxt).replace(/[^A-Za-z0-9]/g,'_')+'</title><style>'+
+    '@page{margin:0;size:landscape}'+
+    '*{box-sizing:border-box;margin:0;padding:0}'+
+    'body{font-family:Arial,Helvetica,sans-serif;color:#1f2937;font-size:11px}'+
+    '.sheet{page-break-after:always;padding:0 26px 18px;border-top:8px solid #166534}'+
     '.sheet:last-child{page-break-after:auto}'+
-    '.sheet h2{font-size:14px;margin:12px 0 6px;border-bottom:2px solid #1F4E79;color:#1F4E79;padding-bottom:3px}'+
-    'table{width:100%;border-collapse:collapse;font-size:11px}'+
-    'th,td{border:1px solid #999;padding:4px 6px;text-align:left;vertical-align:top}'+
-    'th{background:#1F4E79;color:#fff;text-transform:uppercase;font-size:10px}'+
+    '.cab{display:flex;justify-content:space-between;align-items:center;padding:8px 0 6px;border-bottom:2px solid #d1d5db}'+
+    '.cab h1{color:#166534;font-size:21px;letter-spacing:1px}'+
+    '.cab .sub{font-size:9.5px;color:#374151;margin-top:1px}'+
+    '.cab img{height:44px}'+
+    '.infoline{font-size:10.5px;color:#374151;padding:5px 0 2px;font-weight:bold}'+
+    '.sheet h2{font-size:13px;margin:8px 0 6px;border-bottom:2px solid #166534;color:#166534;padding-bottom:3px}'+
+    'table{width:100%;border-collapse:collapse;font-size:10.5px}'+
+    'th,td{border:1px solid #c9d4cc;padding:4px 6px;text-align:left;vertical-align:top}'+
+    'th{background:#166534;color:#fff;text-transform:uppercase;font-size:9.5px;border-color:#14532d}'+
     'td.r{text-align:right;white-space:nowrap}'+
-    'tr.sub td{background:#eef3f9;font-weight:bold}'+
-    'tr.tot td{background:#FFF2CC;font-weight:bold}'+
-    'tr.secc td{background:#1F4E79;color:#fff;font-weight:bold;letter-spacing:1px}'+
-    '.empty{font-size:12px;color:#555}'+
-    '@page{margin:1cm;size:landscape}'+
+    'tr{page-break-inside:avoid}'+
+    'tr.sub td{background:#e8f0ea;font-weight:bold}'+
+    'tr.tot td{background:#FFE699;font-weight:bold;color:#14532d;border-color:#e3c96a}'+
+    'tr.secc td{background:#166534;color:#fff;font-weight:bold;letter-spacing:1px;border-color:#14532d}'+
+    '.empty{font-size:12px;color:#555;margin:6px 0}'+
     '</style></head><body>'+
-    '<h1>AGACON</h1><div class="meta">'+esc(selTxt)+' &nbsp;|&nbsp; Impreso: '+fecha+' '+(expEsBob()?'':'&nbsp;|&nbsp; T/C: '+tc)+' &nbsp;|&nbsp; Comisión: '+comPct+'%</div>'+
     hojas+'</body></html>');
   w.document.close(); w.focus();
   setTimeout(function(){ try{ w.print(); }catch(e){} }, 400);

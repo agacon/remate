@@ -114,13 +114,13 @@ function compRenderTable() {
     // Raza
     tr.appendChild(cell(l.raza||'—', fontSize+';color:#555'));
     // Precio unitario
-    tr.appendChild(cell((admMoneda==='BOB'?'Bs. ':'$us ')+(l.precio||0), fontBig+';color:#1a2333'));
+    tr.appendChild(cell((admMoneda==='BOB'?'Bs. ':'$us ')+(l.precio||0).toLocaleString('es-BO'), fontBig+';color:#1a2333'));
     // Total
-    tr.appendChild(cell((admMoneda==='BOB'?'Bs. ':'$us ')+dispMonto.toLocaleString(), fontBig+';color:#4a4a4a'));
+    tr.appendChild(cell((admMoneda==='BOB'?'Bs. ':'$us ')+dispMonto.toLocaleString('es-BO'), fontBig+';color:#4a4a4a'));
     // Comision 3%
-    tr.appendChild(cell((admMoneda==='BOB'?'Bs. ':'$us ')+dispCom.toFixed(2), fontSize+';color:#555'));
+    tr.appendChild(cell((admMoneda==='BOB'?'Bs. ':'$us ')+dispCom.toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2}), fontSize+';color:#555'));
     // Liq. Pagable
-    tr.appendChild(cell((admMoneda==='BOB'?'Bs. ':'$us ')+dispTotalCom.toFixed(2), fontBig+';color:#1a2333'));
+    tr.appendChild(cell((admMoneda==='BOB'?'Bs. ':'$us ')+dispTotalCom.toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2}), fontBig+';color:#1a2333'));
     // Comprador
     var tdBuyer=document.createElement('td');
     tdBuyer.style.cssText=fontSize+';color:'+(hasBuyer?'#1a2333':'#f39c12');
@@ -154,7 +154,7 @@ function compUpdateStats() {
   setText('cst-tot',compLotes.length);
   setText('cst-vend',saved.length);
   setText('cst-sinc',saved.filter(function(l){return !l.comprador;}).length);
-  setText('cst-monto',admS()+monto.toLocaleString());
+  setText('cst-monto',admS()+monto.toLocaleString('es-BO'));
 }
 
 function compSetFilter(mode,btn) {
@@ -366,7 +366,7 @@ function compOpenModal(lotKey) {
   var lot=compLotes.find(function(l){return l._key===lotKey;});
   if(!lot) return;
   compCurrentLotKey=lotKey;
-  document.getElementById('m-comp-info').textContent='Lote '+lot.lote+' — '+lot.categoria+' | '+lot.cantidad+' cab. | Propietario: '+(lot.propietario||'—')+' | Precio: '+admS()+(lot.precio||0);
+  document.getElementById('m-comp-info').textContent='Lote '+lot.lote+' — '+lot.categoria+' | '+lot.cantidad+' cab. | Propietario: '+(lot.propietario||'—')+' | Precio: '+admS()+(lot.precio||0).toLocaleString('es-BO');
   document.getElementById('mc-nombre').value=lot.comprador||'';
   document.getElementById('mc-ci').value=lot.compradorCI||'';
   document.getElementById('mc-tel').value=lot.compradorTel||'';

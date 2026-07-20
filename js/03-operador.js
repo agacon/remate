@@ -174,15 +174,37 @@ function renderPriceButtons() {
 // Edición manual del precio: tocar el número grande y escribirlo
 function editPriceManual() {
   var l = lots[cur]; if (!l) return;
-  var v = prompt('Escribir precio unitario (' + monSym() + '):', l.precio || 0);
-  if (v === null) return;
-  v = String(v).trim().replace(/\s/g, '');
-  if (/^\d{1,3}(\.\d{3})+$/.test(v)) v = v.replace(/\./g, ''); // 4.350 → 4350 (miles)
-  v = parseFloat(v.replace(',', '.'));
-  if (isNaN(v) || v < 0) { toast('Precio inválido', true); return; }
-  l.precio = v;
-  renderOp();
-  if (l.saved) syncLot(l);
+  var el = document.getElementById('op-price');
+  if (!el || el.dataset.editing) return;
+  el.dataset.editing = '1';
+  var inp = document.createElement('input');
+  inp.type = 'text'; inp.inputMode = 'numeric'; inp.autocomplete = 'off';
+  inp.value = l.precio ? String(l.precio) : '';
+  inp.style.cssText = 'width:100%;background:transparent;border:none;outline:none;color:inherit;font:inherit;text-align:center;padding:0;caret-color:var(--gold);';
+  el.textContent = '';
+  el.appendChild(inp);
+  inp.focus(); inp.select();
+  function fin(confirmar) {
+    if (!el.dataset.editing) return;
+    delete el.dataset.editing;
+    if (confirmar) {
+      var v = String(inp.value).trim().replace(/\s/g, '');
+      if (/^\d{1,3}(\.\d{3})+$/.test(v)) v = v.replace(/\./g, ''); // 4.350 → 4350 (miles)
+      v = parseFloat(v.replace(',', '.'));
+      if (!isNaN(v) && v >= 0) {
+        l.precio = v;
+        if (l.saved) syncLot(l);
+      } else if (String(inp.value).trim() !== '') {
+        toast('Precio inválido', true);
+      }
+    }
+    renderOp();
+  }
+  inp.addEventListener('keydown', function(e){
+    if (e.key === 'Enter') { e.preventDefault(); fin(true); }
+    else if (e.key === 'Escape') { fin(false); }
+  });
+  inp.addEventListener('blur', function(){ fin(true); });
 }
 
 // Tamaño del precio en pantalla pública según cantidad de dígitos (Bs. usa más)
@@ -387,7 +409,8 @@ function renderOp() {
   setText('op-raza', l.raza||'—');
   setText('op-edad', l.edad||'—');
   setText('op-obs', l.obs||'—');
-  setText('op-price', l.precio||'0');
+  var _opEl = document.getElementById('op-price');
+  if (!_opEl || !_opEl.dataset.editing) setText('op-price', (l.precio||0).toLocaleString('es-BO'));
   document.getElementById('f-peso').value = l.peso||'';
   updateTotal(l);
   setText('lot-counter', (cur+1)+' / '+lots.length);
@@ -433,9 +456,10 @@ function goToLot(i) { cur=i; renderOp(); }
 
 function adjPrice(amount) {
   var l=lots[cur];
-  l.precio=Math.max(0,(l.precio||0)+amount);
   var el=document.getElementById('op-price');
-  el.textContent=l.precio;
+  if (el && el.dataset.editing) return; // no tocar el precio mientras se escribe
+  l.precio=Math.max(0,(l.precio||0)+amount);
+  el.textContent=(l.precio||0).toLocaleString('es-BO');
   el.classList.remove('flash-up','flash-down');
   void el.offsetWidth;
   el.classList.add(amount>0?'flash-up':'flash-down');
@@ -564,14 +588,14 @@ function renderPublic() {
   setFlip('mini-cant',  String(l.cantidad||'—'));
   setFlip('mini-peso',  l.peso?String(l.peso):'—');
   setFlip('mini-prom',  prom?String(prom):'—');
-  setFlip('mini-price', String(l.precio||'0'));
+  setFlip('mini-price', (l.precio||0).toLocaleString('es-BO'));
   setText('mini-cat',   l.categoria||'—');
   setText('mini-raza',  l.raza||'—');
   setText('mini-edad',  l.edad||'—');
   // Full public screen
   setFlip('pf-lote',    String(l.lote||'—'));
   setFlip('pf-cant',    String(l.cantidad||'—'));
-  setFlip('pf-price',   String(l.precio||'0'));
+  setFlip('pf-price',   (l.precio||0).toLocaleString('es-BO'));
   applyPubPriceSize(l.precio||'0');
   var _plbl = document.getElementById('pf-price-lbl');
   if (_plbl) _plbl.textContent = 'PRECIO ' + (remateMoneda === 'BOB' ? 'Bs.' : '$us.');
@@ -583,7 +607,7 @@ function renderPublic() {
   var promEl = document.getElementById('pf-promedio');
   if(promEl) promEl.textContent = prom ? String(prom) : '—';
   // localStorage for external tab
-  try{ localStorage.setItem(LS_KEY, JSON.stringify({lote:l.lote||'—',cant:l.cantidad||'—',peso:peso||'—',prom:prom||'—',precio:l.precio||'0',categoria:l.categoria||'—',raza:l.raza||'—',edad:l.edad||'—',estancia:l.estancia||'—',mon:remateMoneda,ts:Date.now()})); }catch(e){}
+  try{ localStorage.setItem(LS_KEY, JSON.stringify({lote:l.lote||'—',cant:l.cantidad||'—',peso:peso||'—',prom:prom||'—',precio:(l.precio||0).toLocaleString('es-BO'),categoria:l.categoria||'—',raza:l.raza||'—',edad:l.edad||'—',estancia:l.estancia||'—',mon:remateMoneda,ts:Date.now()})); }catch(e){}
 }
 
 function showPublic() {
