@@ -379,11 +379,16 @@ function admImprimirExcel(tipo) {
   var lotsPlat = normales.filter(function(l){return l.otraPlataforma;});
   var lotsComp = normales.filter(function(l){return !l.otraPlataforma;});
 
-  var infoLinea = 'REMATE: '+esc(selTxt)+' &nbsp;&middot;&nbsp; FECHA: '+esc(fecha)+' &nbsp;&middot;&nbsp; COMISI&Oacute;N: '+comPct+'%'+
-    (expEsBob() ? ' &nbsp;&middot;&nbsp; MONEDA: Bs.' : ' &nbsp;&middot;&nbsp; T/C: Bs. '+tc+' / $us');
-  var cab = '<div class="cab"><div><h1>AGACON</h1><div class="sub">ASOCIACI&Oacute;N DE GANADEROS DE CONCEPCI&Oacute;N</div></div>'+
+  // Encabezado grande — mismo formato que el PDF por persona
+  var cab =
+    '<div class="hdr"><div><h1>AGACON</h1><div class="sub">ASOCIACI&Oacute;N DE GANADEROS<br>DE CONCEPCI&Oacute;N</div></div>'+
     '<img src="'+AGACON_LOGO_REPORTE+'" alt="AGACON"></div>'+
-    '<div class="infoline">'+infoLinea+'</div>';
+    '<div class="info"><table>'+
+      '<tr><td class="lbl">REMATE:</td><td>'+esc(selTxt)+(expEsBob()?' (Bs.)':' ($us)')+'</td></tr>'+
+      '<tr><td class="lbl">FECHA:</td><td>'+esc(fecha)+'</td></tr>'+
+      '<tr><td class="lbl">COMISI&Oacute;N:</td><td>'+comPct+'%</td></tr>'+
+      (expEsBob()?'':'<tr><td class="lbl">T/C:</td><td>Bs. '+tc+' / $us</td></tr>')+
+    '</table></div>';
   function sheet(titulo, tablaHTML){
     return '<div class="sheet">'+cab+'<h2>'+esc(titulo)+'</h2>'+tablaHTML+'</div>';
   }
@@ -487,21 +492,26 @@ function admImprimirExcel(tipo) {
     '@page{margin:0;size:landscape}'+
     '*{box-sizing:border-box;margin:0;padding:0}'+
     'body{font-family:Arial,Helvetica,sans-serif;color:#1f2937;font-size:11px}'+
-    '.sheet{page-break-after:always;padding:0 26px 18px;border-top:8px solid #166534}'+
+    '.sheet{page-break-after:always;padding:0 34px 20px}'+
     '.sheet:last-child{page-break-after:auto}'+
-    '.cab{display:flex;justify-content:space-between;align-items:center;padding:8px 0 6px;border-bottom:2px solid #d1d5db}'+
-    '.cab h1{color:#166534;font-size:21px;letter-spacing:1px}'+
-    '.cab .sub{font-size:9.5px;color:#374151;margin-top:1px}'+
-    '.cab img{height:44px}'+
-    '.infoline{font-size:10.5px;color:#374151;padding:5px 0 2px;font-weight:bold}'+
-    '.sheet h2{font-size:13px;margin:8px 0 6px;border-bottom:2px solid #166534;color:#166534;padding-bottom:3px}'+
+    '.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #d1d5db;padding-bottom:10px;border-top:8px solid #166534;padding-top:12px}'+
+    '.hdr h1{color:#166534;font-size:24px;letter-spacing:1px}'+
+    '.hdr .sub{font-size:10.5px;color:#374151;margin-top:2px;line-height:1.35}'+
+    '.hdr img{height:58px}'+
+    '.info{display:flex;justify-content:space-between;margin:10px 0 4px}'+
+    '.info table{width:auto;font-size:11.5px}'+
+    '.info table td{padding:2px 10px 2px 0;border:none;text-align:left}'+
+    '.info .lbl{color:#166534;font-weight:bold}'+
+    '.sheet h2{font-size:13px;margin:8px 0 6px;color:#166534;font-weight:bold}'+
     'table{width:100%;border-collapse:collapse;font-size:10.5px}'+
-    'th,td{border:1px solid #c9d4cc;padding:4px 6px;text-align:left;vertical-align:top}'+
+    'th,td{border:1px solid #d1d5db;padding:4px 6px;text-align:left;vertical-align:top}'+
     'th{background:#166534;color:#fff;text-transform:uppercase;font-size:9.5px;border-color:#14532d}'+
     'td.r{text-align:right;white-space:nowrap}'+
     'tr{page-break-inside:avoid}'+
-    'tr.sub td{background:#e8f0ea;font-weight:bold}'+
-    'tr.tot td{background:#FFE699;font-weight:bold;color:#14532d;border-color:#e3c96a}'+
+    'tr.sub td{background:#e8f0ea;font-weight:bold;border-color:#c6d8cb}'+
+    'tr.tot td{background:#e8f0ea;font-weight:bold;border-color:#c6d8cb}'+
+    'tr.tot td:first-child{background:#166534;color:#fff;text-align:left;padding-left:8px;border-color:#14532d}'+
+    'tr.tot td.r{background:#FFE699;color:#14532d;font-size:11px;border-color:#e3c96a}'+
     'tr.secc td{background:#166534;color:#fff;font-weight:bold;letter-spacing:1px;border-color:#14532d}'+
     '.empty{font-size:12px;color:#555;margin:6px 0}'+
     '</style></head><body>'+
@@ -533,19 +543,24 @@ function admImprimir() {
   w.document.write(
     '<!doctype html><html lang="es"><head><meta charset="utf-8"><title>' + titulo + ' — ' + tabName + '</title>' +
     '<style>' +
-    'body{font-family:Arial,Helvetica,sans-serif;margin:22px;color:#000}' +
-    'h1{margin:0;font-size:20px;letter-spacing:2px}' +
-    'h2{margin:2px 0 0;font-size:15px;font-weight:600;color:#222}' +
-    '.meta{font-size:12px;color:#444;margin:6px 0 14px}' +
+    '@page{margin:0}' +
+    '*{box-sizing:border-box}' +
+    'body{font-family:Arial,Helvetica,sans-serif;margin:0;padding:0 34px 20px;color:#1f2937}' +
+    '.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #d1d5db;padding-bottom:10px;border-top:8px solid #166534;padding-top:12px;margin:0 -34px;padding-left:34px;padding-right:34px}' +
+    '.hdr h1{margin:0;color:#166534;font-size:24px;letter-spacing:1px}' +
+    '.hdr .sub{font-size:10.5px;color:#374151;margin-top:2px;line-height:1.35}' +
+    '.hdr img{height:58px}' +
+    'h2{margin:10px 0 2px;font-size:14px;font-weight:bold;color:#166534}' +
+    '.meta{font-size:11px;color:#374151;margin:2px 0 10px;font-weight:bold}' +
     '.tbl-wrap,.tbl-scroll{overflow:visible!important;height:auto!important;max-height:none!important}' +
-    'table{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}' +
-    'th,td{border:1px solid #999;padding:5px 7px;text-align:left;vertical-align:top}' +
-    'th{background:#eee;text-transform:uppercase;font-size:11px;letter-spacing:.5px}' +
-    'tr:nth-child(even) td{background:#f7f7f7}' +
-    '.subtotal td{background:#e8f0e8!important;font-weight:bold}' +
-    '@page{margin:1cm}' +
+    'table{width:100%;border-collapse:collapse;font-size:11px;margin-top:6px}' +
+    'th,td{border:1px solid #d1d5db;padding:5px 7px;text-align:left;vertical-align:top}' +
+    'th{background:#166534;color:#fff;text-transform:uppercase;font-size:10px;letter-spacing:.5px;border-color:#14532d}' +
+    'tr{page-break-inside:avoid}' +
+    '.subtotal td{background:#e8f0ea!important;font-weight:bold;border-color:#c6d8cb}' +
     '</style></head><body>' +
-    '<h1>AGACON</h1>' +
+    '<div class="hdr"><div><h1>AGACON</h1><div class="sub">ASOCIACI&Oacute;N DE GANADEROS<br>DE CONCEPCI&Oacute;N</div></div>' +
+    '<img src="' + AGACON_LOGO_REPORTE + '" alt="AGACON"></div>' +
     '<h2>' + titulo + ' — ' + tabName + '</h2>' +
     '<div class="meta">Impreso: ' + fecha + ' &nbsp;|&nbsp; T/C: ' + tc + ' &nbsp;|&nbsp; Comisión: ' + com + '%' +
     (filtroInfo ? ' &nbsp;|&nbsp; ' + filtroInfo : '') + '</div>' +
