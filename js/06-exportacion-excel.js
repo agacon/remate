@@ -489,10 +489,10 @@ function admImprimirExcel(tipo) {
   var w=window.open('','_blank');
   if(!w){ toast('Permití las ventanas emergentes para poder imprimir', true); return; }
   w.document.write('<!doctype html><html lang="es"><head><meta charset="utf-8"><title>AGACON_REPORTE_'+esc(selTxt).replace(/[^A-Za-z0-9]/g,'_')+'</title><style>'+
-    '@page{margin:0;size:landscape}'+
+    '@page{size:letter landscape;margin:12mm}'+
     '*{box-sizing:border-box;margin:0;padding:0}'+
     'body{font-family:Arial,Helvetica,sans-serif;color:#1f2937;font-size:11px}'+
-    '.sheet{page-break-after:always;padding:0 34px 20px}'+
+    '.sheet{page-break-after:always;padding:0}'+
     '.sheet:last-child{page-break-after:auto}'+
     '.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #d1d5db;padding-bottom:10px;border-top:8px solid #166534;padding-top:12px}'+
     '.hdr h1{color:#166534;font-size:24px;letter-spacing:1px}'+
@@ -543,10 +543,10 @@ function admImprimir() {
   w.document.write(
     '<!doctype html><html lang="es"><head><meta charset="utf-8"><title>' + titulo + ' — ' + tabName + '</title>' +
     '<style>' +
-    '@page{margin:0}' +
+    '@page{size:letter;margin:12mm}' +
     '*{box-sizing:border-box}' +
-    'body{font-family:Arial,Helvetica,sans-serif;margin:0;padding:0 34px 20px;color:#1f2937}' +
-    '.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #d1d5db;padding-bottom:10px;border-top:8px solid #166534;padding-top:12px;margin:0 -34px;padding-left:34px;padding-right:34px}' +
+    'body{font-family:Arial,Helvetica,sans-serif;margin:0;padding:0;color:#1f2937}' +
+    '.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #d1d5db;padding-bottom:10px;border-top:8px solid #166534;padding-top:12px}' +
     '.hdr h1{margin:0;color:#166534;font-size:24px;letter-spacing:1px}' +
     '.hdr .sub{font-size:10.5px;color:#374151;margin-top:2px;line-height:1.35}' +
     '.hdr img{height:58px}' +
@@ -1211,5 +1211,32 @@ async function admExportParticipantes() {
   } catch(e) {
     console.error('[AGACON] participantes:', e);
     toast('Error generando el Excel', true);
+  }
+}
+
+/* ============================================================
+   EXPORTACIÓN UNIFICADA — combo box de tipo + botones Excel/PDF
+   ============================================================ */
+function admExportTipoChanged(){
+  var sel = document.getElementById('adm-export-tipo');
+  var btnPdf = document.getElementById('adm-export-btn-pdf');
+  if(!sel || !btnPdf) return;
+  var esParticipantes = sel.value === 'participantes';
+  btnPdf.disabled = esParticipantes;
+  btnPdf.style.opacity = esParticipantes ? '.35' : '1';
+  btnPdf.style.cursor = esParticipantes ? 'not-allowed' : 'pointer';
+  btnPdf.title = esParticipantes ? 'Participantes solo está disponible en Excel' : 'Ver / imprimir en PDF';
+}
+
+function admExportar(formato){
+  var sel = document.getElementById('adm-export-tipo');
+  var tipo = sel ? sel.value : 'completo';
+  if(formato === 'excel'){
+    if(tipo === 'completo') return admExportExcel();
+    if(tipo === 'plataforma') return admExportPlataforma();
+    if(tipo === 'participantes') return admExportParticipantes();
+  } else if(formato === 'pdf'){
+    if(tipo === 'participantes'){ toast('Participantes solo está disponible en Excel', true); return; }
+    return admImprimirExcel(tipo); // 'completo' | 'plataforma'
   }
 }

@@ -821,10 +821,10 @@ function admRenderPersonaPDF(d) {
     '<div class="foot"><b>Gracias por su confianza</b><div>&iexcl;Sigamos fortaleciendo la ganader&iacute;a!</div></div></div>';
 
   var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>AGACON_'+esc(d.personaNombre).replace(/[^A-Za-z0-9]/g,'_')+'_'+d.fecha.replace(/[/]/g,'-')+'</title><style>'+
-    '@page{size:letter;margin:0}'+
+    '@page{size:letter;margin:12mm}'+
     '*{box-sizing:border-box;margin:0;padding:0}'+
     'body{font-family:Arial,Helvetica,sans-serif;color:#1f2937;font-size:11px}'+
-    '.page{padding:0 34px 22px;page-break-after:always}'+
+    '.page{padding:0;page-break-after:always}'+
     '.page.last{page-break-after:auto}'+
     '.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #d1d5db;padding-bottom:10px;border-top:8px solid #166534;padding-top:12px}'+
     '.hdr h1{color:#166534;font-size:24px;letter-spacing:1px}'+
