@@ -152,9 +152,13 @@ function admApplyFilter() {
     info.textContent = matches.length + ' lote(s)' + (parts.length?' ('+parts.join(', ')+')':'');
     info.style.color = matches.length ? 'var(--green)' : 'var(--red)';
     btn.style.display = matches.length ? 'inline-flex' : 'none';
+    var btnPdf = document.getElementById('btn-export-single-pdf');
+    if (btnPdf) btnPdf.style.display = matches.length ? 'inline-flex' : 'none';
   } else {
     info.textContent = '';
     btn.style.display = 'none';
+    var btnPdf0 = document.getElementById('btn-export-single-pdf');
+    if (btnPdf0) btnPdf0.style.display = 'none';
   }
   admRecalc();
 }
@@ -178,6 +182,8 @@ function admClearFilter() {
   if (sug) sug.style.display = 'none';
   document.getElementById('adm-filter-info').textContent = '';
   document.getElementById('btn-export-single').style.display = 'none';
+  var _bp = document.getElementById('btn-export-single-pdf');
+  if (_bp) _bp.style.display = 'none';
   admRecalc();
 }
 
@@ -245,7 +251,7 @@ function admGetFilteredLotes() {
   });
 }
 
-async function admExportSingle() {
+async function admExportSingle(formato) {
   var lotesFiltrados = admGetFilteredLotes();
   if (!lotesFiltrados.length) { toast('No hay lotes para esta persona', true); return; }
   var tc     = parseFloat(document.getElementById('adm-tc').value)||6.96;
@@ -340,6 +346,13 @@ async function admExportSingle() {
     l.esDefensa = true; l.defensaCom = pct;
     if(!yaGuardada) admPersistDefensa(l, pct);
   });
+
+  if (formato === 'pdf') {
+    admRenderPersonaPDF({ personaNombre: personaNombre, personaCI: personaCI,
+      lotesCompras: lotesCompras, lotesVentas: lotesVentas, lotesDefensas: lotesDefensas,
+      tc: tc, comPct: comPct, bank: bank, fecha: fecha, remateNumero: remateNumeroSingle });
+    return;
+  }
 
   toast('Generando Excel para ' + personaNombre + '...');
 
@@ -715,6 +728,126 @@ async function admExportSingle() {
 }
 
 function ecSym(){ return expEsBob() ? 'Bs.' : '$us'; }
+
+
+// ════════════════════════════════════════
+//  REPORTE PDF DE PERSONA (diseño AGACON)
+//  Se abre en una ventana lista para imprimir / guardar como PDF.
+// ════════════════════════════════════════
+function admRenderPersonaPDF(d) {
+  var esBob = expEsBob();
+  var sym   = esBob ? 'Bs.' : '$us';
+  function fI(n){ return Math.round(n||0).toLocaleString('es-BO'); }
+  function fD(n){ return (n||0).toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function fPU(n){ return esBob ? fI(n) : fD(n); }   // P/U y Monto: enteros en Bs.
+  function fMon(n){ return esBob ? fI(n) : fD(n); }
+  var com = d.comPct/100;
+
+  function tabla(titulo, icono, lotes, contraparteLbl, liqLbl, vendedor, esDef) {
+    if (!lotes.length) return { html:'', total:0 };
+    var extraBs = !esBob; // en $us se muestra el equivalente en Bs.
+    var head = '<tr><th>N°</th><th style="text-align:left">'+contraparteLbl+'</th><th>CATEGORÍA</th><th>LOTE</th><th>CANT.</th><th>P/U</th><th>MONTO</th><th>'+(esDef?'COM %':'COM '+d.comPct+'%')+'</th><th>'+liqLbl+'</th>'+(extraBs?'<th>'+liqLbl.replace('$us','Bs.')+'</th>':'')+'</tr>';
+    var rows='', tCant=0, tM=0, tC=0, tL=0;
+    lotes.forEach(function(l,i){
+      var m = (+l.precio||0)*(+l.cantidad||0);
+      var pct = esDef ? (l.defensaCom!=null?l.defensaCom:0.5) : d.comPct;
+      var c = m*pct/100;
+      var liq = esDef ? c : (vendedor ? m-c : m+c);
+      tCant += (+l.cantidad||0); tM+=m; tC+=c; tL+=liq;
+      var quien = esDef ? (l.raza||'—') : vendedor ? (l.comprador||'—') : (l.propietario||'—');
+      rows += '<tr><td>'+(i+1)+'</td><td style="text-align:left">'+esc(quien)+'</td><td>'+esc(l.categoria||'')+'</td><td>'+(l.lote||'')+'</td><td>'+fI(l.cantidad)+'</td><td class="r">'+fPU(l.precio)+'</td><td class="r">'+fMon(m)+'</td><td class="r">'+(esDef?pct+'% — ':'')+fD(c)+'</td><td class="r liq">'+fD(liq)+'</td>'+(extraBs?'<td class="r">'+fD(liq*d.tc)+'</td>':'')+'</tr>';
+    });
+    rows += '<tr class="tot"><td colspan="4">TOTALES</td><td>'+fI(tCant)+'</td><td></td><td class="r">'+fMon(tM)+'</td><td class="r">'+fD(tC)+'</td><td class="r liq">'+fD(tL)+'</td>'+(extraBs?'<td class="r">'+fD(tL*d.tc)+'</td>':'')+'</tr>';
+    return { html:'<div class="sec"><div class="sec-t">'+icono+'&nbsp; '+titulo+'</div><table>'+head+rows+'</table></div>', total:tL };
+  }
+  function esc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+
+  var tCompras  = tabla('COMPRAS',  '&#128722;', d.lotesCompras,  'PROPIETARIO', 'LIQ. A PAGAR '+sym,  false, false);
+  var tVentas   = tabla('VENTAS',   '&#127991;', d.lotesVentas,   'COMPRADOR',   'LIQ. A COBRAR '+sym, true,  false);
+  var tDefensas = tabla('DEFENSAS', '&#128737;', d.lotesDefensas, 'RAZA',        'COM. A PAGAR '+sym,  false, true);
+
+  var saldo = tVentas.total - tCompras.total - tDefensas.total;
+  var multi = [tCompras,tVentas,tDefensas].filter(function(t){return t.html;}).length > 1;
+  var saldoHtml = '';
+  if (multi) {
+    var pos = saldo >= 0;
+    saldoHtml = '<div class="saldo '+(pos?'pos':'neg')+'">'+(pos?'&#9989; SALDO A FAVOR — le deben: ':'&#10060; SALDO A PAGAR — debe: ')+'<b>'+sym+' '+fD(Math.abs(saldo))+'</b>'+(esBob?'':' &nbsp;·&nbsp; Bs. '+fD(Math.abs(saldo)*d.tc))+'</div>';
+  }
+
+  // Datos bancarios: si debe → cuenta AGACON; si le deben → campos del cliente para completar
+  var debe = saldo < 0 || (tCompras.html && !tVentas.html && !tDefensas.html);
+  var bankHtml = '';
+  if (debe && (d.bank.tipo || d.bank.cuenta || d.bank.titular1)) {
+    bankHtml = '<div class="bank"><div class="bank-t">&#127974;&nbsp; '+esc(d.bank.tipo||'CAJA DE AHORRO')+'</div>'+
+      (d.bank.cuenta ? '<div class="bank-cta">'+esc(d.bank.cuenta)+'</div>' : '')+
+      (d.bank.titular1 ? '<div class="bank-l">'+esc(d.bank.titular1)+(d.bank.ci1?' &nbsp; CI. '+esc(d.bank.ci1):'')+'</div>' : '')+
+      (d.bank.titular2 && d.bank.titular2.trim() ? '<div class="bank-l">'+esc(d.bank.titular2)+(d.bank.ci2?' &nbsp; CI. '+esc(d.bank.ci2):'')+'</div>' : '')+'</div>';
+  } else if (!debe && multi) {
+    bankHtml = '<div class="bank"><div class="bank-t">&#127974;&nbsp; DATOS BANCARIOS DEL CLIENTE — completar para el pago</div>'+
+      '<div class="bank-l">TITULAR: ________________________________</div>'+
+      '<div class="bank-l">BANCO: ________________________________</div>'+
+      '<div class="bank-l">NRO. DE CUENTA: ________________________________</div></div>';
+  }
+
+  var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>AGACON_'+esc(d.personaNombre).replace(/[^A-Za-z0-9]/g,'_')+'_'+d.fecha.replace(/[/]/g,'-')+'</title><style>'+
+    '@page{size:letter;margin:0}'+
+    '*{box-sizing:border-box;margin:0;padding:0}'+
+    'body{font-family:Arial,Helvetica,sans-serif;color:#1f2937;font-size:11px}'+
+    '.bar{height:9px;background:#166534}'+
+    '.wrap{padding:16px 34px 8px}'+
+    '.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #d1d5db;padding-bottom:10px}'+
+    '.hdr h1{color:#166534;font-size:24px;letter-spacing:1px}'+
+    '.hdr .sub{font-size:10.5px;color:#374151;margin-top:2px;line-height:1.35}'+
+    '.hdr img{height:58px}'+
+    '.info{display:flex;justify-content:space-between;margin:14px 0 6px}'+
+    '.info table td{padding:3px 10px 3px 0;font-size:11.5px}'+
+    '.info .lbl{color:#166534;font-weight:bold}'+
+    '.sello{width:170px;min-height:92px;border:1.5px solid #cbd5e1;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#9ca3af;letter-spacing:2px;font-size:12px}'+
+    '.sec{margin-top:12px}'+
+    '.sec-t{color:#166534;font-weight:bold;font-size:12.5px;margin-bottom:5px}'+
+    'table{width:100%;border-collapse:collapse}'+
+    'th{background:#166534;color:#fff;font-size:9.5px;padding:6px 5px;border:1px solid #14532d}'+
+    'td{border:1px solid #d1d5db;padding:5px;text-align:center;font-size:10.5px}'+
+    'td.r{text-align:right}'+
+    'td.liq{font-weight:bold;color:#166534}'+
+    'tr.tot td{background:#e8f0ea;font-weight:bold;border-color:#c6d8cb}'+
+    'tr.tot td:first-child{background:#166534;color:#fff;text-align:left;padding-left:8px}'+
+    '.saldo{margin-top:12px;padding:9px 12px;border-radius:7px;font-size:12px}'+
+    '.saldo.pos{background:#E2EFDA;border:1px solid #9CC49C}'+
+    '.saldo.neg{background:#FCE4D6;border:1px solid #E7B8A2}'+
+    '.bank{margin-top:14px;border:1.5px solid #166534;border-radius:10px;padding:10px 14px}'+
+    '.bank-t{color:#166534;font-weight:bold;font-size:12px;margin-bottom:4px}'+
+    '.bank-cta{color:#C00000;font-weight:bold;font-size:11.5px;margin-bottom:4px}'+
+    '.bank-l{font-size:10.5px;margin-top:2px}'+
+    '.foot{margin-top:16px;background:#f1f4f2;padding:12px 34px}'+
+    '.foot b{color:#166534;font-size:12px}'+
+    '.foot div{font-size:10.5px;color:#374151}'+
+    '@media print{.no-print{display:none}}'+
+    '</style></head><body>'+
+    '<div class="bar"></div>'+
+    '<div class="wrap">'+
+      '<div class="hdr"><div><h1>AGACON</h1><div class="sub">ASOCIACI&Oacute;N DE GANADEROS<br>DE CONCEPCI&Oacute;N</div></div>'+
+      '<img src="'+AGACON_LOGO_REPORTE+'" alt="AGACON"></div>'+
+      '<div class="info"><table>'+
+        '<tr><td class="lbl">REMATE N&deg;:</td><td>'+esc(d.remateNumero)+(esBob?' (Bs.)':' ($us)')+'</td></tr>'+
+        '<tr><td class="lbl">FECHA:</td><td>'+esc(d.fecha)+'</td></tr>'+
+        '<tr><td class="lbl">PERSONA:</td><td>'+esc(d.personaNombre.toUpperCase())+'</td></tr>'+
+        (d.personaCI?'<tr><td class="lbl">CI:</td><td>'+esc(d.personaCI)+'</td></tr>':'')+
+        (esBob?'':'<tr><td class="lbl">T/C:</td><td>Bs. '+d.tc+' / $us</td></tr>')+
+      '</table><div class="sello">SELLO</div></div>'+
+      tCompras.html + tVentas.html + tDefensas.html + saldoHtml + bankHtml +
+    '</div>'+
+    '<div class="foot"><b>Gracias por su confianza</b><div>&iexcl;Sigamos fortaleciendo la ganader&iacute;a!</div></div>'+
+    '<div class="bar"></div>'+
+    '</body></html>';
+
+  var w = window.open('', '_blank');
+  if (!w) { toast('El navegador bloqueó la ventana del PDF — permití ventanas emergentes', true); return; }
+  w.document.write(html);
+  w.document.close();
+  w.onload = function(){ setTimeout(function(){ w.print(); }, 350); };
+  toast('Reporte PDF de ' + d.personaNombre + ' listo — Guardar como PDF ✓');
+}
 
 function admExportCSV(tipo) {
   var tc=parseFloat(document.getElementById('adm-tc').value)||6.96;
