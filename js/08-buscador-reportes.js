@@ -787,15 +787,11 @@ function admRenderPersonaPDF(d) {
   var pos = saldo >= 0;
 
   // ── ESTADO DE CUENTA: resumen de totales + saldo (última página, como la hoja del Excel) ──
-  var resumen = '<div class="sec-t">&#128203;&nbsp; ESTADO DE CUENTA \u2014 RESUMEN</div><table class="resu">'+
-    '<tr><th style="text-align:left">CONCEPTO</th><th>CANT.</th><th>TOTAL '+sym+'</th>'+(esBob?'':'<th>TOTAL Bs.</th>')+'</tr>';
-  function fila(lbl, cant, v, cls){
-    resumen += '<tr class="'+(cls||'')+'"><td style="text-align:left">'+lbl+'</td><td>'+(cant?fI(cant):'')+'</td><td class="r">'+fD(v)+'</td>'+(esBob?'':'<td class="r">'+fD(v*d.tc)+'</td>')+'</tr>';
-  }
-  if (tCompras.html)  fila('&#128722; TOTAL COMPRAS \u2014 a pagar',   tCompras.cant,  tCompras.total,  'neg-r');
-  if (tVentas.html)   fila('&#127991; TOTAL VENTAS \u2014 a cobrar',   tVentas.cant,   tVentas.total,   'pos-r');
-  if (tDefensas.html) fila('&#128737; TOTAL DEFENSAS \u2014 comisi&oacute;n a pagar', tDefensas.cant, tDefensas.total, 'neg-r');
-  resumen += '<tr class="tot"><td style="text-align:left">'+(pos?'&#9989; SALDO A FAVOR \u2014 le deben':'&#10060; SALDO A PAGAR \u2014 debe')+'</td><td></td><td class="r '+(esBob?'hl':'')+'">'+fD(Math.abs(saldo))+'</td>'+(esBob?'':'<td class="r hl">'+fD(Math.abs(saldo)*d.tc)+'</td>')+'</tr></table>';
+  var saldoBox = '<div class="saldo-final '+(pos?'sf-pos':'sf-neg')+'">'+
+    '<span>'+(pos?'&#9989;&nbsp; SALDO A FAVOR \u2014 se le debe pagar:':'&#10060;&nbsp; SALDO A PAGAR \u2014 debe pagar:')+'</span>'+
+    '<span class="sf-monto">'+sym+' '+fD(Math.abs(saldo))+'</span>'+
+    (esBob?'':'<span class="sf-monto">Bs. '+fD(Math.abs(saldo)*d.tc)+'</span>')+
+    '</div>';
 
   // ── Datos bancarios ──
   var debe = !pos || (tCompras.html && !tVentas.html && !tDefensas.html);
@@ -821,14 +817,14 @@ function admRenderPersonaPDF(d) {
   });
   // ESTADO DE CUENTA: documento completo y DETALLADO (se puede enviar solo)
   paginas += '<div class="page last">'+headerGrande+
-    tCompras.html + tVentas.html + tDefensas.html + resumen + bankHtml +
+    tCompras.html + tVentas.html + tDefensas.html + saldoBox + bankHtml +
     '<div class="foot"><b>Gracias por su confianza</b><div>&iexcl;Sigamos fortaleciendo la ganader&iacute;a!</div></div></div>';
 
   var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>AGACON_'+esc(d.personaNombre).replace(/[^A-Za-z0-9]/g,'_')+'_'+d.fecha.replace(/[/]/g,'-')+'</title><style>'+
-    '@page{size:letter;margin:10mm 0 8mm 0}'+
+    '@page{size:letter;margin:0}'+
     '*{box-sizing:border-box;margin:0;padding:0}'+
     'body{font-family:Arial,Helvetica,sans-serif;color:#1f2937;font-size:11px}'+
-    '.page{padding:6px 34px 10px;page-break-after:always}'+
+    '.page{padding:0 34px 22px;page-break-after:always}'+
     '.page.last{page-break-after:auto}'+
     '.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #d1d5db;padding-bottom:10px;border-top:8px solid #166534;padding-top:12px}'+
     '.hdr h1{color:#166534;font-size:24px;letter-spacing:1px}'+
@@ -854,6 +850,10 @@ function admRenderPersonaPDF(d) {
     'table.resu td{font-size:11.5px;padding:7px 6px}'+
     'tr.pos-r td{background:#F3FAF3}'+
     'tr.neg-r td{background:#FDF6F3}'+
+    '.saldo-final{display:flex;align-items:center;gap:14px;margin-top:14px;padding:10px 14px;border-radius:8px;font-size:12.5px;font-weight:bold;page-break-inside:avoid}'+
+    '.saldo-final.sf-pos{background:#E2EFDA;border:1.5px solid #7FB77F;color:#14532d}'+
+    '.saldo-final.sf-neg{background:#FCE4D6;border:1.5px solid #DC9B7C;color:#7c2d12}'+
+    '.sf-monto{background:#FFE699;color:#14532d;padding:5px 12px;border-radius:6px;font-size:14px;border:1px solid #e3c96a}'+
     '.bank{margin-top:16px;border:1.5px solid #166534;border-radius:10px;padding:10px 14px;page-break-inside:avoid}'+
     '.bank-t{color:#166534;font-weight:bold;font-size:12px;margin-bottom:4px}'+
     '.bank-cta{color:#C00000;font-weight:bold;font-size:11.5px;margin-bottom:4px}'+
