@@ -735,18 +735,36 @@ function ecSym(){ return expEsBob() ? 'Bs.' : '$us'; }
 //  Se abre en una ventana lista para imprimir / guardar como PDF.
 // ════════════════════════════════════════
 function admRenderPersonaPDF(d) {
+ try {
   var esBob = expEsBob();
   var sym   = esBob ? 'Bs.' : '$us';
   function fI(n){ return Math.round(n||0).toLocaleString('es-BO'); }
   function fD(n){ return (n||0).toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-  function fPU(n){ return esBob ? fI(n) : fD(n); }   // P/U y Monto: enteros en Bs.
+  function fPU(n){ return esBob ? fI(n) : fD(n); }
   function fMon(n){ return esBob ? fI(n) : fD(n); }
-  var com = d.comPct/100;
+  function esc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+
+  // Encabezado grande (solo primera página)
+  var headerGrande =
+    '<div class="hdr"><div><h1>AGACON</h1><div class="sub">ASOCIACI&Oacute;N DE GANADEROS<br>DE CONCEPCI&Oacute;N</div></div>'+
+    '<img src="'+AGACON_LOGO_REPORTE+'" alt="AGACON"></div>'+
+    '<div class="info"><table>'+
+      '<tr><td class="lbl">REMATE N&deg;:</td><td>'+esc(d.remateNumero)+(esBob?' (Bs.)':' ($us)')+'</td></tr>'+
+      '<tr><td class="lbl">FECHA:</td><td>'+esc(d.fecha)+'</td></tr>'+
+      '<tr><td class="lbl">PERSONA:</td><td>'+esc((d.personaNombre||'').toUpperCase())+'</td></tr>'+
+      (d.personaCI?'<tr><td class="lbl">CI:</td><td>'+esc(d.personaCI)+'</td></tr>':'')+
+      (esBob?'':'<tr><td class="lbl">T/C:</td><td>Bs. '+d.tc+' / $us</td></tr>')+
+    '</table><div class="sello">SELLO</div></div>';
+
+  // Encabezado compacto (páginas siguientes, como cada hoja del Excel)
+  var headerMini =
+    '<div class="mini-hdr"><span class="mini-brand">AGACON</span>'+
+    '<span>REMATE N&deg; '+esc(d.remateNumero)+' &nbsp;&middot;&nbsp; '+esc(d.fecha)+' &nbsp;&middot;&nbsp; '+esc((d.personaNombre||'').toUpperCase())+(d.personaCI?' (CI: '+esc(d.personaCI)+')':'')+'</span></div>';
 
   function tabla(titulo, icono, lotes, contraparteLbl, liqLbl, vendedor, esDef) {
-    if (!lotes.length) return { html:'', total:0 };
-    var extraBs = !esBob; // en $us se muestra el equivalente en Bs.
-    var head = '<tr><th>N°</th><th style="text-align:left">'+contraparteLbl+'</th><th>CATEGORÍA</th><th>LOTE</th><th>CANT.</th><th>P/U</th><th>MONTO</th><th>'+(esDef?'COM %':'COM '+d.comPct+'%')+'</th><th>'+liqLbl+'</th>'+(extraBs?'<th>'+liqLbl.replace('$us','Bs.')+'</th>':'')+'</tr>';
+    if (!lotes.length) return { html:'', total:0, cant:0 };
+    var extraBs = !esBob;
+    var head = '<tr><th>N&deg;</th><th style="text-align:left">'+contraparteLbl+'</th><th>CATEGOR&Iacute;A</th><th>LOTE</th><th>CANT.</th><th>P/U</th><th>MONTO</th><th>'+(esDef?'COM %':'COM '+d.comPct+'%')+'</th><th>'+liqLbl+'</th>'+(extraBs?'<th>'+liqLbl.replace('$us','Bs.')+'</th>':'')+'</tr>';
     var rows='', tCant=0, tM=0, tC=0, tL=0;
     lotes.forEach(function(l,i){
       var m = (+l.precio||0)*(+l.cantidad||0);
@@ -754,99 +772,102 @@ function admRenderPersonaPDF(d) {
       var c = m*pct/100;
       var liq = esDef ? c : (vendedor ? m-c : m+c);
       tCant += (+l.cantidad||0); tM+=m; tC+=c; tL+=liq;
-      var quien = esDef ? (l.raza||'—') : vendedor ? (l.comprador||'—') : (l.propietario||'—');
-      rows += '<tr><td>'+(i+1)+'</td><td style="text-align:left">'+esc(quien)+'</td><td>'+esc(l.categoria||'')+'</td><td>'+(l.lote||'')+'</td><td>'+fI(l.cantidad)+'</td><td class="r">'+fPU(l.precio)+'</td><td class="r">'+fMon(m)+'</td><td class="r">'+(esDef?pct+'% — ':'')+fD(c)+'</td><td class="r liq">'+fD(liq)+'</td>'+(extraBs?'<td class="r">'+fD(liq*d.tc)+'</td>':'')+'</tr>';
+      var quien = esDef ? (l.raza||'\u2014') : vendedor ? (l.comprador||'\u2014') : (l.propietario||'\u2014');
+      rows += '<tr><td>'+(i+1)+'</td><td style="text-align:left">'+esc(quien)+'</td><td>'+esc(l.categoria||'')+'</td><td>'+(l.lote||'')+'</td><td>'+fI(l.cantidad)+'</td><td class="r">'+fPU(l.precio)+'</td><td class="r">'+fMon(m)+'</td><td class="r">'+(esDef?pct+'% \u2014 ':'')+fD(c)+'</td><td class="r liq">'+fD(liq)+'</td>'+(extraBs?'<td class="r">'+fD(liq*d.tc)+'</td>':'')+'</tr>';
     });
     rows += '<tr class="tot"><td colspan="4">TOTALES</td><td>'+fI(tCant)+'</td><td></td><td class="r">'+fMon(tM)+'</td><td class="r">'+fD(tC)+'</td><td class="r liq">'+fD(tL)+'</td>'+(extraBs?'<td class="r">'+fD(tL*d.tc)+'</td>':'')+'</tr>';
-    return { html:'<div class="sec"><div class="sec-t">'+icono+'&nbsp; '+titulo+'</div><table>'+head+rows+'</table></div>', total:tL };
+    return { html:'<div class="sec-t">'+icono+'&nbsp; '+titulo+'</div><table>'+head+rows+'</table>', total:tL, cant:tCant };
   }
-  function esc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 
-  var tCompras  = tabla('COMPRAS',  '&#128722;', d.lotesCompras,  'PROPIETARIO', 'LIQ. A PAGAR '+sym,  false, false);
-  var tVentas   = tabla('VENTAS',   '&#127991;', d.lotesVentas,   'COMPRADOR',   'LIQ. A COBRAR '+sym, true,  false);
-  var tDefensas = tabla('DEFENSAS', '&#128737;', d.lotesDefensas, 'RAZA',        'COM. A PAGAR '+sym,  false, true);
+  var tCompras  = tabla('COMPRAS \u2014 lo que debe pagar',  '&#128722;', d.lotesCompras,  'PROPIETARIO', 'LIQ. A PAGAR '+sym,  false, false);
+  var tVentas   = tabla('VENTAS \u2014 lo que debe cobrar',  '&#127991;', d.lotesVentas,   'COMPRADOR',   'LIQ. A COBRAR '+sym, true,  false);
+  var tDefensas = tabla('DEFENSAS \u2014 comisi&oacute;n a pagar', '&#128737;', d.lotesDefensas, 'RAZA', 'COM. A PAGAR '+sym, false, true);
 
   var saldo = tVentas.total - tCompras.total - tDefensas.total;
-  var multi = [tCompras,tVentas,tDefensas].filter(function(t){return t.html;}).length > 1;
-  var saldoHtml = '';
-  if (multi) {
-    var pos = saldo >= 0;
-    saldoHtml = '<div class="saldo '+(pos?'pos':'neg')+'">'+(pos?'&#9989; SALDO A FAVOR — le deben: ':'&#10060; SALDO A PAGAR — debe: ')+'<b>'+sym+' '+fD(Math.abs(saldo))+'</b>'+(esBob?'':' &nbsp;·&nbsp; Bs. '+fD(Math.abs(saldo)*d.tc))+'</div>';
-  }
+  var pos = saldo >= 0;
 
-  // Datos bancarios: si debe → cuenta AGACON; si le deben → campos del cliente para completar
-  var debe = saldo < 0 || (tCompras.html && !tVentas.html && !tDefensas.html);
+  // ── ESTADO DE CUENTA: resumen de totales + saldo (última página, como la hoja del Excel) ──
+  var resumen = '<div class="sec-t">&#128203;&nbsp; ESTADO DE CUENTA \u2014 RESUMEN</div><table class="resu">'+
+    '<tr><th style="text-align:left">CONCEPTO</th><th>CANT.</th><th>TOTAL '+sym+'</th>'+(esBob?'':'<th>TOTAL Bs.</th>')+'</tr>';
+  function fila(lbl, cant, v, cls){
+    resumen += '<tr class="'+(cls||'')+'"><td style="text-align:left">'+lbl+'</td><td>'+(cant?fI(cant):'')+'</td><td class="r">'+fD(v)+'</td>'+(esBob?'':'<td class="r">'+fD(v*d.tc)+'</td>')+'</tr>';
+  }
+  if (tCompras.html)  fila('&#128722; TOTAL COMPRAS \u2014 a pagar',   tCompras.cant,  tCompras.total,  'neg-r');
+  if (tVentas.html)   fila('&#127991; TOTAL VENTAS \u2014 a cobrar',   tVentas.cant,   tVentas.total,   'pos-r');
+  if (tDefensas.html) fila('&#128737; TOTAL DEFENSAS \u2014 comisi&oacute;n a pagar', tDefensas.cant, tDefensas.total, 'neg-r');
+  resumen += '<tr class="tot"><td style="text-align:left">'+(pos?'&#9989; SALDO A FAVOR \u2014 le deben':'&#10060; SALDO A PAGAR \u2014 debe')+'</td><td></td><td class="r">'+fD(Math.abs(saldo))+'</td>'+(esBob?'':'<td class="r liq">'+fD(Math.abs(saldo)*d.tc)+'</td>')+'</tr></table>';
+
+  // ── Datos bancarios ──
+  var debe = !pos || (tCompras.html && !tVentas.html && !tDefensas.html);
   var bankHtml = '';
   if (debe && (d.bank.tipo || d.bank.cuenta || d.bank.titular1)) {
     bankHtml = '<div class="bank"><div class="bank-t">&#127974;&nbsp; '+esc(d.bank.tipo||'CAJA DE AHORRO')+'</div>'+
       (d.bank.cuenta ? '<div class="bank-cta">'+esc(d.bank.cuenta)+'</div>' : '')+
       (d.bank.titular1 ? '<div class="bank-l">'+esc(d.bank.titular1)+(d.bank.ci1?' &nbsp; CI. '+esc(d.bank.ci1):'')+'</div>' : '')+
-      (d.bank.titular2 && d.bank.titular2.trim() ? '<div class="bank-l">'+esc(d.bank.titular2)+(d.bank.ci2?' &nbsp; CI. '+esc(d.bank.ci2):'')+'</div>' : '')+'</div>';
-  } else if (!debe && multi) {
-    bankHtml = '<div class="bank"><div class="bank-t">&#127974;&nbsp; DATOS BANCARIOS DEL CLIENTE — completar para el pago</div>'+
-      '<div class="bank-l">TITULAR: ________________________________</div>'+
-      '<div class="bank-l">BANCO: ________________________________</div>'+
-      '<div class="bank-l">NRO. DE CUENTA: ________________________________</div></div>';
+      (d.bank.titular2 && String(d.bank.titular2).trim() ? '<div class="bank-l">'+esc(d.bank.titular2)+(d.bank.ci2?' &nbsp; CI. '+esc(d.bank.ci2):'')+'</div>' : '')+'</div>';
+  } else {
+    bankHtml = '<div class="bank"><div class="bank-t">&#127974;&nbsp; DATOS BANCARIOS DEL CLIENTE \u2014 completar para el pago</div>'+
+      '<div class="bank-l">TITULAR: ________________________________________</div>'+
+      '<div class="bank-l">BANCO: ________________________________________</div>'+
+      '<div class="bank-l">NRO. DE CUENTA: ________________________________________</div></div>';
   }
 
+  // ── Armar páginas: cada sección con datos en su propia hoja + estado de cuenta al final ──
+  var secciones = [tCompras, tVentas, tDefensas].filter(function(t){ return t.html; });
+  var paginas = '';
+  secciones.forEach(function(t, idx){
+    paginas += '<div class="page">'+(idx===0 ? headerGrande : headerMini)+t.html+'</div>';
+  });
+  paginas += '<div class="page last">'+(secciones.length ? headerMini : headerGrande)+resumen+bankHtml+
+    '<div class="foot"><b>Gracias por su confianza</b><div>&iexcl;Sigamos fortaleciendo la ganader&iacute;a!</div></div></div>';
+
   var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>AGACON_'+esc(d.personaNombre).replace(/[^A-Za-z0-9]/g,'_')+'_'+d.fecha.replace(/[/]/g,'-')+'</title><style>'+
-    '@page{size:letter;margin:0}'+
+    '@page{size:letter;margin:10mm 0 8mm 0}'+
     '*{box-sizing:border-box;margin:0;padding:0}'+
     'body{font-family:Arial,Helvetica,sans-serif;color:#1f2937;font-size:11px}'+
-    '.bar{height:9px;background:#166534}'+
-    '.wrap{padding:16px 34px 8px}'+
-    '.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #d1d5db;padding-bottom:10px}'+
+    '.page{padding:6px 34px 10px;page-break-after:always}'+
+    '.page.last{page-break-after:auto}'+
+    '.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #d1d5db;padding-bottom:10px;border-top:8px solid #166534;padding-top:12px}'+
     '.hdr h1{color:#166534;font-size:24px;letter-spacing:1px}'+
     '.hdr .sub{font-size:10.5px;color:#374151;margin-top:2px;line-height:1.35}'+
     '.hdr img{height:58px}'+
+    '.mini-hdr{display:flex;justify-content:space-between;align-items:center;border-top:8px solid #166534;border-bottom:1.5px solid #d1d5db;padding:8px 0 6px;font-size:10.5px;color:#374151;margin-bottom:10px}'+
+    '.mini-brand{color:#166534;font-weight:bold;font-size:15px;letter-spacing:1px}'+
     '.info{display:flex;justify-content:space-between;margin:14px 0 6px}'+
     '.info table td{padding:3px 10px 3px 0;font-size:11.5px}'+
     '.info .lbl{color:#166534;font-weight:bold}'+
     '.sello{width:170px;min-height:92px;border:1.5px solid #cbd5e1;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#9ca3af;letter-spacing:2px;font-size:12px}'+
-    '.sec{margin-top:12px}'+
-    '.sec-t{color:#166534;font-weight:bold;font-size:12.5px;margin-bottom:5px}'+
+    '.sec-t{color:#166534;font-weight:bold;font-size:13px;margin:10px 0 6px}'+
     'table{width:100%;border-collapse:collapse}'+
     'th{background:#166534;color:#fff;font-size:9.5px;padding:6px 5px;border:1px solid #14532d}'+
     'td{border:1px solid #d1d5db;padding:5px;text-align:center;font-size:10.5px}'+
     'td.r{text-align:right}'+
     'td.liq{font-weight:bold;color:#166534}'+
+    'tr{page-break-inside:avoid}'+
     'tr.tot td{background:#e8f0ea;font-weight:bold;border-color:#c6d8cb}'+
     'tr.tot td:first-child{background:#166534;color:#fff;text-align:left;padding-left:8px}'+
-    '.saldo{margin-top:12px;padding:9px 12px;border-radius:7px;font-size:12px}'+
-    '.saldo.pos{background:#E2EFDA;border:1px solid #9CC49C}'+
-    '.saldo.neg{background:#FCE4D6;border:1px solid #E7B8A2}'+
-    '.bank{margin-top:14px;border:1.5px solid #166534;border-radius:10px;padding:10px 14px}'+
+    'table.resu td{font-size:11.5px;padding:7px 6px}'+
+    'tr.pos-r td{background:#F3FAF3}'+
+    'tr.neg-r td{background:#FDF6F3}'+
+    '.bank{margin-top:16px;border:1.5px solid #166534;border-radius:10px;padding:10px 14px;page-break-inside:avoid}'+
     '.bank-t{color:#166534;font-weight:bold;font-size:12px;margin-bottom:4px}'+
     '.bank-cta{color:#C00000;font-weight:bold;font-size:11.5px;margin-bottom:4px}'+
-    '.bank-l{font-size:10.5px;margin-top:2px}'+
-    '.foot{margin-top:16px;background:#f1f4f2;padding:12px 34px}'+
+    '.bank-l{font-size:10.5px;margin-top:3px}'+
+    '.foot{margin-top:18px;background:#f1f4f2;padding:12px 16px;border-radius:8px}'+
     '.foot b{color:#166534;font-size:12px}'+
     '.foot div{font-size:10.5px;color:#374151}'+
-    '@media print{.no-print{display:none}}'+
-    '</style></head><body>'+
-    '<div class="bar"></div>'+
-    '<div class="wrap">'+
-      '<div class="hdr"><div><h1>AGACON</h1><div class="sub">ASOCIACI&Oacute;N DE GANADEROS<br>DE CONCEPCI&Oacute;N</div></div>'+
-      '<img src="'+AGACON_LOGO_REPORTE+'" alt="AGACON"></div>'+
-      '<div class="info"><table>'+
-        '<tr><td class="lbl">REMATE N&deg;:</td><td>'+esc(d.remateNumero)+(esBob?' (Bs.)':' ($us)')+'</td></tr>'+
-        '<tr><td class="lbl">FECHA:</td><td>'+esc(d.fecha)+'</td></tr>'+
-        '<tr><td class="lbl">PERSONA:</td><td>'+esc(d.personaNombre.toUpperCase())+'</td></tr>'+
-        (d.personaCI?'<tr><td class="lbl">CI:</td><td>'+esc(d.personaCI)+'</td></tr>':'')+
-        (esBob?'':'<tr><td class="lbl">T/C:</td><td>Bs. '+d.tc+' / $us</td></tr>')+
-      '</table><div class="sello">SELLO</div></div>'+
-      tCompras.html + tVentas.html + tDefensas.html + saldoHtml + bankHtml +
-    '</div>'+
-    '<div class="foot"><b>Gracias por su confianza</b><div>&iexcl;Sigamos fortaleciendo la ganader&iacute;a!</div></div>'+
-    '<div class="bar"></div>'+
-    '</body></html>';
+    '</style></head><body>'+paginas+'</body></html>';
 
   var w = window.open('', '_blank');
-  if (!w) { toast('El navegador bloqueó la ventana del PDF — permití ventanas emergentes', true); return; }
+  if (!w) { toast('El navegador bloque\u00f3 la ventana del PDF \u2014 permit\u00ed ventanas emergentes', true); return; }
   w.document.write(html);
   w.document.close();
-  w.onload = function(){ setTimeout(function(){ w.print(); }, 350); };
-  toast('Reporte PDF de ' + d.personaNombre + ' listo — Guardar como PDF ✓');
+  setTimeout(function(){ try { w.focus(); w.print(); } catch(e){} }, 450);
+  toast('Reporte PDF de ' + d.personaNombre + ' listo \u2014 Guardar como PDF \u2713');
+ } catch (err) {
+  console.error(err);
+  toast('Error generando el PDF: ' + err.message, true);
+ }
 }
 
 function admExportCSV(tipo) {
