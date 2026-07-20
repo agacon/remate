@@ -775,13 +775,13 @@ function admRenderPersonaPDF(d) {
       var quien = esDef ? (l.raza||'\u2014') : vendedor ? (l.comprador||'\u2014') : (l.propietario||'\u2014');
       rows += '<tr><td>'+(i+1)+'</td><td style="text-align:left">'+esc(quien)+'</td><td>'+esc(l.categoria||'')+'</td><td>'+(l.lote||'')+'</td><td>'+fI(l.cantidad)+'</td><td class="r">'+fPU(l.precio)+'</td><td class="r">'+fMon(m)+'</td><td class="r">'+(esDef?pct+'% \u2014 ':'')+fD(c)+'</td><td class="r liq">'+fD(liq)+'</td>'+(extraBs?'<td class="r">'+fD(liq*d.tc)+'</td>':'')+'</tr>';
     });
-    rows += '<tr class="tot"><td colspan="4">TOTALES</td><td>'+fI(tCant)+'</td><td></td><td class="r">'+fMon(tM)+'</td><td class="r">'+fD(tC)+'</td><td class="r liq">'+fD(tL)+'</td>'+(extraBs?'<td class="r">'+fD(tL*d.tc)+'</td>':'')+'</tr>';
+    rows += '<tr class="tot"><td colspan="4">TOTALES</td><td>'+fI(tCant)+'</td><td></td><td class="r">'+fMon(tM)+'</td><td class="r">'+fD(tC)+'</td><td class="r liq">'+fD(tL)+'</td>'+(extraBs?'<td class="r hl">'+fD(tL*d.tc)+'</td>':'')+'</tr>';
     return { html:'<div class="sec-t">'+icono+'&nbsp; '+titulo+'</div><table>'+head+rows+'</table>', total:tL, cant:tCant };
   }
 
-  var tCompras  = tabla('COMPRAS \u2014 lo que debe pagar',  '&#128722;', d.lotesCompras,  'PROPIETARIO', 'LIQ. A PAGAR '+sym,  false, false);
+  var tCompras  = tabla('COMPRAS \u2014 lo que debe pagar',  '&#128722;', d.lotesCompras,  'PROPIETARIO', 'LIQ. A PAGAR '+sym,  false, false); tCompras.aPagar = true;
   var tVentas   = tabla('VENTAS \u2014 lo que debe cobrar',  '&#127991;', d.lotesVentas,   'COMPRADOR',   'LIQ. A COBRAR '+sym, true,  false);
-  var tDefensas = tabla('DEFENSAS \u2014 comisi&oacute;n a pagar', '&#128737;', d.lotesDefensas, 'RAZA', 'COM. A PAGAR '+sym, false, true);
+  var tDefensas = tabla('DEFENSAS \u2014 comisi&oacute;n a pagar', '&#128737;', d.lotesDefensas, 'RAZA', 'COM. A PAGAR '+sym, false, true); tDefensas.aPagar = true;
 
   var saldo = tVentas.total - tCompras.total - tDefensas.total;
   var pos = saldo >= 0;
@@ -795,7 +795,7 @@ function admRenderPersonaPDF(d) {
   if (tCompras.html)  fila('&#128722; TOTAL COMPRAS \u2014 a pagar',   tCompras.cant,  tCompras.total,  'neg-r');
   if (tVentas.html)   fila('&#127991; TOTAL VENTAS \u2014 a cobrar',   tVentas.cant,   tVentas.total,   'pos-r');
   if (tDefensas.html) fila('&#128737; TOTAL DEFENSAS \u2014 comisi&oacute;n a pagar', tDefensas.cant, tDefensas.total, 'neg-r');
-  resumen += '<tr class="tot"><td style="text-align:left">'+(pos?'&#9989; SALDO A FAVOR \u2014 le deben':'&#10060; SALDO A PAGAR \u2014 debe')+'</td><td></td><td class="r">'+fD(Math.abs(saldo))+'</td>'+(esBob?'':'<td class="r liq">'+fD(Math.abs(saldo)*d.tc)+'</td>')+'</tr></table>';
+  resumen += '<tr class="tot"><td style="text-align:left">'+(pos?'&#9989; SALDO A FAVOR \u2014 le deben':'&#10060; SALDO A PAGAR \u2014 debe')+'</td><td></td><td class="r '+(esBob?'hl':'')+'">'+fD(Math.abs(saldo))+'</td>'+(esBob?'':'<td class="r hl">'+fD(Math.abs(saldo)*d.tc)+'</td>')+'</tr></table>';
 
   // ── Datos bancarios ──
   var debe = !pos || (tCompras.html && !tVentas.html && !tDefensas.html);
@@ -815,10 +815,13 @@ function admRenderPersonaPDF(d) {
   // ── Armar páginas: cada sección con datos en su propia hoja + estado de cuenta al final ──
   var secciones = [tCompras, tVentas, tDefensas].filter(function(t){ return t.html; });
   var paginas = '';
-  secciones.forEach(function(t, idx){
-    paginas += '<div class="page">'+(idx===0 ? headerGrande : headerMini)+t.html+'</div>';
+  secciones.forEach(function(t){
+    // Cada sección es un documento completo: encabezado, sello y su detalle
+    paginas += '<div class="page">'+headerGrande+t.html+(t.aPagar ? bankHtml : '')+'</div>';
   });
-  paginas += '<div class="page last">'+(secciones.length ? headerMini : headerGrande)+resumen+bankHtml+
+  // ESTADO DE CUENTA: documento completo y DETALLADO (se puede enviar solo)
+  paginas += '<div class="page last">'+headerGrande+
+    tCompras.html + tVentas.html + tDefensas.html + resumen + bankHtml +
     '<div class="foot"><b>Gracias por su confianza</b><div>&iexcl;Sigamos fortaleciendo la ganader&iacute;a!</div></div></div>';
 
   var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>AGACON_'+esc(d.personaNombre).replace(/[^A-Za-z0-9]/g,'_')+'_'+d.fecha.replace(/[/]/g,'-')+'</title><style>'+
@@ -836,7 +839,7 @@ function admRenderPersonaPDF(d) {
     '.info{display:flex;justify-content:space-between;margin:14px 0 6px}'+
     '.info table td{padding:3px 10px 3px 0;font-size:11.5px}'+
     '.info .lbl{color:#166534;font-weight:bold}'+
-    '.sello{width:170px;min-height:92px;border:1.5px solid #cbd5e1;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#9ca3af;letter-spacing:2px;font-size:12px}'+
+    '.sello{width:210px;min-height:125px;border:1.5px solid #cbd5e1;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#9ca3af;letter-spacing:2px;font-size:12px}'+
     '.sec-t{color:#166534;font-weight:bold;font-size:13px;margin:10px 0 6px}'+
     'table{width:100%;border-collapse:collapse}'+
     'th{background:#166534;color:#fff;font-size:9.5px;padding:6px 5px;border:1px solid #14532d}'+
@@ -845,6 +848,8 @@ function admRenderPersonaPDF(d) {
     'td.liq{font-weight:bold;color:#166534}'+
     'tr{page-break-inside:avoid}'+
     'tr.tot td{background:#e8f0ea;font-weight:bold;border-color:#c6d8cb}'+
+    'tr.tot td.liq{background:#FFE699;color:#14532d;font-size:11.5px;border-color:#e3c96a}'+
+    'tr.tot td.hl{background:#FFE699;color:#14532d;font-size:12px;border-color:#e3c96a}'+
     'tr.tot td:first-child{background:#166534;color:#fff;text-align:left;padding-left:8px}'+
     'table.resu td{font-size:11.5px;padding:7px 6px}'+
     'tr.pos-r td{background:#F3FAF3}'+
