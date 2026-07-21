@@ -801,19 +801,26 @@ function admRenderPersonaPDF(d) {
     (esBob?'':'<span class="sf-monto hl-bs">Bs. '+fD(Math.abs(saldo)*d.tc)+'</span>')+
     '</div>';
 
-  // ── Datos bancarios ──
-  var debe = !pos || (tCompras.html && !tVentas.html && !tDefensas.html);
+  // ── Datos bancarios según el saldo ──
+  // Saldo A FAVOR (AGACON paga al cliente) → recuadro VACÍO para anotar la cuenta del CLIENTE.
+  // Cliente DEBE PAGAR → datos bancarios de AGACON (para que deposite).
   var bankHtml = '';
-  if (debe && (d.bank.tipo || d.bank.cuenta || d.bank.titular1)) {
-    bankHtml = '<div class="bank"><div class="bank-t">&#127974;&nbsp; '+esc(d.bank.tipo||'CAJA DE AHORRO')+'</div>'+
-      (d.bank.cuenta ? '<div class="bank-cta">'+esc(d.bank.cuenta)+'</div>' : '')+
-      (d.bank.titular1 ? '<div class="bank-l">'+esc(d.bank.titular1)+(d.bank.ci1?' &nbsp; CI. '+esc(d.bank.ci1):'')+'</div>' : '')+
-      (d.bank.titular2 && String(d.bank.titular2).trim() ? '<div class="bank-l">'+esc(d.bank.titular2)+(d.bank.ci2?' &nbsp; CI. '+esc(d.bank.ci2):'')+'</div>' : '')+'</div>';
-  } else {
+  if (pos) {
     bankHtml = '<div class="bank"><div class="bank-t">&#127974;&nbsp; DATOS BANCARIOS DEL CLIENTE \u2014 completar para el pago</div>'+
       '<div class="bank-l">TITULAR: ________________________________________</div>'+
       '<div class="bank-l">BANCO: ________________________________________</div>'+
       '<div class="bank-l">NRO. DE CUENTA: ________________________________________</div></div>';
+  } else if (d.bank.tipo || d.bank.cuenta || d.bank.titular1) {
+    bankHtml = '<div class="bank"><div class="bank-t">&#127974;&nbsp; DATOS BANCARIOS DE AGACON \u2014 para realizar el pago</div>'+
+      (d.bank.tipo ? '<div class="bank-l" style="font-weight:bold">'+esc(d.bank.tipo)+'</div>' : '')+
+      (d.bank.cuenta ? '<div class="bank-cta">'+esc(d.bank.cuenta)+'</div>' : '')+
+      (d.bank.titular1 ? '<div class="bank-l">'+esc(d.bank.titular1)+(d.bank.ci1?' &nbsp; CI. '+esc(d.bank.ci1):'')+'</div>' : '')+
+      (d.bank.titular2 && String(d.bank.titular2).trim() ? '<div class="bank-l">'+esc(d.bank.titular2)+(d.bank.ci2?' &nbsp; CI. '+esc(d.bank.ci2):'')+'</div>' : '')+'</div>';
+  } else {
+    bankHtml = '<div class="bank"><div class="bank-t">&#127974;&nbsp; DATOS BANCARIOS DE AGACON \u2014 para realizar el pago</div>'+
+      '<div class="bank-l">BANCO: ________________________________________</div>'+
+      '<div class="bank-l">NRO. DE CUENTA: ________________________________________</div>'+
+      '<div class="bank-l">TITULAR: ________________________________________</div></div>';
   }
 
   // ── Armar páginas: cada sección con datos en su propia hoja + estado de cuenta al final ──
@@ -1008,18 +1015,27 @@ function admExportarPDFPersona(d){
   }
 
   function bloqueBanco(y){
-    var b=d.bank||{}, tieneDatos=(b.tipo||b.cuenta||b.titular1);
+    var b=d.bank||{};
     var lineas=[];
-    if(tieneDatos){
-      lineas.push({t:(b.tipo||'CAJA DE AHORRO'), bold:true, verde:true});
-      if(b.cuenta) lineas.push({t:b.cuenta, bold:true, rojo:true});
-      if(b.titular1) lineas.push({t:b.titular1+(b.ci1?'   CI. '+b.ci1:'')});
-      if(b.titular2 && String(b.titular2).trim()) lineas.push({t:b.titular2+(b.ci2?'   CI. '+b.ci2:'')});
-    } else {
+    if(pos){
+      // Saldo A FAVOR → recuadro vacío para anotar la cuenta del CLIENTE
       lineas.push({t:'DATOS BANCARIOS DEL CLIENTE — completar para el pago', bold:true, verde:true});
       lineas.push({t:'TITULAR: ________________________________________'});
       lineas.push({t:'BANCO: ________________________________________'});
       lineas.push({t:'NRO. DE CUENTA: ________________________________________'});
+    } else {
+      // Cliente DEBE PAGAR → datos bancarios de AGACON
+      lineas.push({t:'DATOS BANCARIOS DE AGACON — para realizar el pago', bold:true, verde:true});
+      if(b.tipo||b.cuenta||b.titular1){
+        if(b.tipo) lineas.push({t:b.tipo, bold:true});
+        if(b.cuenta) lineas.push({t:b.cuenta, bold:true, rojo:true});
+        if(b.titular1) lineas.push({t:b.titular1+(b.ci1?'   CI. '+b.ci1:'')});
+        if(b.titular2 && String(b.titular2).trim()) lineas.push({t:b.titular2+(b.ci2?'   CI. '+b.ci2:'')});
+      } else {
+        lineas.push({t:'BANCO: ________________________________________'});
+        lineas.push({t:'NRO. DE CUENTA: ________________________________________'});
+        lineas.push({t:'TITULAR: ________________________________________'});
+      }
     }
     var h = 6 + lineas.length*4.6 + 3;
     if(y+h > PH-M){ doc.addPage(); y=M; }
