@@ -712,9 +712,12 @@
       <button class="btn" id="btn-export-single" onclick="admExportSingle()" title="Descargar Excel de esta persona" style="display:none;font-size:.72rem;padding:.35rem .7rem;align-items:center;gap:.35rem;background:#1D6F42;color:#fff;border:none;">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="3" fill="#fff" opacity=".18"/><path d="M14 2h5a3 3 0 0 1 3 3v14a3 3 0 0 1-3 3h-5V2z" fill="#fff" opacity=".25"/><text x="12" y="17" text-anchor="middle" font-family="Arial" font-weight="bold" font-size="13" fill="#fff">X</text></svg>
         Excel</button>
-      <button class="btn" id="btn-export-single-pdf" onclick="admExportSingle('pdf')" title="Reporte PDF de esta persona" style="display:none;font-size:.72rem;padding:.35rem .7rem;align-items:center;gap:.35rem;background:#C0392B;color:#fff;border:none;">
+      <button class="btn" id="btn-export-single-pdf" onclick="admExportSingle('pdf')" title="Descargar PDF de esta persona" style="display:none;font-size:.72rem;padding:.35rem .7rem;align-items:center;gap:.35rem;background:#C0392B;color:#fff;border:none;">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 2h9l5 5v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3z" fill="#fff" opacity=".2"/><path d="M15 2v5h5" stroke="#fff" stroke-width="1.6" opacity=".6"/><text x="12" y="17" text-anchor="middle" font-family="Arial" font-weight="bold" font-size="8.5" fill="#fff">PDF</text></svg>
         PDF</button>
+      <button class="btn" id="btn-export-single-print" onclick="admExportSingle('imprimir')" title="Imprimir reporte de esta persona" style="display:none;font-size:.72rem;padding:.35rem .7rem;align-items:center;gap:.35rem;background:#34495E;color:#fff;border:none;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 9V3h12v6" stroke="#fff" stroke-width="1.6"/><rect x="3" y="9" width="18" height="8" rx="2" fill="#fff" opacity=".25" stroke="#fff" stroke-width="1.6"/><path d="M7 14h10v7H7z" fill="#fff" opacity=".2" stroke="#fff" stroke-width="1.6"/></svg>
+        Imprimir</button>
     </div>
     <!-- Dropdown suggestions - fixed position to avoid overflow clipping -->
     <div id="adm-suggestions" style="display:none;position:fixed;z-index:9999;background:#1a2744;border:1px solid var(--gold);border-radius:8px;max-height:260px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.7);min-width:320px;"></div>
