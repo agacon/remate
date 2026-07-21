@@ -154,11 +154,15 @@ function admApplyFilter() {
     btn.style.display = matches.length ? 'inline-flex' : 'none';
     var btnPdf = document.getElementById('btn-export-single-pdf');
     if (btnPdf) btnPdf.style.display = matches.length ? 'inline-flex' : 'none';
+    var btnPrint = document.getElementById('btn-export-single-print');
+    if (btnPrint) btnPrint.style.display = matches.length ? 'inline-flex' : 'none';
   } else {
     info.textContent = '';
     btn.style.display = 'none';
     var btnPdf0 = document.getElementById('btn-export-single-pdf');
     if (btnPdf0) btnPdf0.style.display = 'none';
+    var btnPrint0 = document.getElementById('btn-export-single-print');
+    if (btnPrint0) btnPrint0.style.display = 'none';
   }
   admRecalc();
 }
@@ -184,6 +188,8 @@ function admClearFilter() {
   document.getElementById('btn-export-single').style.display = 'none';
   var _bp = document.getElementById('btn-export-single-pdf');
   if (_bp) _bp.style.display = 'none';
+  var _bpr = document.getElementById('btn-export-single-print');
+  if (_bpr) _bpr.style.display = 'none';
   admRecalc();
 }
 
@@ -347,10 +353,12 @@ async function admExportSingle(formato) {
     if(!yaGuardada) admPersistDefensa(l, pct);
   });
 
-  if (formato === 'pdf') {
-    admRenderPersonaPDF({ personaNombre: personaNombre, personaCI: personaCI,
+  if (formato === 'pdf' || formato === 'imprimir') {
+    var datosPersona = { personaNombre: personaNombre, personaCI: personaCI,
       lotesCompras: lotesCompras, lotesVentas: lotesVentas, lotesDefensas: lotesDefensas,
-      tc: tc, comPct: comPct, bank: bank, fecha: fecha, remateNumero: remateNumeroSingle });
+      tc: tc, comPct: comPct, bank: bank, fecha: fecha, remateNumero: remateNumeroSingle };
+    if (formato === 'pdf') admExportarPDFPersona(datosPersona);   // descarga archivo .pdf
+    else admRenderPersonaPDF(datosPersona);                        // ventana de impresión
     return;
   }
 
@@ -789,8 +797,8 @@ function admRenderPersonaPDF(d) {
   // ── ESTADO DE CUENTA: resumen de totales + saldo (última página, como la hoja del Excel) ──
   var saldoBox = '<div class="saldo-final '+(pos?'sf-pos':'sf-neg')+'">'+
     '<span>'+(pos?'&#9989;&nbsp; SALDO A FAVOR \u2014 se le debe pagar:':'&#10060;&nbsp; SALDO A PAGAR \u2014 debe pagar:')+'</span>'+
-    '<span class="sf-monto">'+sym+' '+fD(Math.abs(saldo))+'</span>'+
-    (esBob?'':'<span class="sf-monto">Bs. '+fD(Math.abs(saldo)*d.tc)+'</span>')+
+    '<span class="sf-monto'+(esBob?' hl-bs':' plain')+'">'+sym+' '+fD(Math.abs(saldo))+'</span>'+
+    (esBob?'':'<span class="sf-monto hl-bs">Bs. '+fD(Math.abs(saldo)*d.tc)+'</span>')+
     '</div>';
 
   // ── Datos bancarios ──
@@ -826,40 +834,44 @@ function admRenderPersonaPDF(d) {
     'body{font-family:Arial,Helvetica,sans-serif;color:#1f2937;font-size:11px}'+
     '.page{padding:0;page-break-after:always}'+
     '.page.last{page-break-after:auto}'+
-    '.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #d1d5db;padding-bottom:10px;border-top:8px solid #166534;padding-top:12px}'+
-    '.hdr h1{color:#166534;font-size:24px;letter-spacing:1px}'+
+    '.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #d1d5db;padding-bottom:10px;border-top:8px solid #4e9b6a;padding-top:12px}'+
+    '.hdr h1{color:#4e9b6a;font-size:24px;letter-spacing:1px}'+
     '.hdr .sub{font-size:10.5px;color:#374151;margin-top:2px;line-height:1.35}'+
     '.hdr img{height:58px}'+
-    '.mini-hdr{display:flex;justify-content:space-between;align-items:center;border-top:8px solid #166534;border-bottom:1.5px solid #d1d5db;padding:8px 0 6px;font-size:10.5px;color:#374151;margin-bottom:10px}'+
-    '.mini-brand{color:#166534;font-weight:bold;font-size:15px;letter-spacing:1px}'+
+    '.mini-hdr{display:flex;justify-content:space-between;align-items:center;border-top:8px solid #4e9b6a;border-bottom:1.5px solid #d1d5db;padding:8px 0 6px;font-size:10.5px;color:#374151;margin-bottom:10px}'+
+    '.mini-brand{color:#4e9b6a;font-weight:bold;font-size:15px;letter-spacing:1px}'+
     '.info{display:flex;justify-content:space-between;margin:14px 0 6px}'+
     '.info table td{padding:3px 10px 3px 0;font-size:11.5px}'+
-    '.info .lbl{color:#166534;font-weight:bold}'+
+    '.info .lbl{color:#4e9b6a;font-weight:bold}'+
     '.sello{width:210px;min-height:125px;border:1.5px solid #cbd5e1;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#9ca3af;letter-spacing:2px;font-size:12px}'+
-    '.sec-t{color:#166534;font-weight:bold;font-size:13px;margin:10px 0 6px}'+
+    '.sec-t{color:#4e9b6a;font-weight:bold;font-size:13px;margin:10px 0 6px}'+
     'table{width:100%;border-collapse:collapse}'+
-    'th{background:#166534;color:#fff;font-size:9.5px;padding:6px 5px;border:1px solid #14532d}'+
+    'th{background:#4e9b6a;color:#fff;font-size:9.5px;padding:6px 5px;border:1px solid #3f8257}'+
     'td{border:1px solid #d1d5db;padding:5px;text-align:center;font-size:10.5px}'+
     'td.r{text-align:right}'+
-    'td.liq{font-weight:bold;color:#166534}'+
+    'td.liq{font-weight:bold;color:#4e9b6a}'+
     'tr{page-break-inside:avoid}'+
     'tr.tot td{background:#e8f0ea;font-weight:bold;border-color:#c6d8cb}'+
-    'tr.tot td.liq{background:#FFE699;color:#14532d;font-size:11.5px;border-color:#e3c96a}'+
-    'tr.tot td.hl{background:#FFE699;color:#14532d;font-size:12px;border-color:#e3c96a}'+
-    'tr.tot td:first-child{background:#166534;color:#fff;text-align:left;padding-left:8px}'+
+    (esBob
+      ? 'tr.tot td.liq{background:#FFE699;color:#3f8257;font-size:11.5px;border-color:#e3c96a}'
+      : 'tr.tot td.liq{background:#e8f0ea;color:#3f8257;font-size:11.5px;border-color:#c6d8cb}')+
+    'tr.tot td.hl{background:#FFE699;color:#3f8257;font-size:12px;border-color:#e3c96a}'+
+    'tr.tot td:first-child{background:#4e9b6a;color:#fff;text-align:left;padding-left:8px}'+
     'table.resu td{font-size:11.5px;padding:7px 6px}'+
     'tr.pos-r td{background:#F3FAF3}'+
     'tr.neg-r td{background:#FDF6F3}'+
     '.saldo-final{display:flex;align-items:center;gap:14px;margin-top:14px;padding:10px 14px;border-radius:8px;font-size:12.5px;font-weight:bold;page-break-inside:avoid}'+
-    '.saldo-final.sf-pos{background:#E2EFDA;border:1.5px solid #7FB77F;color:#14532d}'+
+    '.saldo-final.sf-pos{background:#E2EFDA;border:1.5px solid #7FB77F;color:#3f8257}'+
     '.saldo-final.sf-neg{background:#FCE4D6;border:1.5px solid #DC9B7C;color:#7c2d12}'+
-    '.sf-monto{background:#FFE699;color:#14532d;padding:5px 12px;border-radius:6px;font-size:14px;border:1px solid #e3c96a}'+
-    '.bank{margin-top:16px;border:1.5px solid #166534;border-radius:10px;padding:10px 14px;page-break-inside:avoid}'+
-    '.bank-t{color:#166534;font-weight:bold;font-size:12px;margin-bottom:4px}'+
+    '.sf-monto{padding:5px 12px;border-radius:6px;font-size:14px}'+
+    '.sf-monto.hl-bs{background:#FFE699;color:#3f8257;border:1px solid #e3c96a}'+
+    '.sf-monto.plain{background:rgba(255,255,255,.65);border:1px solid #cbd5e1}'+
+    '.bank{margin-top:16px;border:1.5px solid #4e9b6a;border-radius:10px;padding:10px 14px;page-break-inside:avoid}'+
+    '.bank-t{color:#4e9b6a;font-weight:bold;font-size:12px;margin-bottom:4px}'+
     '.bank-cta{color:#C00000;font-weight:bold;font-size:11.5px;margin-bottom:4px}'+
     '.bank-l{font-size:10.5px;margin-top:3px}'+
     '.foot{margin-top:18px;background:#f1f4f2;padding:12px 16px;border-radius:8px}'+
-    '.foot b{color:#166534;font-size:12px}'+
+    '.foot b{color:#4e9b6a;font-size:12px}'+
     '.foot div{font-size:10.5px;color:#374151}'+
     '</style></head><body>'+paginas+'</body></html>';
 
@@ -873,6 +885,213 @@ function admRenderPersonaPDF(d) {
   console.error(err);
   toast('Error generando el PDF: ' + err.message, true);
  }
+}
+
+/* ════════════════════════════════════════
+   PDF DESCARGABLE del reporte por persona (jsPDF + autotable)
+   Mismo diseño verde claro. Amarillo SOLO en montos en Bs.
+   ════════════════════════════════════════ */
+function admExportarPDFPersona(d){
+  if(typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF){ toast('No se pudo cargar la librería de PDF. Verificá la conexión a internet.', true); return; }
+  try{
+  var esBob = expEsBob();
+  var sym   = esBob ? 'Bs.' : '$us';
+  function fI(n){ return Math.round(n||0).toLocaleString('es-BO'); }
+  function fD(n){ return (n||0).toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function fPU(n){ return esBob ? fI(n) : fD(n); }
+  function fMon(n){ return esBob ? fI(n) : fD(n); }
+
+  var VERDE=[78,155,106], VERDE_OSC=[63,130,87], GRIS=[209,213,219], VERDE_CLARO=[232,240,234], AMARILLO=[255,230,153], TEXTO=[31,41,55];
+
+  // Construye una sección estructurada {head, rows, total, cant}. Marca celdas: r(right), liq(verde), hlbs(amarillo Bs)
+  function seccion(titulo, lotes, contraparteLbl, liqLbl, vendedor, esDef){
+    if(!lotes.length) return null;
+    var head = ['N°', contraparteLbl, 'CATEGORÍA', 'LOTE', 'CANT.', 'P/U', 'MONTO', (esDef?'COM %':'COM '+d.comPct+'%'), liqLbl];
+    if(!esBob) head.push(liqLbl.replace('$us','Bs.'));
+    var rows=[], tCant=0,tM=0,tC=0,tL=0;
+    lotes.forEach(function(l,i){
+      var m=(+l.precio||0)*(+l.cantidad||0);
+      var pct = esDef ? (l.defensaCom!=null?l.defensaCom:0.5) : d.comPct;
+      var c = m*pct/100;
+      var liq = esDef ? c : (vendedor ? m-c : m+c);
+      tCant+=(+l.cantidad||0); tM+=m; tC+=c; tL+=liq;
+      var quien = esDef ? (l.raza||'—') : vendedor ? (l.comprador||'—') : (l.propietario||'—');
+      var cells=[
+        {t:String(i+1)}, {t:quien, left:true}, {t:l.categoria||''}, {t:String(l.lote||'')},
+        {t:fI(l.cantidad)}, {t:fPU(l.precio), r:true}, {t:fMon(m), r:true},
+        {t:(esDef?pct+'% — ':'')+fD(c), r:true}, {t:fD(liq), r:true, liq:true}
+      ];
+      if(!esBob) cells.push({t:fD(liq*d.tc), r:true, hlbs:true});
+      rows.push({k:'n', c:cells});
+    });
+    var tcells=[
+      {t:'TOTALES', left:true, span:4}, {t:fI(tCant)}, {t:''}, {t:fMon(tM), r:true},
+      {t:fD(tC), r:true}, {t:fD(tL), r:true, liq:true, totliq:true}
+    ];
+    if(!esBob) tcells.push({t:fD(tL*d.tc), r:true, hlbs:true});
+    rows.push({k:'tot', c:tcells});
+    return {titulo:titulo, head:head, rows:rows, total:tL};
+  }
+
+  var sCompras  = seccion('COMPRAS — lo que debe pagar',        d.lotesCompras,  'PROPIETARIO', 'LIQ. A PAGAR '+sym,  false, false);
+  var sVentas   = seccion('VENTAS — lo que debe cobrar',        d.lotesVentas,   'COMPRADOR',   'LIQ. A COBRAR '+sym, true,  false);
+  var sDefensas = seccion('DEFENSAS — comisión a pagar',        d.lotesDefensas, 'RAZA',        'COM. A PAGAR '+sym,  false, true);
+  if(sCompras)  sCompras.aPagar = true;
+  if(sDefensas) sDefensas.aPagar = true;
+
+  var totC = sCompras?sCompras.total:0, totV = sVentas?sVentas.total:0, totD = sDefensas?sDefensas.total:0;
+  var saldo = totV - totC - totD;
+  var pos = saldo >= 0;
+
+  var doc = new window.jspdf.jsPDF({orientation:'portrait', unit:'mm', format:'letter'});
+  var M=12, PW=doc.internal.pageSize.getWidth(), PH=doc.internal.pageSize.getHeight();
+  var logoProps=null, logoW=15, logoH=15;
+  try{ logoProps=doc.getImageProperties(AGACON_LOGO_REPORTE); logoH=15; logoW=logoH*(logoProps.width/logoProps.height); }catch(e){}
+
+  function headerGrande(){
+    doc.setFillColor(VERDE[0],VERDE[1],VERDE[2]); doc.rect(M,M,PW-2*M,2.2,'F');
+    doc.setTextColor(VERDE[0],VERDE[1],VERDE[2]); doc.setFont('helvetica','bold'); doc.setFontSize(17);
+    doc.text('AGACON', M, M+9.5);
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(55,65,81);
+    doc.text('ASOCIACIÓN DE GANADEROS', M, M+13.5); doc.text('DE CONCEPCIÓN', M, M+16.8);
+    if(logoProps){ try{ doc.addImage(AGACON_LOGO_REPORTE,'PNG', PW-M-logoW, M+3, logoW, logoH); }catch(e){} }
+    doc.setDrawColor(GRIS[0],GRIS[1],GRIS[2]); doc.setLineWidth(0.5); doc.line(M,M+20.5,PW-M,M+20.5);
+    var y=M+25.5; doc.setFontSize(8.5);
+    function dato(lbl,val){
+      doc.setFont('helvetica','bold'); doc.setTextColor(VERDE[0],VERDE[1],VERDE[2]); doc.text(lbl, M, y);
+      doc.setFont('helvetica','normal'); doc.setTextColor(TEXTO[0],TEXTO[1],TEXTO[2]); doc.text(String(val), M+30, y); y+=4.3;
+    }
+    dato('REMATE N°:', (d.remateNumero||'')+(esBob?' (Bs.)':' ($us)'));
+    dato('FECHA:', d.fecha);
+    dato('PARTICIPANTE:', (d.personaNombre||'').toUpperCase());
+    if(d.personaCI) dato('CI:', d.personaCI);
+    if(!esBob) dato('T/C:', 'Bs. '+d.tc+' / $us');
+    // recuadro SELLO a la derecha
+    var sx=PW-M-52, sy=M+23, sw=52, sh=26;
+    doc.setDrawColor(203,213,225); doc.setLineWidth(0.4); doc.roundedRect(sx,sy,sw,sh,2,2,'S');
+    doc.setTextColor(156,163,175); doc.setFontSize(9); doc.text('SELLO', sx+sw/2, sy+sh/2+1, {align:'center'});
+    return Math.max(y, sy+sh)+3;
+  }
+
+  function pintarTabla(sec, startY){
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(VERDE[0],VERDE[1],VERDE[2]);
+    doc.text(sec.titulo, M, startY);
+    var body = sec.rows.map(function(row){
+      var arr = row.c.map(function(cel){
+        return {content:cel.t, colSpan:cel.span>1?cel.span:undefined,
+          styles:{halign:cel.left?'left':(cel.r?'right':'center')}, _f:cel};
+      });
+      arr._k=row.k; return arr;
+    });
+    doc.autoTable({
+      head:[sec.head], body:body, startY:startY+2,
+      margin:{left:M,right:M,top:M,bottom:M}, showHead:'everyPage',
+      styles:{font:'helvetica',fontSize:7,cellPadding:1.4,lineColor:GRIS,lineWidth:0.15,textColor:TEXTO,overflow:'linebreak'},
+      headStyles:{fillColor:VERDE,textColor:[255,255,255],fontSize:6.5,fontStyle:'bold',lineColor:VERDE_OSC,halign:'center'},
+      didParseCell:function(data){
+        if(data.section!=='body') return;
+        var f = data.cell.raw && data.cell.raw._f ? data.cell.raw._f : {};
+        var k = data.row.raw._k;
+        if(k==='tot'){
+          data.cell.styles.fontStyle='bold';
+          if(data.column.index===0){ data.cell.styles.fillColor=VERDE; data.cell.styles.textColor=[255,255,255]; data.cell.styles.lineColor=VERDE_OSC; }
+          else if(f.hlbs){ data.cell.styles.fillColor=AMARILLO; data.cell.styles.textColor=VERDE_OSC; data.cell.styles.lineColor=[227,201,106]; }
+          else if(f.totliq && esBob){ data.cell.styles.fillColor=AMARILLO; data.cell.styles.textColor=VERDE_OSC; data.cell.styles.lineColor=[227,201,106]; }
+          else { data.cell.styles.fillColor=VERDE_CLARO; data.cell.styles.textColor=VERDE_OSC; data.cell.styles.lineColor=[198,216,203]; }
+        } else {
+          if(f.hlbs){ data.cell.styles.textColor=VERDE_OSC; }
+          else if(f.liq){ data.cell.styles.textColor=VERDE; data.cell.styles.fontStyle='bold'; }
+        }
+      }
+    });
+    return doc.lastAutoTable.finalY;
+  }
+
+  function bloqueBanco(y){
+    var b=d.bank||{}, tieneDatos=(b.tipo||b.cuenta||b.titular1);
+    var lineas=[];
+    if(tieneDatos){
+      lineas.push({t:(b.tipo||'CAJA DE AHORRO'), bold:true, verde:true});
+      if(b.cuenta) lineas.push({t:b.cuenta, bold:true, rojo:true});
+      if(b.titular1) lineas.push({t:b.titular1+(b.ci1?'   CI. '+b.ci1:'')});
+      if(b.titular2 && String(b.titular2).trim()) lineas.push({t:b.titular2+(b.ci2?'   CI. '+b.ci2:'')});
+    } else {
+      lineas.push({t:'DATOS BANCARIOS DEL CLIENTE — completar para el pago', bold:true, verde:true});
+      lineas.push({t:'TITULAR: ________________________________________'});
+      lineas.push({t:'BANCO: ________________________________________'});
+      lineas.push({t:'NRO. DE CUENTA: ________________________________________'});
+    }
+    var h = 6 + lineas.length*4.6 + 3;
+    if(y+h > PH-M){ doc.addPage(); y=M; }
+    doc.setDrawColor(VERDE[0],VERDE[1],VERDE[2]); doc.setLineWidth(0.5); doc.roundedRect(M,y,PW-2*M,h,2.5,2.5,'S');
+    var yy=y+6; doc.setFontSize(8.5);
+    lineas.forEach(function(ln){
+      doc.setFont('helvetica', ln.bold?'bold':'normal');
+      if(ln.verde) doc.setTextColor(VERDE[0],VERDE[1],VERDE[2]);
+      else if(ln.rojo) doc.setTextColor(192,0,0);
+      else doc.setTextColor(TEXTO[0],TEXTO[1],TEXTO[2]);
+      doc.text(ln.t, M+4, yy); yy+=4.6;
+    });
+    return y+h;
+  }
+
+  function bloqueSaldo(y){
+    var h=14;
+    if(y+h > PH-M){ doc.addPage(); y=M; }
+    if(pos){ doc.setFillColor(226,239,218); doc.setDrawColor(127,183,127); }
+    else   { doc.setFillColor(252,228,214); doc.setDrawColor(220,155,124); }
+    doc.setLineWidth(0.5); doc.roundedRect(M,y,PW-2*M,h,2.5,2.5,'FD');
+    doc.setFont('helvetica','bold'); doc.setFontSize(10);
+    doc.setTextColor(pos?63:124, pos?130:45, pos?87:18);
+    doc.text((pos?'SALDO A FAVOR — se le debe pagar:':'SALDO A PAGAR — debe pagar:'), M+4, y+9);
+    // montos a la derecha: Bs siempre amarillo; $us amarillo solo si esBob
+    var x=PW-M-4;
+    function chip(txt, amarillo){
+      doc.setFontSize(10.5); var w=doc.getTextWidth(txt)+8;
+      x-=w;
+      if(amarillo){ doc.setFillColor(AMARILLO[0],AMARILLO[1],AMARILLO[2]); doc.setDrawColor(227,201,106); }
+      else { doc.setFillColor(255,255,255); doc.setDrawColor(203,213,225); }
+      doc.setLineWidth(0.4); doc.roundedRect(x, y+2.5, w, 9, 1.5,1.5,'FD');
+      doc.setTextColor(VERDE_OSC[0],VERDE_OSC[1],VERDE_OSC[2]); doc.setFont('helvetica','bold');
+      doc.text(txt, x+w/2, y+8.4, {align:'center'});
+      x-=3;
+    }
+    if(!esBob){ chip('Bs. '+fD(Math.abs(saldo)*d.tc), true); chip('$us '+fD(Math.abs(saldo)), false); }
+    else { chip('Bs. '+fD(Math.abs(saldo)), true); }
+    return y+h;
+  }
+
+  function pie(y){
+    var h=15; if(y+8 > PH-M) return; if(y+h>PH-M) h=PH-M-y;
+    doc.setFillColor(241,244,242); doc.roundedRect(M,y,PW-2*M,h,2.5,2.5,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(VERDE[0],VERDE[1],VERDE[2]);
+    doc.text('Gracias por su confianza', M+4, y+6);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(55,65,81);
+    doc.text('¡Sigamos fortaleciendo la ganadería!', M+4, y+11);
+  }
+
+  // ── Páginas: una por sección con datos (con banco si aPagar) ──
+  var secciones = [sCompras, sVentas, sDefensas].filter(Boolean);
+  var primera = true;
+  secciones.forEach(function(sec){
+    if(!primera) doc.addPage(); primera=false;
+    var y = headerGrande();
+    y = pintarTabla(sec, y+4);
+    if(sec.aPagar) bloqueBanco(y+5);
+  });
+
+  // ── Página final: estado de cuenta completo ──
+  doc.addPage();
+  var yf = headerGrande();
+  secciones.forEach(function(sec){ yf = pintarTabla(sec, yf+5); });
+  yf = bloqueSaldo(yf+5);
+  yf = bloqueBanco(yf+5);
+  pie(yf+5);
+
+  var nombre='AGACON_'+String(d.personaNombre||'PARTICIPANTE').replace(/[^A-Za-z0-9]/g,'_')+'_'+String(d.fecha).replace(/[/]/g,'-')+'.pdf';
+  doc.save(nombre);
+  toast('PDF descargado: '+nombre);
+  }catch(err){ console.error(err); toast('Error generando el PDF: '+err.message, true); }
 }
 
 function admExportCSV(tipo) {
