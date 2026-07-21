@@ -827,8 +827,8 @@ function admRenderPersonaPDF(d) {
   var secciones = [tCompras, tVentas, tDefensas].filter(function(t){ return t.html; });
   var paginas = '';
   secciones.forEach(function(t){
-    // Cada sección es un documento completo: encabezado, sello y su detalle
-    paginas += '<div class="page">'+headerGrande+t.html+(t.aPagar ? bankHtml : '')+'</div>';
+    // Cada sección es un documento completo: encabezado, sello y su detalle (sin banco)
+    paginas += '<div class="page">'+headerGrande+t.html+'</div>';
   });
   // ESTADO DE CUENTA: documento completo y DETALLADO (se puede enviar solo)
   paginas += '<div class="page last">'+headerGrande+
@@ -1086,14 +1086,13 @@ function admExportarPDFPersona(d){
     doc.text('¡Sigamos fortaleciendo la ganadería!', M+4, y+11);
   }
 
-  // ── Páginas: una por sección con datos (con banco si aPagar) ──
+  // ── Páginas: una por sección con datos (sin bloque bancario; va solo en el estado de cuenta) ──
   var secciones = [sCompras, sVentas, sDefensas].filter(Boolean);
   var primera = true;
   secciones.forEach(function(sec){
     if(!primera) doc.addPage(); primera=false;
     var y = headerGrande();
-    y = pintarTabla(sec, y+4);
-    if(sec.aPagar) bloqueBanco(y+5);
+    pintarTabla(sec, y+4);
   });
 
   // ── Página final: estado de cuenta completo ──
