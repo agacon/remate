@@ -143,7 +143,8 @@ function admRenderPlataforma(tc) {
 
 function admRenderVendedores(tc,com) {
   var byVend={};
-  admLotes.forEach(function(l){var k=l.propietario||'SIN PROP';if(!byVend[k])byVend[k]=[];byVend[k].push(l);});
+  // Solo ventas reales: excluir defensas y lotes sin comprador (esos van en Defensas)
+  admLotes.forEach(function(l){if(lotEsDefensa(l) || !l.comprador) return;var k=l.propietario||'SIN PROP';if(!byVend[k])byVend[k]=[];byVend[k].push(l);});
   var tbody=document.getElementById('adm-tbody-vend');tbody.innerHTML='';
   Object.entries(byVend).forEach(function(entry){
     var vend=entry[0],rows=entry[1],n=1,stM=0,stC=0,stT=0,stCant=0;
@@ -151,12 +152,11 @@ function admRenderVendedores(tc,com) {
       var m=(l.precio||0)*(l.cantidad||0),c=m*com,t=m-c;
       stM+=m;stC+=c;stT+=t;stCant+=l.cantidad||0;
       var tr=document.createElement('tr');
-      var ciComp=l.compradorCI?'<small style="color:var(--muted)">'+l.compradorCI+'</small>':'<small style="color:#555">—</small>';
-      tr.innerHTML='<td>'+n+'</td><td>'+vend+'</td><td>'+ciComp+'</td><td>'+l.categoria+'</td><td>'+l.lote+'</td><td>'+l.cantidad+'</td><td>'+admS()+(l.precio||0)+'</td><td>'+admS()+m.toLocaleString()+'</td><td style="color:var(--red2)">'+admS()+c.toFixed(2)+'</td><td style="font-weight:700;color:var(--green)">'+admS()+t.toFixed(2)+'</td>'+admBsCell(t,tc);
+      tr.innerHTML='<td>'+n+'</td><td>'+vend+'</td><td>'+l.categoria+'</td><td>'+l.lote+'</td><td>'+l.cantidad+'</td><td>'+admS()+(l.precio||0)+'</td><td>'+admS()+m.toLocaleString()+'</td><td style="color:var(--red2)">'+admS()+c.toFixed(2)+'</td><td style="font-weight:700;color:var(--green)">'+admS()+t.toFixed(2)+'</td>'+admBsCell(t,tc);
       tbody.appendChild(tr);n++;
     });
     var tr=document.createElement('tr');tr.className='subtotal';
-    tr.innerHTML='<td colspan="3">TOTAL — '+vend+'</td><td></td><td>'+stCant+'</td><td>—</td><td>'+admS()+stM.toLocaleString()+'</td><td>'+admS()+stC.toFixed(2)+'</td><td>'+admS()+stT.toFixed(2)+'</td>'+admBsCell(stT,tc);
+    tr.innerHTML='<td colspan="2">TOTAL — '+vend+'</td><td></td><td></td><td>'+stCant+'</td><td>—</td><td>'+admS()+stM.toLocaleString()+'</td><td>'+admS()+stC.toFixed(2)+'</td><td>'+admS()+stT.toFixed(2)+'</td>'+admBsCell(stT,tc);
     tbody.appendChild(tr);
   });
 }
