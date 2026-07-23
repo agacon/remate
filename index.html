@@ -623,47 +623,9 @@
       </div>
     </div>
 
-    <!-- Socios import -->
-    <div style="background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:.7rem 1rem;display:flex;flex-direction:column;gap:.5rem;flex-shrink:0;">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;">
-        <div style="font-size:.62rem;letter-spacing:2px;color:#1a9ad6;text-transform:uppercase;font-weight:700;">📋 Lista de Socios (para cálculo de comisión defensas)</div>
-        <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
-          <span id="socios-count" style="font-size:.72rem;color:var(--muted);">No cargada</span>
-          <label style="cursor:pointer;">
-            <input type="file" id="socios-file" accept=".xlsx,.xls" style="display:none" onchange="sociosImport(this)">
-            <span class="tbtn" style="font-size:.62rem;padding:.25rem .65rem;">📂 Importar Excel Socios</span>
-          </label>
-          <button class="tbtn" id="socios-reload-btn" onclick="sociosLoadFromFirebase()" style="font-size:.62rem;padding:.25rem .65rem;display:none;">↻ Recargar</button>
-        </div>
-      </div>
-      <div id="socios-preview" style="font-size:.72rem;color:var(--muted);display:none;"></div>
-    </div>
+    <!-- Socios import: removido de Configuración (se gestiona en el panel Socios) -->
 
-    <!-- PIN Config Section -->
-    <div style="background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:.8rem 1rem;display:flex;flex-direction:column;gap:.6rem;flex-shrink:0;">
-      <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div style="font-size:.62rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:700;">🔑 Contraseñas de Acceso</div>
-        <button class="tbtn green" onclick="pinSaveAll()" style="font-size:.65rem;padding:.25rem .7rem;">💾 Guardar contraseñas</button>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.7rem;">
-        <div class="fgroup">
-          <label>🎙 Operador</label>
-          <input type="password" id="pin-op" placeholder="Sin contraseña = libre"
-            style="background:#111;border:1px solid var(--red);color:#fff;border-radius:5px;padding:.38rem .6rem;font-size:.88rem;width:100%;">
-        </div>
-        <div class="fgroup">
-          <label>👤 Compradores</label>
-          <input type="password" id="pin-comp" placeholder="Sin contraseña = libre"
-            style="background:#111;border:1px solid var(--green);color:#fff;border-radius:5px;padding:.38rem .6rem;font-size:.88rem;width:100%;">
-        </div>
-        <div class="fgroup">
-          <label>📊 Administración</label>
-          <input type="password" id="pin-adm" placeholder="Sin contraseña = libre"
-            style="background:#111;border:1px solid var(--gold);color:#fff;border-radius:5px;padding:.38rem .6rem;font-size:.88rem;width:100%;">
-        </div>
-      </div>
-      <div style="font-size:.65rem;color:var(--muted);">Dejar vacío = acceso libre. Los cambios aplican inmediatamente.</div>
-    </div>
+    <!-- PIN Config removido de Configuración (las contraseñas se manejan por otra vía) -->
 
     <!-- Eliminar remate (zona peligrosa) -->
     <div style="background:var(--panel);border:1px solid var(--red);border-radius:8px;padding:.8rem 1rem;display:flex;flex-direction:column;gap:.6rem;flex-shrink:0;">
@@ -731,7 +693,7 @@
     </div>
     <div id="adm-tab-comp" class="tab-content on"><div class="tbl-wrap"><div class="tbl-scroll"><table><thead><tr><th>N°</th><th>Comprador</th><th>CI</th><th>Categoría</th><th>Lote</th><th>Cant.</th><th>P/U</th><th>Monto</th><th>Comisión</th><th id="adm-h-comp-tot">Total $us</th><th id="adm-h-comp-bs">Total Bs.</th></tr></thead><tbody id="adm-tbody-comp"></tbody></table></div></div></div>
     <div id="adm-tab-plat" class="tab-content"><div class="tbl-wrap"><div class="tbl-scroll"><table><thead><tr><th>N°</th><th>Comprador</th><th>CI</th><th>Categoría</th><th>Lote</th><th>Cant.</th><th>P/U</th><th>Monto</th><th>Com. 3% total</th><th>2% Plataforma</th><th>1% Remate</th></tr></thead><tbody id="adm-tbody-plat"></tbody></table></div></div></div>
-    <div id="adm-tab-vend" class="tab-content"><div class="tbl-wrap"><div class="tbl-scroll"><table><thead><tr><th>N°</th><th>Vendedor</th><th>CI Comprador</th><th>Categoría</th><th>Lote</th><th>Cant.</th><th>P/U</th><th>Monto</th><th>Comisión</th><th>Liq. Pagable</th><th id="adm-h-vend-bs">Total Bs.</th></tr></thead><tbody id="adm-tbody-vend"></tbody></table></div></div></div>
+    <div id="adm-tab-vend" class="tab-content"><div class="tbl-wrap"><div class="tbl-scroll"><table><thead><tr><th>N°</th><th>Vendedor</th><th>Categoría</th><th>Lote</th><th>Cant.</th><th>P/U</th><th>Monto</th><th>Comisión</th><th>Liq. Pagable</th><th id="adm-h-vend-bs">Total Bs.</th></tr></thead><tbody id="adm-tbody-vend"></tbody></table></div></div></div>
     <div id="adm-tab-def" class="tab-content"><div class="tbl-wrap"><div class="tbl-scroll"><table><thead><tr><th>N°</th><th>Propietario</th><th>Categoría</th><th>Lote</th><th>Cant.</th><th>P/U</th><th>Monto</th><th>Com. defensa</th></tr></thead><tbody id="adm-tbody-def"></tbody></table></div></div></div>
     <div id="adm-tab-res" class="tab-content"><div class="tbl-wrap" style="padding:1.5rem"><div id="adm-resumen" style="font-size:.88rem;color:var(--muted);line-height:2">Seleccioná un remate.</div></div></div>
     </div><!-- fin adm-panel-reportes -->
