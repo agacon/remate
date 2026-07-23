@@ -133,7 +133,8 @@ function sociosImport(input) {
 function sociosLoadFromFirebase() {
   supa.from('socios').select('*').eq('activo', true).order('nombre').then(function(res) {
     if (res.error || !res.data || !res.data.length) {
-      document.getElementById('socios-count').textContent = 'No cargada';
+      var sc = document.getElementById('socios-count');
+      if (sc) sc.textContent = 'No cargada';
       return;
     }
     sociosList = res.data.map(function(s) {
@@ -151,12 +152,15 @@ function sociosLoadFromFirebase() {
 }
 
 function sociosUpdateUI(count) {
-  document.getElementById('socios-count').textContent = count + ' socios cargados';
-  document.getElementById('socios-count').style.color = 'var(--green)';
-  document.getElementById('socios-reload-btn').style.display = 'inline';
+  var sc = document.getElementById('socios-count');
+  if (sc) { sc.textContent = count + ' socios cargados'; sc.style.color = 'var(--green)'; }
+  var rb = document.getElementById('socios-reload-btn');
+  if (rb) rb.style.display = 'inline';
   var prev = document.getElementById('socios-preview');
-  prev.style.display = 'block';
-  prev.textContent = 'Primeros 3: ' + sociosList.slice(0,3).map(function(s){ return s.nombre+' ('+s.ci+')'; }).join(' | ');
+  if (prev) {
+    prev.style.display = 'block';
+    prev.textContent = 'Primeros 3: ' + sociosList.slice(0,3).map(function(s){ return s.nombre+' ('+s.ci+')'; }).join(' | ');
+  }
 }
 
 // ── DEFENSA detection ──
